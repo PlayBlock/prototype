@@ -44,6 +44,8 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include "libproducer/producer_plugin.hpp"
+
 namespace dev
 {
 namespace eth
@@ -346,6 +348,7 @@ protected:
 	std::atomic<bool> m_syncBlockQueue = {false};
 
 	bytes m_extraData;
+	std::shared_ptr<class producer_plugin> m_producer_plugin;
 };
 
 }

@@ -74,7 +74,8 @@ Client::Client(
 	m_gp(_gpForAdoption ? _gpForAdoption : make_shared<TrivialGasPricer>()),
 	m_preSeal(chainParams().accountStartNonce),
 	m_postSeal(chainParams().accountStartNonce),
-	m_working(chainParams().accountStartNonce)
+	m_working(chainParams().accountStartNonce),
+	m_producer_plugin(make_shared<class producer_plugin>(m_bc))
 {
 	init(_host, _dbPath, _forceAction, _networkID);
 }

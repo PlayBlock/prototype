@@ -145,6 +145,9 @@ add_subdirectory(libethashseal)
 add_subdirectory(libwebthree)
 add_subdirectory(libweb3jsonrpc)
 
+add_subdirectory(libproducer)
+
+
 if (EVMJIT)
     add_subdirectory(evmjit)
 endif()
