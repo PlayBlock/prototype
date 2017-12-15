@@ -100,8 +100,8 @@ include(EthUtils)
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-hunter_add_package(Boost COMPONENTS program_options filesystem system thread)
-find_package(Boost CONFIG REQUIRED program_options filesystem system thread)
+hunter_add_package(Boost COMPONENTS program_options filesystem system thread chrono date_time)
+find_package(Boost CONFIG REQUIRED program_options filesystem system thread chrono date_time)
 
 hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)

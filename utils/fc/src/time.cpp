@@ -32,6 +32,7 @@ namespace fc {
       return this->to_iso_string();
   }
 
+ #if 0
   time_point_sec time_point_sec::from_iso_string( const fc::string& s )
   { try {
       static boost::posix_time::ptime epoch = boost::posix_time::from_time_t( 0 );
@@ -141,5 +142,7 @@ namespace fc {
   {
     output_microseconds = microseconds(input_variant.as_int64());
   }
+  
+ #endif
 
 } //namespace fc

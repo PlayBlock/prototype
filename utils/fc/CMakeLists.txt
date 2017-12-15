@@ -15,16 +15,9 @@ set (sources
 
 list(APPEND sources ${fc_headers})
 
-FIND_PACKAGE(Boost 1.34 REQUIRED)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(include)
-INCLUDE_DIRECTORIES(../../deps/install/win64/include)
 
 ADD_LIBRARY(fc STATIC ${sources})
 
-INSTALL( TARGETS fc
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-)
-INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION . )
+target_link_libraries(fc PRIVATE Boost::chrono Boost::date_time)
+
+target_include_directories(fc PRIVATE include)
