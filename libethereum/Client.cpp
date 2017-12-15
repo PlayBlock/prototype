@@ -648,6 +648,7 @@ void Client::noteChanged(h256Hash const& _filters)
 
 void Client::doWork(bool _doWait)
 {
+	cout << "Client::doWork()" << endl;
 	bool t = true;
 	if (m_syncBlockQueue.compare_exchange_strong(t, false))
 		syncBlockQueue();
@@ -667,7 +668,7 @@ void Client::doWork(bool _doWait)
 
 	tick();
 
-	rejigSealing();
+	//rejigSealing();
 
 	callQueuedFunctions();
 
@@ -680,6 +681,7 @@ void Client::doWork(bool _doWait)
 		std::unique_lock<std::mutex> l(x_signalled);
 		m_signalled.wait_for(l, chrono::seconds(1));
 	}
+	m_producer_plugin->schedule_production_loop();
 }
 
 void Client::tick()
