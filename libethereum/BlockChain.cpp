@@ -40,6 +40,7 @@
 #endif
 
 #include <boost/filesystem.hpp>
+#include <libproducer/producer_plugin.hpp>
 
 using namespace std;
 using namespace dev;
@@ -803,8 +804,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 	bool isImportedAndBest = false;
 	// This might be the new best block...
 	h256 last = currentHash();
-	if (_totalDifficulty > details(last).totalDifficulty || (m_sealEngine->chainParams().tieBreakingGas && 
-		_totalDifficulty == details(last).totalDifficulty && _block.info.gasUsed() > info(last).gasUsed()))
+	if (number() < _block.info.number())
 	{
 		// don't include bi.hash() in treeRoute, since it's not yet in details DB...
 		// just tack it on afterwards.
@@ -826,6 +826,16 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 				tbi = _block.info;
 			else
 				tbi = BlockHeader(block(*i));
+
+			//更新下一轮生产顺序，更新全局动态数据和全局状态数据
+			if (m_producer_plugin)
+			{
+				m_producer_plugin->get_chain_controller().push_block(tbi);
+			}
+			else
+			{
+				cwarn << "no set producer_plugin";
+			}
 
 			// Collate logs into blooms.
 			h256s alteredBlooms;

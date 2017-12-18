@@ -108,10 +108,10 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 	if (_parent)
 	{
 		// Check difficulty is correct given the two timestamps.
-		auto expected = calculateDifficulty(_bi, _parent);
-		auto difficulty = _bi.difficulty();
-		if (difficulty != expected)
-			BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError((bigint)expected, (bigint)difficulty));
+		//auto expected = calculateDifficulty(_bi, _parent);
+		//auto difficulty = _bi.difficulty();
+		//if (difficulty != expected)
+		//	BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError((bigint)expected, (bigint)difficulty));
 
 		auto gasLimit = _bi.gasLimit();
 		auto parentGasLimit = _parent.gasLimit();
