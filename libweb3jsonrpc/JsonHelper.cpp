@@ -169,7 +169,8 @@ Json::Value toJson(dev::eth::BlockHeader const& _bi, BlockDetails const& _bd, Un
 Json::Value toJson(dev::eth::TransactionSkeleton const& _t)
 {
 	Json::Value res;
-	res["to"] = _t.creation ? Json::Value() : toJS(_t.to);
+	//res["to"] = _t.creation ? Json::Value() : toJS(_t.to);
+	res["to"] = (_t.type == TransactionType::ContractCreation || _t.type == TransactionType::WASMContractCreation) ? Json::Value() : toJS(_t.to);
 	res["from"] = toJS(_t.from);
 	res["gas"] = toJS(_t.gas);
 	res["gasPrice"] = toJS(_t.gasPrice);
@@ -358,10 +359,27 @@ TransactionSkeleton toTransactionSkeleton(Json::Value const& _json)
 
 	if (!_json["from"].empty())
 		ret.from = jsToAddress(_json["from"].asString());
+	//if (!_json["to"].empty() && _json["to"].asString() != "0x")
+	//	ret.to = jsToAddress(_json["to"].asString());
+	//else
+	//	ret.creation = true;
+
+	//by dz
 	if (!_json["to"].empty() && _json["to"].asString() != "0x")
+	{
+		ret.type = TransactionType::MessageCall;
 		ret.to = jsToAddress(_json["to"].asString());
+	}
+	else if (_json["vm"] == "wasm")
+	{
+		ret.type = TransactionType::WASMContractCreation;
+	}
 	else
-		ret.creation = true;
+	{
+		ret.type = TransactionType::ContractCreation;
+	}
+
+
 
 	if (!_json["value"].empty())
 		ret.value = jsToU256(_json["value"].asString());

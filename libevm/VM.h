@@ -57,7 +57,7 @@ struct InstructionMetric
 class VM: public VMFace
 {
 public:
-	virtual owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
+	virtual owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, bool isCreation = false) override final;
 
 #if EIP_615
 	// invalid code will throw an exeption

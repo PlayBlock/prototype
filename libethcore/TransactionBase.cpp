@@ -31,7 +31,8 @@ using namespace dev;
 using namespace dev::eth;
 
 TransactionBase::TransactionBase(TransactionSkeleton const& _ts, Secret const& _s):
-	m_type(_ts.creation ? ContractCreation : MessageCall),
+	//m_type(_ts.creation ? ContractCreation : MessageCall),
+	m_type((Type)_ts.type),
 	m_nonce(_ts.nonce),
 	m_value(_ts.value),
 	m_receiveAddress(_ts.to),
@@ -55,8 +56,29 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 		m_nonce = rlp[0].toInt<u256>();
 		m_gasPrice = rlp[1].toInt<u256>();
 		m_gas = rlp[2].toInt<u256>();
-		m_type = rlp[3].isEmpty() ? ContractCreation : MessageCall;
-		m_receiveAddress = rlp[3].isEmpty() ? Address() : rlp[3].toHash<Address>(RLP::VeryStrict);
+		//m_type = rlp[3].isEmpty() ? ContractCreation : MessageCall;
+		//m_receiveAddress = rlp[3].isEmpty() ? Address() : rlp[3].toHash<Address>(RLP::VeryStrict);
+
+		//by dz
+		if (rlp[3].isEmpty())
+		{
+			m_type = ContractCreation;
+			m_receiveAddress = Address();
+		}
+		//else if (rlp[field = 3].toHash<Address>(RLP::VeryStrict)==Address(0x6d736100))
+		else if (rlp[3].toHash<Address>(RLP::VeryStrict) == Address(6))
+		{
+			m_type = WASMContractCreation;
+			m_receiveAddress = Address();
+		}
+		else
+		{
+			m_type = MessageCall;
+			m_receiveAddress = rlp[3].toHash<Address>(RLP::VeryStrict);
+		}
+		//by dz end
+
+
 		m_value = rlp[4].toInt<u256>();
 
 		if (!rlp[5].isData())
@@ -151,15 +173,49 @@ void TransactionBase::sign(Secret const& _priv)
 
 void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forEip155hash) const
 {
+	//if (m_type == NullTransaction)
+	//	return;
+
+	//_s.appendList((_sig || _forEip155hash ? 3 : 0) + 6);
+	//_s << m_nonce << m_gasPrice << m_gas;
+	//if (m_type == MessageCall)
+	//	_s << m_receiveAddress;
+	//else
+	//	_s << "";
+	//_s << m_value << m_data;
+
+	//if (_sig)
+	//{
+	//	if (!m_vrs)
+	//		BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
+
+	//	if (hasZeroSignature())
+	//		_s << m_chainId;
+	//	else
+	//	{
+	//		int const vOffset = m_chainId * 2 + 35;
+	//		_s << (m_vrs->v + vOffset);
+	//	}
+	//	_s << (u256)m_vrs->r << (u256)m_vrs->s;
+	//}
+	//else if (_forEip155hash)
+	//	_s << m_chainId << 0 << 0;
+
+	//by dz
 	if (m_type == NullTransaction)
 		return;
 
 	_s.appendList((_sig || _forEip155hash ? 3 : 0) + 6);
 	_s << m_nonce << m_gasPrice << m_gas;
-	if (m_type == MessageCall)
-		_s << m_receiveAddress;
-	else
+	//
+	if (m_type == ContractCreation)
 		_s << "";
+	else if (m_type == WASMContractCreation)
+		//_s << Address(0x6d736100);
+		_s << Address(6);
+	else
+		_s << m_receiveAddress;
+	//
 	_s << m_value << m_data;
 
 	if (_sig)
@@ -178,6 +234,7 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forE
 	}
 	else if (_forEip155hash)
 		_s << m_chainId << 0 << 0;
+
 }
 
 static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279074904382605163141518161494337");

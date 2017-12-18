@@ -145,7 +145,7 @@ def run():
                         default=default_backend_path,
                         help=backend_path_help)
     parser.add_argument('proxy_url', nargs='?',
-                        default='http://127.0.0.1:8545',
+                        default='http://0.0.0.0:8545',
                         help="URL for this proxy server")
     args = parser.parse_args()
     proxy = Proxy(args.proxy_url, args.backend_path)

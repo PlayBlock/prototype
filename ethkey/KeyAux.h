@@ -173,7 +173,9 @@ public:
 		else if ((arg == "--tx-dest" || arg == "--tx-to" || arg == "--tx-destination") && i + 1 < argc)
 			try
 			{
-				m_toSign.creation = false;
+				//m_toSign.creation = false;
+				//by dz
+				m_toSign.type = TransactionType::MessageCall;
 				m_toSign.to = toAddress(argv[++i]);
 			}
 			catch (...)

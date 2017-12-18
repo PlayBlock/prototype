@@ -62,7 +62,7 @@ public:
 	VMFace& operator=(VMFace const&) = delete;
 
 	/// VM implementation
-	virtual owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) = 0;
+	virtual owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,bool isCreation=false) = 0;
 };
 
 }

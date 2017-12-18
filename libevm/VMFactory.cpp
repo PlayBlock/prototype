@@ -18,6 +18,7 @@
 #include "VMFactory.h"
 #include <libdevcore/Assertions.h>
 #include "VM.h"
+#include "WASM_VM.h"
 
 #if ETH_EVMJIT
 #include "JitVM.h"
@@ -61,6 +62,9 @@ std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
 	return std::unique_ptr<VMFace>(new VM);
 #endif
 }
-
+std::unique_ptr<VMFace> VMFactory::createWASM()
+{
+	return std::unique_ptr<VMFace>(new WASM_VM);
+}
 }
 }

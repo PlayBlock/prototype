@@ -233,10 +233,21 @@ bool Executive::execute()
 	clog(StateDetail) << "Paying" << formatBalance(m_gasCost) << "from sender for gas (" << m_t.gas() << "gas at" << formatBalance(m_t.gasPrice()) << ")";
 	m_s.subBalance(m_t.sender(), m_gasCost);
 
+	//if (m_t.isCreation())
+	//	return create(m_t.sender(), m_t.value(), m_t.gasPrice(), m_t.gas() - (u256)m_baseGasRequired, &m_t.data(), m_t.sender());
+	//else
+	//	return call(m_t.receiveAddress(), m_t.sender(), m_t.value(), m_t.gasPrice(), bytesConstRef(&m_t.data()), m_t.gas() - (u256)m_baseGasRequired);
+
+	//by dz
 	if (m_t.isCreation())
-		return create(m_t.sender(), m_t.value(), m_t.gasPrice(), m_t.gas() - (u256)m_baseGasRequired, &m_t.data(), m_t.sender());
+	{
+		return create(m_t.sender(), m_t.value(), m_t.gasPrice(), m_t.gas() - (u256)m_baseGasRequired, &m_t.data(), m_t.sender(), m_t.getType());
+	}
 	else
 		return call(m_t.receiveAddress(), m_t.sender(), m_t.value(), m_t.gasPrice(), bytesConstRef(&m_t.data()), m_t.gas() - (u256)m_baseGasRequired);
+
+
+
 }
 
 bool Executive::call(Address const& _receiveAddress, Address const& _senderAddress, u256 const& _value, u256 const& _gasPrice, bytesConstRef _data, u256 const& _gas)
@@ -308,26 +319,26 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 	return !m_ext;
 }
 
-bool Executive::create(Address const& _txSender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
+bool Executive::create(Address const& _txSender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin, TransactionType _type)
 {
 	// Contract creation by an external account is the same as CREATE opcode
-	return createOpcode(_txSender, _endowment, _gasPrice, _gas, _init, _origin);
+	return createOpcode(_txSender, _endowment, _gasPrice, _gas, _init, _origin, _type);
 }
 
-bool Executive::createOpcode(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
+bool Executive::createOpcode(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin, TransactionType _type)
 {
 	u256 nonce = m_s.getNonce(_sender);
 	m_newAddress = right160(sha3(rlpList(_sender, nonce)));
-	return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin);
+	return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin, _type);
 }
 
-bool Executive::create2Opcode(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin, u256 const& _salt)
+bool Executive::create2Opcode(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin, u256 const& _salt, TransactionType _type)
 {
 	m_newAddress = right160(sha3(_sender.asBytes() + toBigEndian(_salt) + sha3(_init).asBytes()));
-	return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin);
+	return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin, _type);
 }
 
-bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
+bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin, TransactionType _type)
 {
 	if (_sender != MaxAddress || m_envInfo.number() < m_sealEngine.chainParams().constantinopleForkBlock) // EIP86
 		m_s.incNonce(_sender);
@@ -350,6 +361,15 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
 		m_ext = {}; // cancel the _init execution if there are any scheduled.
 		return !m_ext;
 	}
+	
+
+	//by dz
+	if (_type == TransactionType::WASMContractCreation)
+	{
+		m_s.setStorage(Address(6), sha3(m_newAddress), u256(1));
+	}
+	//by dz end
+
 
 	// Transfer ether before deploying the code. This will also create new
 	// account if it does not exist yet.
@@ -397,7 +417,26 @@ bool Executive::go(OnOpFunc const& _onOp)
 		try
 		{
 			// Create VM instance. Force Interpreter if tracing requested.
-			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
+			//auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
+			
+			
+			
+			std::unique_ptr<VMFace> vm;// = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
+									   //if (m_ext->store(u256(0)) == u256(1))
+									   //if (m_s.storage(Address(0x6d736100))[sha3(m_ext->myAddress)] == u256(1))
+	
+			if (m_s.storage(Address(6), sha3(m_ext->myAddress)) == u256(1))
+				//if (true)
+			{
+				vm = VMFactory::createWASM();
+			}
+			else
+			{
+				vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
+			}
+			//by dz end
+				
+			
 			if (m_isCreation)
 			{
 				m_s.clearStorage(m_ext->myAddress);

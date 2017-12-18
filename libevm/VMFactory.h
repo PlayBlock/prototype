@@ -43,6 +43,9 @@ public:
 
 	/// Set global VM kind
 	static void setKind(VMKind _kind);
+
+	/// Creates a WASM.
+	static std::unique_ptr<VMFace> createWASM();
 };
 
 }

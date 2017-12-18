@@ -147,7 +147,8 @@ void badBlock(bytesConstRef _block, string const& _err)
 
 string TransactionSkeleton::userReadable(bool _toProxy, function<pair<bool, string>(TransactionSkeleton const&)> const& _getNatSpec, function<string(Address const&)> const& _formatAddress) const
 {
-	if (creation)
+	//if (creation)
+	if (type == TransactionType::ContractCreation || type == TransactionType::WASMContractCreation)
 	{
 		// show notice concerning the creation code. TODO: this needs entering into natspec.
 		return string("ÐApp is attempting to create a contract; ") + (_toProxy ? "(this transaction is not executed directly, but forwarded to another ÐApp) " : "") + "to be endowed with " + formatBalance(value) + ", with additional network fees of up to " + formatBalance(gas * gasPrice) + ".\n\nMaximum total cost is " + formatBalance(value + gas * gasPrice) + ".";

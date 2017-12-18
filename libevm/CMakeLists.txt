@@ -8,6 +8,8 @@ set(SOURCES
 	VMSIMD.cpp
 	VMValidate.cpp
 	VMFactory.cpp
+	WASM_VM.cpp
+	Vote.cpp
 )
 
 if (EVMJIT)

@@ -199,9 +199,19 @@ private:
 
 template<class... Args> using Handler = std::shared_ptr<typename Signal<Args...>::HandlerAux>;
 
+enum class TransactionType
+{
+	NullTransaction,				///< Null transaction.
+	ContractCreation,				///< Transaction to create contracts - receiveAddress() is ignored.
+	MessageCall,					///< Transaction to invoke a message call - receiveAddress() is used.
+	WASMContractCreation
+};
+
 struct TransactionSkeleton
 {
-	bool creation = false;
+	//bool creation = false;
+	//by dz
+	TransactionType type = TransactionType::NullTransaction;
 	Address from;
 	Address to;
 	u256 value;

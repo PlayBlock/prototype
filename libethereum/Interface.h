@@ -84,7 +84,7 @@ public:
 
 	/// Submits a new contract-creation transaction.
 	/// @returns the new contract's address (assuming it all goes through).
-	Address submitTransaction(Secret const& _secret, u256 const& _endowment, bytes const& _init, u256 const& _gas = 1000000, u256 const& _gasPrice = DefaultGasPrice, u256 const& _nonce = Invalid256);
+	Address submitTransaction(Secret const& _secret, TransactionType _type, u256 const& _endowment, bytes const& _init, u256 const& _gas = 1000000, u256 const& _gasPrice = DefaultGasPrice, u256 const& _nonce = Invalid256);
 
 	/// Blocks until all pending transactions have been processed.
 	virtual void flushTransactions() = 0;

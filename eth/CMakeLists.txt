@@ -3,6 +3,7 @@ set(
     AccountManager.cpp AccountManager.h
     main.cpp
     MinerAux.h
+    Register.cpp
 )
 
 
