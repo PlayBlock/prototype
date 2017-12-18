@@ -58,9 +58,11 @@ string const c_sealEngine = "sealEngine";
 string const c_params = "params";
 string const c_genesis = "genesis";
 string const c_accounts = "accounts";
+/// for dpos
+string const c_privateKeys = "privateKeys";
 
 set<string> const c_knownChainConfigFields =
-	{c_sealEngine, c_params, c_genesis, c_accounts};
+	{c_sealEngine, c_params, c_genesis, c_accounts, c_privateKeys};
 
 string const c_minGasLimit = "minGasLimit";
 string const c_maxGasLimit = "maxGasLimit";
@@ -83,12 +85,16 @@ string const c_networkID = "networkID";
 string const c_allowFutureBlocks = "allowFutureBlocks";
 string const c_registrar = "registrar";
 
+//for dpos
+string const c_enableStaleProduction = "enableStaleProduction";
+string const c_producerAccounts = "producerAccounts";
+
 set<string> const c_knownParamNames = {
 	c_minGasLimit, c_maxGasLimit, c_gasLimitBoundDivisor, c_homesteadForkBlock,
 	c_EIP150ForkBlock, c_EIP158ForkBlock, c_accountStartNonce, c_maximumExtraDataSize,
 	c_tieBreakingGas, c_blockReward, c_byzantiumForkBlock, c_constantinopleForkBlock,
 	c_daoHardforkBlock, c_minimumDifficulty, c_difficultyBoundDivisor, c_durationLimit,
-	c_chainID, c_networkID, c_allowFutureBlocks, c_registrar
+	c_chainID, c_networkID, c_allowFutureBlocks, c_registrar, c_enableStaleProduction, c_producerAccounts
 };
 } // anonymous namespace
 
@@ -135,6 +141,25 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 		cp.networkID = int(u256(fromBigEndian<u256>(fromHex(params.at(c_networkID).get_str()))));
 	cp.allowFutureBlocks = params.count(c_allowFutureBlocks);
 
+	/// for dpos
+	cp.enableStaleProduction = params.count(c_enableStaleProduction);
+
+	if (params.count(c_producerAccounts))
+	{
+		for (auto& a : params[c_producerAccounts].get_array())
+		{
+			cp.accountNames.insert(types::AccountName(a.get_str()));
+		}
+	}
+
+	// privateKeys
+	if (obj.count("privateKeys") > 0)
+	{
+		js::mObject keys = obj["privateKeys"].get_obj();
+		for (const auto& key : keys)
+			cp.privateKeys[Address(key.first)] = Secret(key.second.get_str());
+	}
+
 	// genesis
 	string genesisStr = json_spirit::write_string(obj[c_genesis], false);
 	cp = cp.loadGenesis(genesisStr, _stateRoot);
@@ -165,9 +190,12 @@ string const c_extraData = "extraData";
 string const c_mixHash = "mixHash";
 string const c_nonce = "nonce";
 
+/// for dpos
+string const c_initialProducers = "initialProducers";
+
 set<string> const c_knownGenesisFields = {
 	c_parentHash, c_coinbase, c_author, c_difficulty, c_gasLimit, c_gasUsed, c_timestamp,
-	c_extraData, c_mixHash, c_nonce
+	c_extraData, c_mixHash, c_nonce, c_initialProducers
 };
 }
 
@@ -188,6 +216,18 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 	cp.gasUsed = genesis.count(c_gasUsed) ? u256(fromBigEndian<u256>(fromHex(genesis[c_gasUsed].get_str()))) : 0;
 	cp.timestamp = u256(fromBigEndian<u256>(fromHex(genesis[c_timestamp].get_str())));
 	cp.extraData = bytes(fromHex(genesis[c_extraData].get_str()));
+
+	// for dpos: get the initial producers
+	auto initialProducers = genesis["initialProducers"].get_array();
+	if (initialProducers.size() != cp.initialProducers.size())
+		BOOST_THROW_EXCEPTION(NoEnoughProducers()
+			<< errinfo_required(bigint(cp.initialProducers.size()))
+			<< errinfo_got(bigint(initialProducers.size())));
+
+	for (int i = 0; i < initialProducers.size(); i++)
+	{
+		cp.initialProducers[i] = Address(initialProducers[i].get_str());
+	}
 
 	// magic code for handling ethash stuff:
 	if (genesis.count(c_mixHash) && genesis.count(c_nonce))

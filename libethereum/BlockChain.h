@@ -42,6 +42,7 @@
 #include <unordered_set>
 #include <boost/filesystem/path.hpp>
 
+
 namespace std
 {
 template <> struct hash<pair<dev::h256, unsigned>>
@@ -63,6 +64,8 @@ static const h256s NullH256s;
 class State;
 class Block;
 class ImportPerformanceLogger;
+
+class producer_plugin;
 
 DEV_SIMPLE_EXCEPTION(AlreadyHaveBlock);
 DEV_SIMPLE_EXCEPTION(FutureTime);
@@ -319,6 +322,10 @@ public:
 	/// Change the chain start block.
 	void setChainStartBlockNumber(unsigned _number);
 
+	/// for dpos
+	void setProducer(std::shared_ptr<class producer_plugin>& p) { m_producer_plugin = p; };
+	const boost::filesystem::path& dbPath()const { return m_dbPath; }
+
 private:
 	static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
 
@@ -421,6 +428,10 @@ private:
 	std::function<void(BlockHeader const&)> m_onBlockImport;										///< Called if we have imported a new block into the db
 
 	boost::filesystem::path m_dbPath;
+	
+	/// for dpos
+	std::shared_ptr<producer_plugin> m_producer_plugin;
+
 
 	friend std::ostream& operator<<(std::ostream& _out, BlockChain const& _bc);
 };

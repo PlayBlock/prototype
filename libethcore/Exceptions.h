@@ -86,5 +86,11 @@ DEV_SIMPLE_EXCEPTION(DatabaseAlreadyOpen);
 DEV_SIMPLE_EXCEPTION(DAGCreationFailure);
 DEV_SIMPLE_EXCEPTION(DAGComputeFailure);
 
+// for dpos
+//DEV_SIMPLE_EXCEPTION(NoEnoughProducers);
+//DEV_SIMPLE_EXCEPTION(InvalidProducerNum);
+DEV_SIMPLE_EXCEPTION(InvalidProducer);
+
+
 }
 }

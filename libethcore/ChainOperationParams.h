@@ -23,9 +23,11 @@
 
 #include <libdevcore/Common.h>
 #include <libethcore/Precompiled.h>
+#include <libdevcrypto/Common.h>
 
 #include "Common.h"
 #include "EVMSchedule.h"
+#include <libproducer/types.hpp>
 
 namespace dev
 {
@@ -99,6 +101,13 @@ public:
 	u256 durationLimit;
 	bool allowFutureBlocks = false;
 	u256 registrar;
+
+	/// for dpos
+	bool enableStaleProduction = false;
+	types::AccountNames accountNames;
+
+	/// private keys for producer
+	std::unordered_map<Address, Secret> privateKeys;
 
 	/// Precompiled contracts as specified in the chain params.
 	std::unordered_map<Address, PrecompiledContract> precompiled;

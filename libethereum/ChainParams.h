@@ -26,6 +26,7 @@
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/BlockHeader.h>
 #include "Account.h"
+#include <libproducer/config.hpp>
 
 namespace dev
 {
@@ -66,6 +67,9 @@ struct ChainParams: public ChainOperationParams
 	ChainParams loadConfig(std::string const& _json, h256 const& _stateRoot = h256()) const;
 	ChainParams loadGenesisState(std::string const& _json,  h256 const& _stateRoot = h256()) const;
 	ChainParams loadGenesis(std::string const& _json, h256 const& _stateRoot = h256()) const;
+
+	/// for dpos
+	std::array<Address, config::BlocksPerRound> initialProducers;
 
 private:
 	void populateFromGenesis(bytes const& _genesisRLP, AccountMap const& _state);

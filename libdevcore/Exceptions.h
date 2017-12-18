@@ -66,6 +66,10 @@ DEV_SIMPLE_EXCEPTION(FailedInvariant);
 DEV_SIMPLE_EXCEPTION(ValueTooLarge);
 DEV_SIMPLE_EXCEPTION(UnknownField);
 
+// for dpos
+DEV_SIMPLE_EXCEPTION(NoEnoughProducers);
+DEV_SIMPLE_EXCEPTION(InvalidProducerNum);
+
 struct InterfaceNotSupported: virtual Exception { public: InterfaceNotSupported(std::string const& _f): Exception("Interface " + _f + " not supported.") {} };
 struct ExternalFunctionFailure: virtual Exception { public: ExternalFunctionFailure(std::string const& _f): Exception("Function " + _f + "() failed.") {} };
 

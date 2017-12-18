@@ -44,3 +44,4 @@ jsonrpcstub_create(web3jsonrpc test.json
 )
 
 target_link_libraries(web3jsonrpc ethashseal webthree libjson-rpc-cpp::server)
+target_include_directories(web3jsonrpc PRIVATE ../utils ../utils/fc/include)

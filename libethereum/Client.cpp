@@ -75,7 +75,7 @@ Client::Client(
 	m_preSeal(chainParams().accountStartNonce),
 	m_postSeal(chainParams().accountStartNonce),
 	m_working(chainParams().accountStartNonce),
-	m_producer_plugin(make_shared<class producer_plugin>(m_bc))
+	m_producer_plugin(make_shared<class producer_plugin>(m_bc, *this))
 {
 	init(_host, _dbPath, _forceAction, _networkID);
 }
@@ -121,6 +121,9 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 
 	_extNet->addCapability(host, EthereumHost::staticName(), EthereumHost::c_oldProtocolVersion); //TODO: remove this once v61+ protocol is common
 
+	// for dpos
+	m_producer_plugin->get_chain_controller().setStateDB(m_stateDB);
+	m_bc.setProducer(m_producer_plugin);
 
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
@@ -576,6 +579,58 @@ void Client::startSealing()
 		clog(ClientNote) << "You need to set an author in order to seal!";
 }
 
+void Client::generateSeal(BlockHeader& bh)
+{
+	auto tid = std::this_thread::get_id();
+	static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
+
+	uint64_t tryNonce = s_eng();
+
+	enum { MixHashField = 0, NonceField = 1 };
+
+	bh.setSeal(MixHashField, h256());
+	bh.setSeal(NonceField, (h64)(u64)tryNonce);
+}
+
+void Client::generate_block(
+	fc::time_point_sec when,
+	const types::AccountName& producer,
+	const fc::ecc::private_key& block_signing_private_key
+	//block_schedule::factory scheduler
+)
+{
+	// 所有出块条件全部具备时开始出块
+	m_working.currentBlock().setTimestamp(u256(when.sec_since_epoch()));
+
+	clog(ClientTrace) << "Rejigging seal engine...";
+	DEV_WRITE_GUARDED(x_working)
+	{
+		if (m_working.isSealed())
+		{
+			clog(ClientNote) << "Tried to seal sealed block...";
+			return;
+		}
+		m_working.commitToSeal(bc(), m_extraData);
+	}
+	DEV_READ_GUARDED(x_working)
+	{
+		DEV_WRITE_GUARDED(x_postSeal)
+			m_postSeal = m_working;
+		m_sealingInfo = m_working.info();
+	}
+
+	generateSeal(m_sealingInfo);
+	m_sealingInfo.sign(block_signing_private_key);
+
+	RLPStream blockHeaderRLP;
+	m_sealingInfo.streamRLP(blockHeaderRLP);
+
+	if (!submitSealed(blockHeaderRLP.out()))
+	{
+		std::cerr << "submitSealed error!" << std::endl;
+	}
+}
+
 void Client::rejigSealing()
 {
 	if ((wouldSeal() || remoteActive()) && !isMajorSyncing())
@@ -584,31 +639,9 @@ void Client::rejigSealing()
 		{
 			m_wouldButShouldnot = false;
 
-			clog(ClientTrace) << "Rejigging seal engine...";
-			DEV_WRITE_GUARDED(x_working)
+			if (m_producer_plugin->should_produce() != block_production_condition::block_production_condition_enum::produced)
 			{
-				if (m_working.isSealed())
-				{
-					clog(ClientNote) << "Tried to seal sealed block...";
-					return;
-				}
-				m_working.commitToSeal(bc(), m_extraData);
-			}
-			DEV_READ_GUARDED(x_working)
-			{
-				DEV_WRITE_GUARDED(x_postSeal)
-					m_postSeal = m_working;
-				m_sealingInfo = m_working.info();
-			}
-
-			if (wouldSeal())
-			{
-				sealEngine()->onSealGenerated([=](bytes const& header){
-					if (!this->submitSealed(header))
-						clog(ClientNote) << "Submitting block failed...";
-				});
-				ctrace << "Generating seal on" << m_sealingInfo.hash(WithoutSeal) << "#" << m_sealingInfo.number();
-				sealEngine()->generateSeal(m_sealingInfo);
+				return;
 			}
 		}
 		else
@@ -668,7 +701,7 @@ void Client::doWork(bool _doWait)
 
 	tick();
 
-	//rejigSealing();
+	rejigSealing();
 
 	callQueuedFunctions();
 

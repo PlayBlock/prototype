@@ -26,9 +26,11 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/Guards.h>
+#include <libdevcrypto/Common.h>
 #include "Common.h"
 #include "ChainOperationParams.h"
 #include "Exceptions.h"
+#include <libproducer/types.hpp>
 
 namespace dev
 {
@@ -210,6 +212,21 @@ private:
 	mutable h256 m_hash;			///< (Memoised) SHA3 hash of the block header with seal.
 	mutable h256 m_hashWithout;		///< (Memoised) SHA3 hash of the block header without seal.
 	mutable Mutex m_hashLock;		///< A lock for both m_hash and m_hashWithout.
+
+/// for dpos
+public:
+	void sign(const fc::ecc::private_key& signer);
+	bool verifySign() const;
+
+	types::AccountName const& producer() const;
+
+	const SignatureStruct & signature() const { return _signature; };
+
+private:
+	
+	SignatureStruct _signature;
+	mutable types::AccountName _producer;
+
 };
 
 inline std::ostream& operator<<(std::ostream& _out, BlockHeader const& _bi)

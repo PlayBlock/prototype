@@ -348,6 +348,13 @@ protected:
 	std::atomic<bool> m_syncBlockQueue = {false};
 
 	bytes m_extraData;
+
+	/// for dpos
+public:
+	void generate_block(fc::time_point_sec when, const types::AccountName& producer, const fc::ecc::private_key& block_signing_private_key);
+
+private:
+	void generateSeal(BlockHeader& bh);
 	std::shared_ptr<class producer_plugin> m_producer_plugin;
 };
 
