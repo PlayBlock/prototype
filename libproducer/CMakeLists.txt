@@ -1,6 +1,6 @@
 
 
-file(GLOB sources "*.cpp" "*.h")
+file(GLOB sources "*.cpp" "*.hpp")
 
 add_library(producer ${sources})
 
