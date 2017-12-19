@@ -26,9 +26,16 @@
 #include <libdevcrypto/Common.h>
 #include <libdevcrypto/LibSnark.h>
 #include <libethcore/Common.h>
+
+//#include <libevm/Vote.h>
+//#include <libethereum/chainbase.hpp>
+//#include <libethereum/State.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+
+
 
 PrecompiledRegistrar* PrecompiledRegistrar::s_this = nullptr;
 
@@ -48,8 +55,8 @@ PrecompiledPricer const& PrecompiledRegistrar::pricer(std::string const& _name)
 
 namespace
 {
-
-ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in)
+	class dev::eth::State;
+ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in, Address const& _address, State& _state)
 {
 	struct
 	{
@@ -83,17 +90,17 @@ ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in)
 	return {true, {}};
 }
 
-ETH_REGISTER_PRECOMPILED(sha256)(bytesConstRef _in)
+ETH_REGISTER_PRECOMPILED(sha256)(bytesConstRef _in, Address const& _address, State& _state)
 {
 	return {true, dev::sha256(_in).asBytes()};
 }
 
-ETH_REGISTER_PRECOMPILED(ripemd160)(bytesConstRef _in)
+ETH_REGISTER_PRECOMPILED(ripemd160)(bytesConstRef _in, Address const& _address, State& _state)
 {
 	return {true, h256(dev::ripemd160(_in), h256::AlignRight).asBytes()};
 }
 
-ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in)
+ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in, Address const& _address, State& _state)
 {
 	return {true, _in.toBytes()};
 }
@@ -120,7 +127,7 @@ bigint parseBigEndianRightPadded(bytesConstRef _in, bigint const& _begin, bigint
 	return ret;
 }
 
-ETH_REGISTER_PRECOMPILED(modexp)(bytesConstRef _in)
+ETH_REGISTER_PRECOMPILED(modexp)(bytesConstRef _in, Address const& _address, State& _state)
 {
 	bigint const baseLength(parseBigEndianRightPadded(_in, 0, 32));
 	bigint const expLength(parseBigEndianRightPadded(_in, 32, 32));
@@ -184,17 +191,17 @@ ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in)
 	return multComplexity(maxLength) * max<bigint>(adjustedExpLength, 1) / 20;
 }
 
-ETH_REGISTER_PRECOMPILED(alt_bn128_G1_add)(bytesConstRef _in)
+ETH_REGISTER_PRECOMPILED(alt_bn128_G1_add)(bytesConstRef _in, Address const& _address, State& _state)
 {
 	return dev::crypto::alt_bn128_G1_add(_in);
 }
 
-ETH_REGISTER_PRECOMPILED(alt_bn128_G1_mul)(bytesConstRef _in)
+ETH_REGISTER_PRECOMPILED(alt_bn128_G1_mul)(bytesConstRef _in, Address const& _address, State& _state)
 {
 	return dev::crypto::alt_bn128_G1_mul(_in);
 }
 
-ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in)
+ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in, Address const& _address, State& _state)
 {
 	return dev::crypto::alt_bn128_pairing_product(_in);
 }

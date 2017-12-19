@@ -25,13 +25,13 @@
 #include <functional>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Exceptions.h>
-
+#include <libethcore/Common.h>
 namespace dev
 {
 namespace eth
 {
-
-using PrecompiledExecutor = std::function<std::pair<bool, bytes>(bytesConstRef _in)>;
+	class State;
+using PrecompiledExecutor = std::function<std::pair<bool, bytes>(bytesConstRef _in, Address const& _address, State& _state)>;
 using PrecompiledPricer = std::function<bigint(bytesConstRef _in)>;
 
 DEV_SIMPLE_EXCEPTION(ExecutorNotFound);
@@ -65,7 +65,7 @@ private:
 };
 
 // TODO: unregister on unload with a static object.
-#define ETH_REGISTER_PRECOMPILED(Name) static std::pair<bool, bytes> __eth_registerPrecompiledFunction ## Name(bytesConstRef _in); static PrecompiledExecutor __eth_registerPrecompiledFactory ## Name = ::dev::eth::PrecompiledRegistrar::registerExecutor(#Name, &__eth_registerPrecompiledFunction ## Name); static std::pair<bool, bytes> __eth_registerPrecompiledFunction ## Name
+#define ETH_REGISTER_PRECOMPILED(Name) static std::pair<bool, bytes> __eth_registerPrecompiledFunction ## Name(bytesConstRef _in, Address const& _address, State& _state); static PrecompiledExecutor __eth_registerPrecompiledFactory ## Name = ::dev::eth::PrecompiledRegistrar::registerExecutor(#Name, &__eth_registerPrecompiledFunction ## Name); static std::pair<bool, bytes> __eth_registerPrecompiledFunction ## Name
 #define ETH_REGISTER_PRECOMPILED_PRICER(Name) static bigint __eth_registerPricerFunction ## Name(bytesConstRef _in); static PrecompiledPricer __eth_registerPricerFactory ## Name = ::dev::eth::PrecompiledRegistrar::registerPricer(#Name, &__eth_registerPricerFunction ## Name); static bigint __eth_registerPricerFunction ## Name
 }
 }

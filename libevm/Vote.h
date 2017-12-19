@@ -10,7 +10,7 @@
 class Vote
 {
 public:
-	Vote(std::unordered_map<dev::u256, dev::u256>& map, std::unordered_map<dev::u256, dev::u256>& mapChange, const dev::Address& address, bool isCandidate = false, uint64_t votedNumber = 0,
+	Vote(std::map<dev::h256, std::pair<dev::u256, dev::u256>>& map, std::unordered_map<dev::u256, dev::u256>& mapChange, const dev::Address& address, bool isCandidate = false, uint64_t votedNumber = 0,
 		uint64_t unAssignNumber = 0, uint64_t assignNumbe = 0, bool isVoted = false,
 		const dev::Address& voteTo = dev::Address(), uint64_t receivedVoteNumber = 0);
 	~Vote();
@@ -55,7 +55,7 @@ protected:
 	dev::Address m_voteTo;                                      ///将已分配投票权投给的地址
 	uint64_t m_receivedVoteNumber;                              ///收到他人的投票权，这部分投票权只能作为已分配投票全，不能转为尚未分配投票权
 
-	std::unordered_map<dev::u256, dev::u256>& m_map;            ///存储投票信息的map
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>>& m_map;            ///存储投票信息的map
 	dev::Address m_address;                                     ///投票信息对应的地址
 	std::unordered_map<dev::u256, dev::u256>& m_mapChange;      ///存储投票信息改变的map
 

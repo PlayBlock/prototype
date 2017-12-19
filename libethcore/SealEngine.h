@@ -83,7 +83,7 @@ public:
 		return m_params.precompiled.count(_a) != 0 && _blockNumber >= m_params.precompiled.at(_a).startingBlock();
 	}
 	virtual bigint costOfPrecompiled(Address const& _a, bytesConstRef _in, u256 const&) const { return m_params.precompiled.at(_a).cost(_in); }
-	virtual std::pair<bool, bytes> executePrecompiled(Address const& _a, bytesConstRef _in, u256 const&) const { return m_params.precompiled.at(_a).execute(_in); }
+	virtual std::pair<bool, bytes> executePrecompiled(Address const& _a, bytesConstRef _in, u256 const&, Address _address, State& _state) const { return m_params.precompiled.at(_a).execute(_in, _address, _state); }
 
 protected:
 	virtual bool onOptionChanging(std::string const&, bytes const&) { return true; }

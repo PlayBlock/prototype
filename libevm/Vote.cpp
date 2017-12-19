@@ -1,8 +1,9 @@
 
+#include <libdevcore/SHA3.h>
 #include "Vote.h"
 
 
-Vote::Vote(std::unordered_map<dev::u256, dev::u256>& map, std::unordered_map<dev::u256, dev::u256>& mapChange, const dev::Address& address, bool isCandidate, uint64_t votedNumber,
+Vote::Vote(std::map<dev::h256, std::pair<dev::u256,dev::u256>>& map, std::unordered_map<dev::u256, dev::u256>& mapChange, const dev::Address& address, bool isCandidate, uint64_t votedNumber,
 	uint64_t unAssignNumber, uint64_t assignNumbe, bool isVoted, const dev::Address& voteTo, uint64_t receivedVoteNumber)
 	: m_map(map), m_mapChange(mapChange), m_address(address), m_isCandidate(isCandidate), m_votedNumber(votedNumber), m_unAssignNumber(unAssignNumber),
 	m_assignNumber(assignNumbe), m_isVoted(isVoted), m_voteTo(voteTo), m_receivedVoteNumber(receivedVoteNumber)
@@ -144,7 +145,7 @@ void Vote::saveInMaps(const dev::bytes& data)
 	for (uint64_t i = 0; i < page; i++)
 	{
 		memcpy(pageH256.data(), data.data() + (i * 32), 32);
-		m_map[expand(i)] = (dev::u256)pageH256;
+		//m_map[expand(i)] = (dev::u256)pageH256;
 		m_mapChange[expand(i)] = (dev::u256)pageH256;
 	}
 
@@ -157,7 +158,7 @@ void Vote::saveInMaps(const dev::bytes& data)
 	//{
 	//	std::cout << "i.first: " << i.first.str() << std::endl;
 	//}
-	m_map[expand(page)] = (dev::u256)pageH256;
+	//m_map[expand(page)] = (dev::u256)pageH256;
 	m_mapChange[expand(page)] = (dev::u256)pageH256;
 }
 
@@ -168,20 +169,22 @@ dev::bytes Vote::loadFromMap(uint64_t size)
 	dev::h256 pageH256;
 	dev::bytes res;
 	dev::bytes bytesTemp;
-	std::unordered_map<dev::u256, dev::u256>::iterator it;
+	//std::unordered_map<dev::u256, dev::u256>::iterator it;
 
 	// Write complete pages.
 	for (uint64_t i = 0; i < page; i++)
 	{
-		dev::u256 key = expand(i);
-		it = m_map.find(key);
+		dev::u256 const key = expand(i);
+		dev::h256 const hashedKey(key);
+		auto it = m_map.find(hashedKey);
 		if (it == m_map.end())
 		{
 			pageH256 = dev::h256();
 		}
 		else
 		{
-			pageH256 = (dev::h256)m_map.at(expand(i));
+			//pageH256 = (dev::h256)m_map.at(expand(i));
+			pageH256 = (dev::h256)(it->second.second);
 		}
 		bytesTemp = pageH256.asBytes();
 		res.insert(res.end(), bytesTemp.begin(), bytesTemp.end());
@@ -189,14 +192,18 @@ dev::bytes Vote::loadFromMap(uint64_t size)
 
 	// Write last page.
 	dev::u256 key = expand(page);
-	it = m_map.find(key);
+	dev::h256 const hashedKey(key);
+	//it = m_map.find(key);
+	auto it = m_map.find(hashedKey);
+
 	if (it == m_map.end())
 	{
 		pageH256 = dev::h256();
 	}
 	else
 	{
-		pageH256 = (dev::h256)m_map.at(expand(page));
+		//pageH256 = (dev::h256)m_map.at(expand(page));
+		pageH256 = (dev::h256)(it->second.second);
 	}
 	bytesTemp = pageH256.asBytes();
 	res.insert(res.end(), bytesTemp.begin(), bytesTemp.begin() + segment);

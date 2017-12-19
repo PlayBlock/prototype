@@ -55,7 +55,7 @@ public:
 	);
 
 	bigint cost(bytesConstRef _in) const { return m_cost(_in); }
-	std::pair<bool, bytes> execute(bytesConstRef _in) const { return m_execute(_in); }
+	std::pair<bool, bytes> execute(bytesConstRef _in, Address _address, State& _state) const { return m_execute(_in, _address, _state); }
 
 	u256 const& startingBlock() const { return m_startingBlock; }
 
