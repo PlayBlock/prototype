@@ -804,89 +804,218 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 	bool isImportedAndBest = false;
 	// This might be the new best block...
 	h256 last = currentHash();
-	if (number() < _block.info.number())
-	{
-		// don't include bi.hash() in treeRoute, since it's not yet in details DB...
-		// just tack it on afterwards.
-		unsigned commonIndex;
-		tie(route, common, commonIndex) = treeRoute(last, _block.info.parentHash());
-		route.push_back(_block.info.hash());
 
-		// Most of the time these two will be equal - only when we're doing a chain revert will they not be
-		if (common != last)
-			DEV_READ_GUARDED(x_lastBlockHash)
-				clearCachesDuringChainReversion(number(common) + 1);
-
-		// Go through ret backwards (i.e. from new head to common) until hash != last.parent and
-		// update m_transactionAddresses, m_blockHashes
-		for (auto i = route.rbegin(); i != route.rend() && *i != common; ++i)
+	// by maml, 整个导入过程捕获异常，可能出现的异常有：
+	bool expection = false;
+	try {
+		// 如果当前块高度小于最后一个块的父块的高度，并且收到的块的父块与新块不是相同的块，做分叉处理
+		if (number() < _block.info.number())
 		{
-			BlockHeader tbi;
-			if (*i == _block.info.hash())
-				tbi = _block.info;
-			else
-				tbi = BlockHeader(block(*i));
+			// don't include bi.hash() in treeRoute, since it's not yet in details DB...
+			// just tack it on afterwards.
+			unsigned commonIndex;
+			tie(route, common, commonIndex) = treeRoute(last, _block.info.parentHash(), true, true, true);
+			route.push_back(_block.info.hash());
 
-			//更新下一轮生产顺序，更新全局动态数据和全局状态数据
-			if (m_producer_plugin)
+			// Most of the time these two will be equal - only when we're doing a chain revert will they not be
+			if (common != last)
 			{
-				m_producer_plugin->get_chain_controller().push_block(tbi);
-			}
-			else
-			{
-				cwarn << "no set producer_plugin";
-			}
+				DEV_READ_GUARDED(x_lastBlockHash)
+					clearCachesDuringChainReversion(number(common) + 1);
 
-			// Collate logs into blooms.
-			h256s alteredBlooms;
-			{
-				LogBloom blockBloom = tbi.logBloom();
-				blockBloom.shiftBloom<3>(sha3(tbi.author().ref()));
-
-				// Pre-memoize everything we need before locking x_blocksBlooms
-				for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
-					blocksBlooms(chunkId(level, index / c_bloomIndexSize));
-
-				WriteGuard l(x_blocksBlooms);
-				for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
+				// by maml, producer中的数据库回滚到common块
+				if (m_producer_plugin)
 				{
-					unsigned i = index / c_bloomIndexSize;
-					unsigned o = index % c_bloomIndexSize;
-					alteredBlooms.push_back(chunkId(level, i));
-					m_blocksBlooms[alteredBlooms.back()].blooms[o] |= blockBloom;
+					m_producer_plugin->get_chain_controller().databaseReversion(number(common));
+				}
+				else
+				{
+					cwarn << "no set producer_plugin";
 				}
 			}
-			// Collate transaction hashes and remember who they were.
-			//h256s newTransactionAddresses;
+
+			//by maml, commonIndex is a joke, find the real common index
+			uint32_t realCommonIndex = 0;
+			for (int i = 0; i < route.size(); i++)
 			{
-				bytes blockBytes;
-				RLP blockRLP(*i == _block.info.hash() ? _block.block : &(blockBytes = block(*i)));
-				TransactionAddress ta;
-				ta.blockHash = tbi.hash();
-				for (ta.index = 0; ta.index < blockRLP[1].itemCount(); ++ta.index)
-					extrasBatch.Put(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+				if (route[i] == common)
+				{
+					realCommonIndex = i;
+					break;
+				}
 			}
+			assert(route[realCommonIndex] == common);
 
-			// Update database with them.
-			ReadGuard l1(x_blocksBlooms);
-			for (auto const& h: alteredBlooms)
-				extrasBatch.Put(toSlice(h, ExtraBlocksBlooms), (ldb::Slice)dev::ref(m_blocksBlooms[h].rlp()));
-			extrasBatch.Put(toSlice(h256(tbi.number()), ExtraBlockHash), (ldb::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
+			/// 导入过程捕获异常，可能抛出的异常：InvalidProducer
+			try {
+				// Go through ret backwards (i.e. from new head to common) until hash != last.parent and
+				// update m_transactionAddresses, m_blockHashes
+				for (int i = realCommonIndex + 1; i < route.size(); i++)
+				{
+					auto curBlock = route[i];
+
+					BlockHeader tbi;
+					if (curBlock == _block.info.hash())
+						tbi = _block.info;
+					else
+						tbi = BlockHeader(block(curBlock));
+
+					//更新下一轮生产顺序，更新全局动态数据和全局状态数据
+					if (m_producer_plugin)
+					{
+						m_producer_plugin->get_chain_controller().push_block(tbi);
+					}
+					else
+					{
+						cwarn << "no set producer_plugin";
+					}
+
+					// Collate logs into blooms.
+					h256s alteredBlooms;
+					{
+						LogBloom blockBloom = tbi.logBloom();
+						blockBloom.shiftBloom<3>(sha3(tbi.author().ref()));
+
+						// Pre-memoize everything we need before locking x_blocksBlooms
+						for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
+							blocksBlooms(chunkId(level, index / c_bloomIndexSize));
+
+						WriteGuard l(x_blocksBlooms);
+						for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
+						{
+							unsigned i = index / c_bloomIndexSize;
+							unsigned o = index % c_bloomIndexSize;
+							alteredBlooms.push_back(chunkId(level, i));
+							m_blocksBlooms[alteredBlooms.back()].blooms[o] |= blockBloom;
+						}
+					}
+					// Collate transaction hashes and remember who they were.
+					//h256s newTransactionAddresses;
+					{
+						bytes blockBytes;
+						RLP blockRLP(curBlock == _block.info.hash() ? _block.block : &(blockBytes = block(curBlock)));
+						TransactionAddress ta;
+						ta.blockHash = tbi.hash();
+						for (ta.index = 0; ta.index < blockRLP[1].itemCount(); ++ta.index)
+							extrasBatch.Put(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+					}
+
+					// Update database with them.
+					ReadGuard l1(x_blocksBlooms);
+					for (auto const& h : alteredBlooms)
+						extrasBatch.Put(toSlice(h, ExtraBlocksBlooms), (ldb::Slice)dev::ref(m_blocksBlooms[h].rlp()));
+					extrasBatch.Put(toSlice(h256(tbi.number()), ExtraBlockHash), (ldb::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
+				}
+			}
+			catch (dev::eth::InvalidProducer) {
+				/// 切换分叉时，验证分叉上的块出现异常，切换会之前的分叉
+
+				// bloom 回滚到common块
+				DEV_READ_GUARDED(x_lastBlockHash)
+					clearCachesDuringChainReversion(number(common) + 1);
+
+				// producer中的数据库回滚到common块
+				if (m_producer_plugin)
+				{
+					m_producer_plugin->get_chain_controller().databaseReversion(number(common));
+				}
+				else
+				{
+					cwarn << "no set producer_plugin";
+				}
+
+				///依次导入之前分叉上的块
+				for (int i = realCommonIndex-1; i >= 0; i++)
+				{
+					auto curBlock = route[i];
+
+					BlockHeader tbi;
+					if (curBlock == _block.info.hash())
+						tbi = _block.info;
+					else
+						tbi = BlockHeader(block(curBlock));
+
+					//更新下一轮生产顺序，更新全局动态数据和全局状态数据
+					if (m_producer_plugin)
+					{
+						m_producer_plugin->get_chain_controller().push_block(tbi);
+					}
+					else
+					{
+						cwarn << "no set producer_plugin";
+					}
+
+					// Collate logs into blooms.
+					h256s alteredBlooms;
+					{
+						LogBloom blockBloom = tbi.logBloom();
+						blockBloom.shiftBloom<3>(sha3(tbi.author().ref()));
+
+						// Pre-memoize everything we need before locking x_blocksBlooms
+						for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
+							blocksBlooms(chunkId(level, index / c_bloomIndexSize));
+
+						WriteGuard l(x_blocksBlooms);
+						for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
+						{
+							unsigned i = index / c_bloomIndexSize;
+							unsigned o = index % c_bloomIndexSize;
+							alteredBlooms.push_back(chunkId(level, i));
+							m_blocksBlooms[alteredBlooms.back()].blooms[o] |= blockBloom;
+						}
+					}
+					// Collate transaction hashes and remember who they were.
+					//h256s newTransactionAddresses;
+					{
+						bytes blockBytes;
+						RLP blockRLP(curBlock == _block.info.hash() ? _block.block : &(blockBytes = block(curBlock)));
+						TransactionAddress ta;
+						ta.blockHash = tbi.hash();
+						for (ta.index = 0; ta.index < blockRLP[1].itemCount(); ++ta.index)
+							extrasBatch.Put(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+					}
+
+					// Update database with them.
+					ReadGuard l1(x_blocksBlooms);
+					for (auto const& h : alteredBlooms)
+						extrasBatch.Put(toSlice(h, ExtraBlocksBlooms), (ldb::Slice)dev::ref(m_blocksBlooms[h].rlp()));
+					extrasBatch.Put(toSlice(h256(tbi.number()), ExtraBlockHash), (ldb::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
+				}
+
+
+				throw;
+			}
+			// FINALLY! change our best hash.
+			{
+				newLastBlockHash = _block.info.hash();
+				newLastBlockNumber = (unsigned)_block.info.number();
+				isImportedAndBest = true;
+			}
+			
+
+			clog(BlockChainNote) << "   Imported and best" << _totalDifficulty << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;
 		}
-
-		// FINALLY! change our best hash.
+		else
 		{
-			newLastBlockHash = _block.info.hash();
-			newLastBlockNumber = (unsigned)_block.info.number();
-			isImportedAndBest = true;
+			clog(BlockChainChat) << "   Imported but not best (oTD:" << details(last).totalDifficulty << " > TD:" << _totalDifficulty << "; " << details(last).number << ".." << _block.info.number() << ")";
 		}
-
-		clog(BlockChainNote) << "   Imported and best" << _totalDifficulty << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;
 	}
-	else
+	catch (dev::eth::ExceedIrreversibleBlock)
 	{
-		clog(BlockChainChat) << "   Imported but not best (oTD:" << details(last).totalDifficulty << " > TD:" << _totalDifficulty << "; " << details(last).number << ".." << _block.info.number() << ")";
+		cwarn << "Exceed Irreversible Block";
+		expection = true;
 	}
+	catch (...)
+	{
+		cwarn << "Unknown exception when import block";
+		expection = true;
+	}
+
+	if (expection)
+	{
+		return ImportRoute{ h256s(), h256s(), _block.transactions };
+	}
+
 
 	ldb::Status o = m_blocksDB->Write(m_writeOptions, &blocksBatch);
 	if (!o.ok())
@@ -1093,7 +1222,7 @@ void BlockChain::rewind(unsigned _newHead)
 	}
 }
 
-tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const& _to, bool _common, bool _pre, bool _post) const
+tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const& _to, bool _common, bool _pre, bool _post, bool _consider_irreversible) const
 {
 	if (!_from || !_to)
 		return make_tuple(h256s(), h256(), 0);
@@ -1125,13 +1254,30 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
 		to = details(to).parent;
 		tn--;
 	}
+
+	uint32_t irreversible_block_num = 0;
+	if (_consider_irreversible)
+	{
+		//获取当前最后一个不可逆转的块高度值
+		irreversible_block_num = m_producer_plugin->get_chain_controller().get_dynamic_global_properties().last_irreversible_block_num;
+	}
+
 	for (;; from = details(from).parent, to = details(to).parent)
 	{
+		if (_consider_irreversible)
+		{
+			// 只有公共块头在当前不可逆转的块之后的块数据，才算作一个有效的公共块会进行回滚分叉处理
+			if (fn < irreversible_block_num)
+				BOOST_THROW_EXCEPTION(ExceedIrreversibleBlock() << errinfo_min(irreversible_block_num) << errinfo_got(fn));
+		}
+
 		if (_pre && (from != to || _common))
 			ret.push_back(from);
 		if (_post && (from != to || (!_pre && _common)))
 			back.push_back(to);
 
+		fn--;
+		tn--;
 		if (from == to)
 			break;
 		if (!from)
