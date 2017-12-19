@@ -341,20 +341,20 @@ void chain_controller::update_global_dynamic_data(const BlockHeader& b) {
 	//   if (missed_blocks)
 	//      wlog("Blockchain continuing after gap of ${b} missed blocks", ("b", missed_blocks));
 
-	//for (uint32_t i = 0; i < missed_blocks; ++i) {
-	//	const auto& producer_missed = get_producer(get_scheduled_producer(i + 1));
-	//	if (producer_missed.owner != b.producer()) {
-	//		/*
-	//		const auto& producer_account = producer_missed.producer_account(*this);
-	//		if( (fc::time_point::now() - b.timestamp) < fc::seconds(30) )
-	//		wlog( "Producer ${name} missed block ${n} around ${t}", ("name",producer_account.name)("n",b.block_num())("t",b.timestamp) );
-	//		*/
+	for (uint32_t i = 0; i < missed_blocks; ++i) {
+		const auto& producer_missed = get_producer(get_scheduled_producer(i + 1));
+		if (producer_missed.owner != b.producer()) {
+			/*
+			const auto& producer_account = producer_missed.producer_account(*this);
+			if( (fc::time_point::now() - b.timestamp) < fc::seconds(30) )
+			wlog( "Producer ${name} missed block ${n} around ${t}", ("name",producer_account.name)("n",b.block_num())("t",b.timestamp) );
+			*/
 
-	//		_db.modify(producer_missed, [&](producer_object& w) {
-	//			w.total_missed++;
-	//		});
-	//	}
-	//}
+			_db.modify(producer_missed, [&](producer_object& w) {
+				w.total_missed++;
+			});
+		}
+	}
 
 	// dynamic global properties updating
 	_db.modify(_dgp, [&](dynamic_global_property_object& dgp) {
@@ -444,12 +444,8 @@ void chain_controller::push_block(const BlockHeader& b)
 
 void chain_controller::apply_block(const BlockHeader& b)
 {
-	//const producer_object& signing_producer = validate_block_header(b);
+	const producer_object& signing_producer = validate_block_header(b);
 	
-	uint32_t slot = get_slot_at_time(fc::time_point_sec(b.timestamp().convert_to<uint32_t>()));
-	types::AccountName scheduled_producer = get_scheduled_producer(slot);
-	const producer_object& signing_producer = get_producer(scheduled_producer);
-
 	update_pvomi_perblock();
 	update_global_dynamic_data(b);
 	update_global_properties(b);
