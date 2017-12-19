@@ -307,21 +307,22 @@ bytes ChainParams::genesisBlock() const
 
 	calculateStateRoot();
 
-	block.appendList(BlockHeader::BasicFields + sealFields)
-			<< parentHash
-			<< EmptyListSHA3	// sha3(uncles)
-			<< author
-			<< stateRoot
-			<< EmptyTrie		// transactions
-			<< EmptyTrie		// receipts
-			<< LogBloom()
-			<< difficulty
-			<< 0				// number
-			<< gasLimit
-			<< gasUsed			// gasUsed
-			<< timestamp
-			<< extraData;
-	block.appendRaw(sealRLP, sealFields);
+	block.appendList(BlockHeader::BasicFields + BlockHeader::SignatureFields)
+		<< parentHash
+		<< EmptyListSHA3	// sha3(uncles)
+		<< author
+		<< stateRoot
+		<< EmptyTrie		// transactions
+		<< EmptyTrie		// receipts
+		<< LogBloom()
+		<< difficulty
+		<< 0				// number
+		<< gasLimit
+		<< gasUsed			// gasUsed
+		<< timestamp
+		<< extraData
+		<< byte(27) << u256() << u256();// signature
+	//block.appendRaw(sealRLP, sealFields);
 	block.appendRaw(RLPEmptyList);
 	block.appendRaw(RLPEmptyList);
 	return block.out();

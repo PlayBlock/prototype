@@ -100,6 +100,7 @@ class BlockHeader
 	friend class BlockChain;
 public:
 	static const unsigned BasicFields = 13;
+	static const unsigned SignatureFields = 3;
 
 	BlockHeader();
 	explicit BlockHeader(bytesConstRef _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256());
@@ -206,6 +207,7 @@ private:
 	Address m_author;
 	u256 m_difficulty;
 
+	// for dpos: replace by signature
 	std::vector<bytes> m_seal;		///< Additional (RLP-encoded) header fields.
 	mutable Mutex m_sealLock;
 
@@ -220,12 +222,12 @@ public:
 
 	types::AccountName const& producer() const;
 
-	const SignatureStruct & signature() const { return _signature; };
+	const SignatureStruct & signature() const { return m_signature; };
 
 private:
 	
-	SignatureStruct _signature;
-	mutable types::AccountName _producer;
+	SignatureStruct m_signature;
+	mutable types::AccountName m_producer;
 
 };
 
