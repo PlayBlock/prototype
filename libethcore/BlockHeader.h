@@ -221,8 +221,7 @@ public:
 	bool verifySign() const;
 
 	types::AccountName const& producer() const;
-
-	const SignatureStruct & signature() const { return m_signature; };
+	const SignatureStruct& signature() const { return m_signature; }
 
 private:
 	

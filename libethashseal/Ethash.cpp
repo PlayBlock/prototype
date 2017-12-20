@@ -244,6 +244,7 @@ void Ethash::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) co
 bool Ethash::quickVerifySeal(BlockHeader const& _bi) const
 {
 	// for dpos: no need to verify pow seal
+    _bi.number();
 	return true;
 
 	//if (_bi.number() >= ETHASH_EPOCH_LENGTH * 2048)
@@ -264,6 +265,7 @@ bool Ethash::quickVerifySeal(BlockHeader const& _bi) const
 bool Ethash::verifySeal(BlockHeader const& _bi) const
 {
 	// for dpos: no need to verify pow seal
+    _bi.number();
 	return true;
 
 #if 0

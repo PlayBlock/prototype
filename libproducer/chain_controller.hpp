@@ -25,8 +25,8 @@ public:
 	chain_controller(chain_controller&&) = default;
 	~chain_controller();
 
-	void chain_controller::initialize_indexes();
-	void chain_controller::initialize_chain(const dev::eth::BlockChain& bc);
+	void initialize_indexes();
+	void initialize_chain(const dev::eth::BlockChain& bc);
 
 
 	fc::time_point_sec get_slot_time(const uint32_t slot_num) const;

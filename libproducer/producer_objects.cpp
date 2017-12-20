@@ -124,7 +124,7 @@ ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db
 
    // Start each producer that finished his lap on the next one, and update the global race time.
    try {
-	   if (boost::distance(LapCompleters) < AllProducersByFinishTime.size()
+	   if ((unsigned)boost::distance(LapCompleters) < AllProducersByFinishTime.size()
 		   && newRaceTime < std::numeric_limits<UInt128>::max()) {
 		   //ilog("Processed producer race. ${count} producers completed a lap at virtual time ${time}",
 		   //     ("count", (int64_t)boost::distance(LapCompleters))("time", newRaceTime));

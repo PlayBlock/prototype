@@ -224,7 +224,7 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 			<< errinfo_required(bigint(cp.initialProducers.size()))
 			<< errinfo_got(bigint(initialProducers.size())));
 
-	for (int i = 0; i < initialProducers.size(); i++)
+	for (uint32_t i = 0; i < initialProducers.size(); i++)
 	{
 		cp.initialProducers[i] = Address(initialProducers[i].get_str());
 	}

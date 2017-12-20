@@ -13,7 +13,7 @@ using native::eos::ProducerVotesMultiIndex;
 using native::eos::ProducerScheduleMultiIndex;
 
 
-chain_controller::chain_controller(const dev::eth::BlockChain& bc, chainbase::database& db): _bc(bc),_db(db) {
+chain_controller::chain_controller(const dev::eth::BlockChain& bc, chainbase::database& db): _db(db), _bc(bc){
 
 	initialize_indexes();
 	initialize_chain(bc);

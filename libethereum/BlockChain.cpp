@@ -836,7 +836,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 
 			//by maml, commonIndex is a joke, find the real common index
 			uint32_t realCommonIndex = 0;
-			for (int i = 0; i < route.size(); i++)
+			for (uint32_t i = 0; i < route.size(); i++)
 			{
 				if (route[i] == common)
 				{
@@ -850,7 +850,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 			try {
 				// Go through ret backwards (i.e. from new head to common) until hash != last.parent and
 				// update m_transactionAddresses, m_blockHashes
-				for (int i = realCommonIndex + 1; i < route.size(); i++)
+				for (uint32_t i = realCommonIndex + 1; i < route.size(); i++)
 				{
 					auto curBlock = route[i];
 

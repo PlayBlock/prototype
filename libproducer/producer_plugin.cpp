@@ -9,9 +9,9 @@
 using namespace dev::eth;
 
 producer_plugin::producer_plugin(const dev::eth::BlockChain& bc, dev::eth::Client& client):
-	_client(client),
 	_io_server(std::make_shared<boost::asio::io_service>()),
-	_timer(*_io_server)
+	_timer(*_io_server),
+	_client(client)
 {
 	auto dbPath = bc.dbPath().string() + "/" + toHex(bc.genesisHash().ref().cropped(0, 4));
 	_db = std::make_shared<chainbase::database>(dbPath, chainbase::database::read_write, 10 * 1024 * 1024);
