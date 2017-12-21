@@ -381,11 +381,12 @@ void Client::syncBlockQueue()
 //	cdebug << "syncBlockQueue()";
 
 	ImportRoute ir;
-	unsigned count;
-	Timer t;
+	unsigned count; //导入的块数
+	Timer t; //用来计算导入用时
 	tie(ir, m_syncBlockQueue, count) = bc().sync(m_bq, m_stateDB, m_syncAmount);
-	double elapsed = t.elapsed();
 
+	//导入用时
+	double elapsed = t.elapsed(); 
 	if (count)
 	{
 		clog(ClientNote) << count << "blocks imported in" << unsigned(elapsed * 1000) << "ms (" << (count / elapsed) << "blocks/s) in #" << bc().number();
@@ -684,6 +685,8 @@ void Client::doWork(bool _doWait)
 {
 	cout << "Client::doWork()" << endl;
 	bool t = true;
+
+	//若m_syncBlockQueue置位则同步BlockQueue
 	if (m_syncBlockQueue.compare_exchange_strong(t, false))
 		syncBlockQueue();
 

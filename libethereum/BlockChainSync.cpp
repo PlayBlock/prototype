@@ -444,6 +444,8 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 {
 	RecursiveGuard l(x_sync);
 	DEV_INVARIANT_CHECK;
+
+	//获取header数量
 	size_t itemCount = _r.itemCount();
 	clog(NetMessageSummary) << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
 
@@ -475,7 +477,8 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 		_peer->addRating(-1);
 	}
 	for (unsigned i = 0; i < itemCount; i++)
-	{
+	{//对于每一个header
+
 		BlockHeader info(_r[i].data(), HeaderData);
 		unsigned blockNumber = static_cast<unsigned>(info.number());
 		if (blockNumber < m_chainStartBlock)
@@ -484,7 +487,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 			continue;
 		}
 		if (haveItem(m_headers, blockNumber))
-		{
+		{//header已存在
 			clog(NetMessageSummary) << "Skipping header " << blockNumber;
 			continue;
 		}
@@ -498,7 +501,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 
 		auto status = host().bq().blockStatus(info.hash());
 		if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(info.hash()))
-		{
+		{//发现相同块
 			m_haveCommonHeader = true;
 			m_lastImportedBlock = (unsigned)info.number();
 			m_lastImportedBlockHash = info.hash();
@@ -565,7 +568,8 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 			else
 				m_headerIdToNumber[headerId] = blockNumber;
 		}
-	}
+	}//end of for
+
 	collectBlocks();
 	continueSync();
 }
@@ -690,7 +694,7 @@ void BlockChainSync::collectBlocks()
 	clog(NetMessageSummary) << dec << success << "imported OK," << unknown << "with unknown parents," << future << "with future timestamps," << got << " already known received.";
 
 	if (host().bq().unknownFull())
-	{
+	{//太多未知块，需要重新同步
 		clog(NetWarn) << "Too many unknown blocks, restarting sync";
 		restartSync();
 		return;

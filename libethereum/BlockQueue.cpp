@@ -183,7 +183,7 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 	UpgradableGuard l(m_lock);
 
 	if (m_readySet.count(h) || m_drainingSet.count(h) || m_unknownSet.count(h) || m_knownBad.count(h))
-	{
+	{//已知块
 		// Already know about this one.
 		clog(BlockQueueTraceChannel) << "Already known.";
 		return ImportResult::AlreadyKnown;
