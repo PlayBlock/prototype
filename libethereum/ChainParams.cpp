@@ -307,7 +307,7 @@ bytes ChainParams::genesisBlock() const
 
 	calculateStateRoot();
 
-	block.appendList(BlockHeader::BasicFields + BlockHeader::SignatureFields)
+	block.appendList(BlockHeader::BasicFields + sealFields + BlockHeader::SignatureFields)
 		<< parentHash
 		<< EmptyListSHA3	// sha3(uncles)
 		<< author
@@ -320,9 +320,10 @@ bytes ChainParams::genesisBlock() const
 		<< gasLimit
 		<< gasUsed			// gasUsed
 		<< timestamp
-		<< extraData
-		<< byte(27) << u256() << u256();// signature
-	//block.appendRaw(sealRLP, sealFields);
+		<< extraData;
+	block.appendRaw(sealRLP, sealFields);
+	block << byte(27) << u256() << u256();// signature
+
 	block.appendRaw(RLPEmptyList);
 	block.appendRaw(RLPEmptyList);
 	return block.out();

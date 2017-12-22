@@ -57,7 +57,7 @@ BlockHeader::BlockHeader(BlockHeader const& _other) :
 	m_timestamp(_other.timestamp()),
 	m_author(_other.author()),
 	m_difficulty(_other.difficulty()),
-	//m_seal(_other.seal()),
+	m_seal(_other.seal()),
 	m_hash(_other.hashRawRead()),
 	m_hashWithout(_other.hashWithoutRawRead()),
 	m_signature(_other.signature())
@@ -83,11 +83,11 @@ BlockHeader& BlockHeader::operator=(BlockHeader const& _other)
 	m_author = _other.author();
 	m_difficulty = _other.difficulty();
 	m_signature = _other.signature();
-	//std::vector<bytes> seal = _other.seal();
-	//{
-	//	Guard l(m_sealLock);
-	//	m_seal = std::move(seal);
-	//}
+	std::vector<bytes> seal = _other.seal();
+	{
+		Guard l(m_sealLock);
+		m_seal = std::move(seal);
+	}
 	h256 hash = _other.hashRawRead();
 	h256 hashWithout = _other.hashWithoutRawRead();
 	{
@@ -114,7 +114,7 @@ void BlockHeader::clear()
 	m_gasUsed = 0;
 	m_timestamp = Invalid256;
 	m_extraData.clear();
-	//m_seal.clear();
+	m_seal.clear();
 	m_signature = { h256(), h256(), 0 };
 	noteDirty();
 }
@@ -141,23 +141,32 @@ void BlockHeader::streamRLPFields(RLPStream& _s) const
 
 void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const
 {
-	if (_i != OnlySeal)
+	if (m_number > ETIForkBlock)
 	{
-		_s.appendList(BlockHeader::BasicFields + (_i == WithoutSeal ? 0 : BlockHeader::SignatureFields));
-		BlockHeader::streamRLPFields(_s);
+		// ETI fork 后, WithoutSeal用来表示是否添加signature
+		if (_i != OnlySeal)
+		{
+			_s.appendList(BlockHeader::BasicFields + (_i == WithoutSeal ? 0 : m_seal.size()+BlockHeader::SignatureFields));
+			BlockHeader::streamRLPFields(_s);
+
+			for (unsigned i = 0; i < m_seal.size(); ++i)
+				_s.appendRaw(m_seal[i]);
+		}
+
+		if (_i != WithoutSeal)
+			_s << (m_signature.v + 27) << (u256)m_signature.r << (u256)m_signature.s;
 	}
-	if (_i != WithoutSeal)
-		_s << (m_signature.v + 27) << (u256)m_signature.r << (u256)m_signature.s;
-
-
-	//if (_i != OnlySeal)
-	//{
-	//	_s.appendList(BlockHeader::BasicFields + (_i == WithoutSeal ? 0 : m_seal.size()));
-	//	BlockHeader::streamRLPFields(_s);
-	//}
-	//if (_i != WithoutSeal)
-	//	for (unsigned i = 0; i < m_seal.size(); ++i)
-	//		_s.appendRaw(m_seal[i]);
+	else
+	{
+		if (_i != OnlySeal)
+		{
+			_s.appendList(BlockHeader::BasicFields + (_i == WithoutSeal ? 0 : m_seal.size()));
+			BlockHeader::streamRLPFields(_s);
+		}
+		if (_i != WithoutSeal)
+			for (unsigned i = 0; i < m_seal.size(); ++i)
+				_s.appendRaw(m_seal[i]);
+	}
 }
 
 h256 BlockHeader::headerHashFromBlock(bytesConstRef _block)
@@ -198,13 +207,19 @@ void BlockHeader::populate(RLP const& _header)
 		m_gasUsed = _header[field = 10].toInt<u256>();
 		m_timestamp = _header[field = 11].toInt<u256>();
 		m_extraData = _header[field = 12].toBytes();
-		byte v = _header[field = 13].toInt<byte>() - 27;
-		h256 r = _header[field = 14].toInt<u256>();
-		h256 s = _header[field = 15].toInt<u256>();
-		m_signature = { r, s, v };
-		//m_seal.clear();
-		//for (unsigned i = 13; i < _header.itemCount(); ++i)
-		//	m_seal.push_back(_header[i].data().toBytes());
+		m_seal.clear();
+
+		uint32_t sealCount = _header.itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields;
+		for (unsigned i = 13; i < 13+sealCount; ++i)
+			m_seal.push_back(_header[i].data().toBytes());
+
+		if (m_number > ETIForkBlock)
+		{
+			byte v = _header[field = 13 + sealCount].toInt<byte>() - 27;
+			h256 r = _header[field = 14 + sealCount].toInt<u256>();
+			h256 s = _header[field = 15 + sealCount].toInt<u256>();
+			m_signature = { r, s, v };
+		}
 	}
 	catch (Exception const& _e)
 	{

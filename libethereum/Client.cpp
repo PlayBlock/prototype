@@ -621,7 +621,7 @@ void Client::generate_block(
 		m_sealingInfo = m_working.info();
 	}
 
-	generateSeal(m_sealingInfo);
+	//generateSeal(m_sealingInfo);
 	m_sealingInfo.sign(block_signing_private_key);
 
 	RLPStream blockHeaderRLP;

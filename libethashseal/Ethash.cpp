@@ -87,8 +87,10 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 
 	if (_s != CheckNothingNew)
 	{
-		//if (_bi.difficulty() < chainParams().minimumDifficulty)
-		//	BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError(bigint(chainParams().minimumDifficulty), bigint(_bi.difficulty())) );
+		if (_bi.number() < ETIForkBlock) {
+			if (_bi.difficulty() < chainParams().minimumDifficulty)
+				BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError(bigint(chainParams().minimumDifficulty), bigint(_bi.difficulty())));
+		}
 
 		if (_bi.gasLimit() < chainParams().minGasLimit)
 			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().minGasLimit), bigint(_bi.gasLimit())) );
@@ -108,10 +110,13 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 	if (_parent)
 	{
 		// Check difficulty is correct given the two timestamps.
-		//auto expected = calculateDifficulty(_bi, _parent);
-		//auto difficulty = _bi.difficulty();
-		//if (difficulty != expected)
-		//	BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError((bigint)expected, (bigint)difficulty));
+		if (_bi.number() < ETIForkBlock)
+		{
+			auto expected = calculateDifficulty(_bi, _parent);
+			auto difficulty = _bi.difficulty();
+			if (difficulty != expected)
+				BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError((bigint)expected, (bigint)difficulty));
+		}
 
 		auto gasLimit = _bi.gasLimit();
 		auto parentGasLimit = _parent.gasLimit();
@@ -244,31 +249,30 @@ void Ethash::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) co
 bool Ethash::quickVerifySeal(BlockHeader const& _bi) const
 {
 	// for dpos: no need to verify pow seal
-    _bi.number();
-	return true;
+    if (_bi.number() > ETIForkBlock)
+		return true;
 
-	//if (_bi.number() >= ETHASH_EPOCH_LENGTH * 2048)
-	//	return false;
+	if (_bi.number() >= ETHASH_EPOCH_LENGTH * 2048)
+		return false;
 
-	//auto h = _bi.hash(WithoutSeal);
-	//auto m = mixHash(_bi);
-	//auto n = nonce(_bi);
-	//auto b = boundary(_bi);
-	//bool ret = !!ethash_quick_check_difficulty(
-	//	(ethash_h256_t const*)h.data(),
-	//	(uint64_t)(u64)n,
-	//	(ethash_h256_t const*)m.data(),
-	//	(ethash_h256_t const*)b.data());
-	//return ret;
+	auto h = _bi.hash(WithoutSeal);
+	auto m = mixHash(_bi);
+	auto n = nonce(_bi);
+	auto b = boundary(_bi);
+	bool ret = !!ethash_quick_check_difficulty(
+		(ethash_h256_t const*)h.data(),
+		(uint64_t)(u64)n,
+		(ethash_h256_t const*)m.data(),
+		(ethash_h256_t const*)b.data());
+	return ret;
 }
 
 bool Ethash::verifySeal(BlockHeader const& _bi) const
 {
 	// for dpos: no need to verify pow seal
-    _bi.number();
-	return true;
+	if (_bi.number() > ETIForkBlock)
+		return true;
 
-#if 0
 	bool pre = quickVerifySeal(_bi);
 #if !ETH_DEBUG
 	if (!pre)
@@ -296,7 +300,6 @@ bool Ethash::verifySeal(BlockHeader const& _bi) const
 #endif // ETH_DEBUG
 
 	return slow;
-#endif
 }
 
 void Ethash::generateSeal(BlockHeader const& _bi)

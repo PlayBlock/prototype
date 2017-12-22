@@ -721,7 +721,15 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 	// All ok - insert into DB
 	bytes const receipts = br.rlp();
-	return insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
+
+	if (_block.info.number() > ETIForkBlock)
+	{
+		return insertBlockAndExtras4ETI(_block, ref(receipts), td, performanceLogger);
+	}
+	else
+	{
+		return insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
+	}
 }
 
 ImportRoute BlockChain::insertWithoutParent(bytes const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty)
@@ -734,7 +742,15 @@ ImportRoute BlockChain::insertWithoutParent(bytes const& _block, bytesConstRef _
 	checkBlockTimestamp(block.info);
 
 	ImportPerformanceLogger performanceLogger;
-	return insertBlockAndExtras(block, _receipts, _totalDifficulty, performanceLogger);
+
+	if (block.info.number() > ETIForkBlock)
+	{
+		return insertBlockAndExtras4ETI(block, _receipts, _totalDifficulty, performanceLogger);
+	}
+	else
+	{
+		return insertBlockAndExtras(block, _receipts, _totalDifficulty, performanceLogger);
+	}
 }
 
 void BlockChain::checkBlockIsNew(VerifiedBlockRef const& _block) const
@@ -758,6 +774,220 @@ void BlockChain::checkBlockTimestamp(BlockHeader const& _header) const
 }
 
 ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger)
+{
+	ldb::WriteBatch blocksBatch;
+	ldb::WriteBatch extrasBatch;
+	h256 newLastBlockHash = currentHash();
+	unsigned newLastBlockNumber = number();
+
+	try
+	{
+		// ensure parent is cached for later addition.
+		// TODO: this is a bit horrible would be better refactored into an enveloping UpgradableGuard
+		// together with an "ensureCachedWithUpdatableLock(l)" method.
+		// This is safe in practice since the caches don't get flushed nearly often enough to be
+		// done here.
+		details(_block.info.parentHash());
+		DEV_WRITE_GUARDED(x_details)
+			m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
+
+		_performanceLogger.onStageFinished("collation");
+
+		blocksBatch.Put(toSlice(_block.info.hash()), ldb::Slice(_block.block));
+		DEV_READ_GUARDED(x_details)
+			extrasBatch.Put(toSlice(_block.info.parentHash(), ExtraDetails), (ldb::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
+
+		BlockDetails const details((unsigned)_block.info.number(), _totalDifficulty, _block.info.parentHash(), {});
+		extrasBatch.Put(toSlice(_block.info.hash(), ExtraDetails), (ldb::Slice)dev::ref(details.rlp()));
+
+		BlockLogBlooms blb;
+		for (auto i : RLP(_receipts))
+			blb.blooms.push_back(TransactionReceipt(i.data()).bloom());
+		extrasBatch.Put(toSlice(_block.info.hash(), ExtraLogBlooms), (ldb::Slice)dev::ref(blb.rlp()));
+
+		extrasBatch.Put(toSlice(_block.info.hash(), ExtraReceipts), (ldb::Slice)_receipts);
+
+		_performanceLogger.onStageFinished("writing");
+	}
+	catch (Exception& ex)
+	{
+		addBlockInfo(ex, _block.info, _block.block.toBytes());
+		throw;
+	}
+
+	h256s route;
+	h256 common;
+	bool isImportedAndBest = false;
+	// This might be the new best block...
+	h256 last = currentHash();
+	if (_totalDifficulty > details(last).totalDifficulty || (m_sealEngine->chainParams().tieBreakingGas &&
+		_totalDifficulty == details(last).totalDifficulty && _block.info.gasUsed() > info(last).gasUsed()))
+	{
+		// don't include bi.hash() in treeRoute, since it's not yet in details DB...
+		// just tack it on afterwards.
+		unsigned commonIndex;
+		tie(route, common, commonIndex) = treeRoute(last, _block.info.parentHash());
+		route.push_back(_block.info.hash());
+
+		// Most of the time these two will be equal - only when we're doing a chain revert will they not be
+		if (common != last)
+			DEV_READ_GUARDED(x_lastBlockHash)
+			clearCachesDuringChainReversion(number(common) + 1);
+
+		// Go through ret backwards (i.e. from new head to common) until hash != last.parent and
+		// update m_transactionAddresses, m_blockHashes
+		for (auto i = route.rbegin(); i != route.rend() && *i != common; ++i)
+		{
+			BlockHeader tbi;
+			if (*i == _block.info.hash())
+				tbi = _block.info;
+			else
+				tbi = BlockHeader(block(*i));
+
+			// Collate logs into blooms.
+			h256s alteredBlooms;
+			{
+				LogBloom blockBloom = tbi.logBloom();
+				blockBloom.shiftBloom<3>(sha3(tbi.author().ref()));
+
+				// Pre-memoize everything we need before locking x_blocksBlooms
+				for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
+					blocksBlooms(chunkId(level, index / c_bloomIndexSize));
+
+				WriteGuard l(x_blocksBlooms);
+				for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
+				{
+					unsigned i = index / c_bloomIndexSize;
+					unsigned o = index % c_bloomIndexSize;
+					alteredBlooms.push_back(chunkId(level, i));
+					m_blocksBlooms[alteredBlooms.back()].blooms[o] |= blockBloom;
+				}
+			}
+			// Collate transaction hashes and remember who they were.
+			//h256s newTransactionAddresses;
+			{
+				bytes blockBytes;
+				RLP blockRLP(*i == _block.info.hash() ? _block.block : &(blockBytes = block(*i)));
+				TransactionAddress ta;
+				ta.blockHash = tbi.hash();
+				for (ta.index = 0; ta.index < blockRLP[1].itemCount(); ++ta.index)
+					extrasBatch.Put(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+			}
+
+			// Update database with them.
+			ReadGuard l1(x_blocksBlooms);
+			for (auto const& h : alteredBlooms)
+				extrasBatch.Put(toSlice(h, ExtraBlocksBlooms), (ldb::Slice)dev::ref(m_blocksBlooms[h].rlp()));
+			extrasBatch.Put(toSlice(h256(tbi.number()), ExtraBlockHash), (ldb::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
+		}
+
+		// FINALLY! change our best hash.
+		{
+			newLastBlockHash = _block.info.hash();
+			newLastBlockNumber = (unsigned)_block.info.number();
+			isImportedAndBest = true;
+		}
+
+		clog(BlockChainNote) << "   Imported and best" << _totalDifficulty << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;
+	}
+	else
+	{
+		clog(BlockChainChat) << "   Imported but not best (oTD:" << details(last).totalDifficulty << " > TD:" << _totalDifficulty << "; " << details(last).number << ".." << _block.info.number() << ")";
+	}
+
+	ldb::Status o = m_blocksDB->Write(m_writeOptions, &blocksBatch);
+	if (!o.ok())
+	{
+		cwarn << "Error writing to blockchain database: " << o.ToString();
+		WriteBatchNoter n;
+		blocksBatch.Iterate(&n);
+		cwarn << "Fail writing to blockchain database. Bombing out.";
+		exit(-1);
+	}
+
+	o = m_extrasDB->Write(m_writeOptions, &extrasBatch);
+	if (!o.ok())
+	{
+		cwarn << "Error writing to extras database: " << o.ToString();
+		WriteBatchNoter n;
+		extrasBatch.Iterate(&n);
+		cwarn << "Fail writing to extras database. Bombing out.";
+		exit(-1);
+	}
+
+#if ETH_PARANOIA
+	if (isKnown(_block.info.hash()) && !details(_block.info.hash()))
+	{
+		clog(BlockChainDebug) << "Known block just inserted has no details.";
+		clog(BlockChainDebug) << "Block:" << _block.info;
+		clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+		exit(-1);
+	}
+
+	try
+	{
+		State canary(_db, BaseState::Empty);
+		canary.populateFromChain(*this, _block.info.hash());
+	}
+	catch (...)
+	{
+		clog(BlockChainDebug) << "Failed to initialise State object form imported block.";
+		clog(BlockChainDebug) << "Block:" << _block.info;
+		clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+		exit(-1);
+	}
+#endif // ETH_PARANOIA
+
+	if (m_lastBlockHash != newLastBlockHash)
+		DEV_WRITE_GUARDED(x_lastBlockHash)
+	{
+		m_lastBlockHash = newLastBlockHash;
+		m_lastBlockNumber = newLastBlockNumber;
+		o = m_extrasDB->Put(m_writeOptions, ldb::Slice("best"), ldb::Slice((char const*)&m_lastBlockHash, 32));
+		if (!o.ok())
+		{
+			cwarn << "Error writing to extras database: " << o.ToString();
+			cout << "Put" << toHex(bytesConstRef(ldb::Slice("best"))) << "=>" << toHex(bytesConstRef(ldb::Slice((char const*)&m_lastBlockHash, 32)));
+			cwarn << "Fail writing to extras database. Bombing out.";
+			exit(-1);
+		}
+	}
+
+#if ETH_PARANOIA
+	checkConsistency();
+#endif // ETH_PARANOIA
+
+	_performanceLogger.onStageFinished("checkBest");
+
+	unsigned const gasPerSecond = static_cast<double>(_block.info.gasUsed()) / _performanceLogger.stageDuration("enactment");
+	_performanceLogger.onFinished({
+		{ "blockHash", "\"" + _block.info.hash().abridged() + "\"" },
+		{ "blockNumber", toString(_block.info.number()) },
+		{ "gasPerSecond", toString(gasPerSecond) },
+		{ "transactions", toString(_block.transactions.size()) },
+		{ "gasUsed", toString(_block.info.gasUsed()) }
+	});
+
+	if (!route.empty())
+		noteCanonChanged();
+
+	if (isImportedAndBest && m_onBlockImport)
+		m_onBlockImport(_block.info);
+
+	h256s fresh;
+	h256s dead;
+	bool isOld = true;
+	for (auto const& h : route)
+		if (h == common)
+			isOld = false;
+		else if (isOld)
+			dead.push_back(h);
+		else
+			fresh.push_back(h);
+	return ImportRoute{ dead, fresh, _block.transactions };
+}
+
+ImportRoute BlockChain::insertBlockAndExtras4ETI(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger)
 {
 	ldb::WriteBatch blocksBatch;
 	ldb::WriteBatch extrasBatch;
