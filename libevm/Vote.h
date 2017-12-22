@@ -1,12 +1,13 @@
 #pragma once
 
-#include "../libdevcore/Common.h"
-#include "../libevm/ExtVMFace.h"
+#include <libdevcore/Common.h>
+#include <libdevcore/Address.h>
 
 
 /// 1 Eth = 100 Votes
 #define VOTES_PRE_ETH 10000000000000000
 
+class dev::eth::State;
 class Vote
 {
 public:
@@ -81,5 +82,22 @@ struct VoteBace
 	bool m_isVoted;
 	dev::Address m_voteTo;
 	uint64_t m_receivedVoteNumber;
+};
+
+class VoteDelegate
+{
+public:
+	static void mortgage(uint64_t amount, dev::Address const& _address, dev::eth::State& _state);
+	static void redeem(uint64_t amount, dev::Address const& _address, dev::eth::State& _state);
+	
+	static void candidateRegister(dev::Address const& _address, dev::eth::State& _state);
+	static void candidateDeregister(dev::Address const& _address, dev::eth::State& _state);
+
+	static void vote(dev::Address _toAddress, dev::Address const& _address, dev::eth::State& _state);
+	static void removeVote(dev::Address const& _address, dev::eth::State& _state);
+	static void send(dev::Address _toAddress, uint64_t amount, dev::Address const& _address, dev::eth::State& _state);
+
+	static void assign(uint64_t amount, dev::Address const& _address, dev::eth::State& _state);
+	static void deAssign(uint64_t amount, dev::Address const& _address, dev::eth::State& _state);
 };
 

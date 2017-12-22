@@ -30,7 +30,7 @@ namespace dev
 {
 namespace eth
 {
-	class State;
+class State;
 using PrecompiledExecutor = std::function<std::pair<bool, bytes>(bytesConstRef _in, Address const& _address, State& _state)>;
 using PrecompiledPricer = std::function<bigint(bytesConstRef _in)>;
 

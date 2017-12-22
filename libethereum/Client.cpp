@@ -602,7 +602,7 @@ void Client::generate_block(
 {
 	// 所有出块条件全部具备时开始出块
 	m_working.currentBlock().setTimestamp(u256(when.sec_since_epoch()));
-    m_working.currentBlock().setAuthor(producer);
+    //m_working.currentBlock().setAuthor(producer);
 
 	clog(ClientTrace) << "Rejigging seal engine...";
 	DEV_WRITE_GUARDED(x_working)
