@@ -182,6 +182,15 @@ Linux)
                 libgmp-dev \
                 libleveldb-dev \
                 $TRAVIS_PACKAGES
+				
+			# 获取wavm-linux
+			cd deps
+			mkdir install
+			cd install 
+			wget http://192.168.1.126/cpp-ethereum-v130/wavm-linux.tar.gz
+			tar -xzvf ./wavm-linux.tar.gz
+			rm -rf ./wavm-linux.tar.gz
+			cd ../..
             ;;
 
         CentOS*|"Red Hat Enterprise Linux"*)
