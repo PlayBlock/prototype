@@ -218,15 +218,11 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 	cp.extraData = bytes(fromHex(genesis[c_extraData].get_str()));
 
 	// for dpos: get the initial producers
-	auto initialProducers = genesis["initialProducers"].get_array();
-	if (initialProducers.size() != cp.initialProducers.size())
-		BOOST_THROW_EXCEPTION(NoEnoughProducers()
-			<< errinfo_required(bigint(cp.initialProducers.size()))
-			<< errinfo_got(bigint(initialProducers.size())));
+	auto initialProducers = genesis["initialProducers"].get_array(); 
 
 	for (uint32_t i = 0; i < initialProducers.size(); i++)
 	{
-		cp.initialProducers[i] = Address(initialProducers[i].get_str());
+		cp.initialProducers.push_back( Address(initialProducers[i].get_str()) );
 	}
 
 	// magic code for handling ethash stuff:

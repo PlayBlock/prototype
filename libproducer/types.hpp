@@ -39,7 +39,7 @@ namespace chain {
 	using types::AccountName;
 	using public_key_type = types::PublicKey;
 
-	using ProducerRound = std::array<AccountName, config::BlocksPerRound>;
+	using ProducerRound = std::vector<AccountName>;
 	using RoundChanges = std::map<AccountName, AccountName>;
 }
 }

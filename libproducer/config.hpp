@@ -18,9 +18,19 @@ namespace config {
 	using types::UInt128;
 
 	const static int BlockIntervalSeconds = 3;
+	  
 
-	const static int BlocksPerRound = 3;
-	const static int VotedProducersPerRound = 2;
+	//每轮DPOS Worker总数
+	const static int DPOSProducersPerRound = 4;
+	//每轮靠选票稳定出的DPOS见证人总数
+	const static int DPOSVotedProducersPerRound = 3;
+	//每轮虚拟赛跑的见证人总数
+	const static int DPOSRunnerupProducersPerRound = 1;
+	//每轮POW 见证人总数
+	const static int POWProducersPerRound = 1;
+	//每轮见证人总数
+	const static int TotalProducersPerRound = 5;
+
 
 	const static int Percent100 = 10000;
 	const static int Percent1 = 100;

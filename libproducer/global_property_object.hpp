@@ -17,7 +17,7 @@
 using dev::Address;
 using dev::types::AccountName;
 using dev::types::block_id_type;
-using dev::eth::config::BlocksPerRound;
+using dev::eth::config::TotalProducersPerRound;
 
 namespace eos { namespace chain {
 
@@ -33,9 +33,9 @@ namespace eos { namespace chain {
    {
       OBJECT_CTOR(global_property_object)
 
-      id_type id;
-      //BlockchainConfiguration configuration;
-      std::array<AccountName, BlocksPerRound> active_producers;
+      id_type id; 
+      //std::vector<AccountName> active_producers;
+	  std::array<AccountName, TotalProducersPerRound> active_producers;
    };
 
 
@@ -86,6 +86,19 @@ namespace eos { namespace chain {
         uint64_t recent_slots_filled;
         
         uint32_t last_irreversible_block_num = 0;
+
+		//===============POW œ‡πÿ=====================
+
+		/**
+		*  The total POW accumulated, aka the sum of num_pow_witness at the time new POW is added
+		*/
+		uint64_t total_pow = 0;
+
+		/**
+		* The current count of how many pending POW witnesses there are, determines the difficulty
+		* of doing pow
+		*/
+		uint32_t num_pow_witnesses = 0;
    };
 
    using global_property_multi_index = chainbase::shared_multi_index_container<
@@ -121,6 +134,8 @@ FC_REFLECT(eos::chain::dynamic_global_property_object,
            (current_absolute_slot)
            (recent_slots_filled)
            (last_irreversible_block_num)
+		   (total_pow)
+		   (num_pow_witnesses)
           )
 
 FC_REFLECT(eos::chain::global_property_object,

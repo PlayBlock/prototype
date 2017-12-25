@@ -1,16 +1,14 @@
-//#include <eos/native_contract/producer_objects.hpp>
-//#include <eos/native_contract/staked_balance_objects.hpp>
-//
-//#include <eos/chain/producer_object.hpp>
 
-#include "producer_objects.hpp"
-
+#include "producer_objects.hpp" 
+#include "producer_object.hpp"
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/algorithm_ext.hpp>
 
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Assertions.h>
+#include "global_property_object.hpp"
+
 
 namespace native {
 namespace eos {
@@ -25,109 +23,127 @@ void ProducerVotesObject::updateVotes(ShareType deltaVotes, UInt128 currentRaceT
    race.update(newSpeed, newPosition, currentRaceTime);
 }
 
-//void ProxyVoteObject::addProxySource(const AccountName& source, ShareType sourceStake, chainbase::database& db) const {
-//   db.modify(*this, [&source, sourceStake](ProxyVoteObject& pvo) {
-//      pvo.proxySources.insert(source);
-//      pvo.proxiedStake += sourceStake;
-//   });
-//   db.get<StakedBalanceObject, byOwnerName>(proxyTarget).propagateVotes(sourceStake, db);
-//}
-//
-//void ProxyVoteObject::removeProxySource(const AccountName& source, ShareType sourceStake,
-//                                        chainbase::database& db) const {
-//   db.modify(*this, [&source, sourceStake](ProxyVoteObject& pvo) {
-//      pvo.proxySources.erase(source);
-//      pvo.proxiedStake -= sourceStake;
-//   });
-//   db.get<StakedBalanceObject, byOwnerName>(proxyTarget).propagateVotes(sourceStake, db);
-//}
-//
-//void ProxyVoteObject::updateProxiedStake(ShareType stakeDelta, chainbase::database& db) const {
-//   db.modify(*this, [stakeDelta](ProxyVoteObject& pvo) {
-//      pvo.proxiedStake += stakeDelta;
-//   });
-//   db.get<StakedBalanceObject, byOwnerName>(proxyTarget).propagateVotes(stakeDelta, db);
-//}
-//
-//void ProxyVoteObject::cancelProxies(chainbase::database& db) const {
-//   boost::for_each(proxySources, [&db](const AccountName& source) {
-//      const auto& balance = db.get<StakedBalanceObject, byOwnerName>(source);
-//      db.modify(balance, [](StakedBalanceObject& sbo) {
-//         sbo.producerVotes = ProducerSlate{};
-//      });
-//   });
-//}
 
 ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db) const {
-   //// Create storage and machinery with nice names, for choosing the top-voted producers
-   ProducerRound round;
-   //auto FilterRetiredProducers = boost::adaptors::filtered([&db](const ProducerVotesObject& pvo) {
-   //   return db.get<producer_object, by_owner>(pvo.ownerName).signing_key != PublicKey();
-   //});
-   auto ProducerObjectToName = boost::adaptors::transformed([](const ProducerVotesObject& p) { return p.ownerName; });
-   const auto& AllProducersByVotes = db.get_index<ProducerVotesMultiIndex, byVotes>();
-   //auto ActiveProducersByVotes = AllProducersByVotes | FilterRetiredProducers;
 
-   //FC_ASSERT(boost::distance(ActiveProducersByVotes) >= config::BlocksPerRound,
-   //          "Not enough active producers registered to schedule a round!",
-   //          ("ActiveProducers", (int64_t)boost::distance(ActiveProducersByVotes))
-   //          ("AllProducers", (int64_t)AllProducersByVotes.size()));
+   ProducerRound round; 
 
-   if (AllProducersByVotes.size() < config::BlocksPerRound)
-   {
-	   BOOST_THROW_EXCEPTION(dev::NoEnoughProducers() 
-		   << dev::errinfo_comment("Not enough active producers registered to schedule a round!"));
+   round.reserve(config::TotalProducersPerRound);
+
+   std::map<AccountName,AccountName> processedProducers;
+
+   int iActive = 0; 
+
+   const auto& allProducersByVotes = db.get_index<ProducerVotesMultiIndex, byVotes>();
+
+   if (allProducersByVotes.size() == 0 )
+   {//需要至少一个Producer
+	   BOOST_THROW_EXCEPTION(dev::NoEnoughProducers()
+		   << dev::errinfo_comment("Active Producers Size = 0 !!!!"));
    }
 
-   // Copy the top voted active producer's names into the round
-   auto runnerUpStorage =
-         boost::copy_n(AllProducersByVotes | ProducerObjectToName, config::VotedProducersPerRound, round.begin());
-
-   // More machinery with nice names, this time for choosing runner-up producers
-   auto VotedProducerRange = boost::make_iterator_range(round.begin(), runnerUpStorage);
-   // Sort the voted producer names; we'll need to do it anyways, and it makes searching faster if we do it now
-   boost::sort(VotedProducerRange);
-   auto FilterVotedProducers = boost::adaptors::filtered([&VotedProducerRange](const ProducerVotesObject& pvo) {
-      return !boost::binary_search(VotedProducerRange, pvo.ownerName);
-   });
-   const auto& AllProducersByFinishTime = db.get_index<ProducerVotesMultiIndex, byProjectedRaceFinishTime>();
-   auto EligibleProducersByFinishTime = AllProducersByFinishTime | FilterVotedProducers;
-
-   auto runnerUpProducerCount = config::BlocksPerRound - config::VotedProducersPerRound;
-
-   // Copy the front producers in the race into the round
-   auto roundEnd =
-         boost::copy_n(EligibleProducersByFinishTime | ProducerObjectToName, runnerUpProducerCount, runnerUpStorage);
-
-   //FC_ASSERT(roundEnd == round.end(),
-   //          "Round scheduling yielded an unexpected number of producers: got ${actual}, but expected ${expected}",
-   //          ("actual", (int64_t)std::distance(round.begin(), roundEnd))("expected", (int64_t)round.size()));
-   if (roundEnd != round.end())
-   {
-	   BOOST_THROW_EXCEPTION(dev::InvalidProducerNum() 
-		   << dev::errinfo_comment("Round scheduling yielded an unexpected number of producers : got "));
+    
+   //挑选出票数最高的19人
+   for (
+	   auto iProducer = allProducersByVotes.begin();
+	   iProducer != allProducersByVotes.end() && iActive < config::DPOSVotedProducersPerRound ; 
+	   iProducer++ , iActive++ )
+   { 
+	   round.push_back(iProducer->ownerName);
+	   processedProducers.insert(std::make_pair(iProducer->ownerName,iProducer->ownerName));
    }
 
-   auto lastRunnerUpName = *(roundEnd - 1);
-   // Sort the runner-up producers into the voted ones
-   boost::inplace_merge(round, runnerUpStorage);
+   ctrace << "Top Voted Producers Count = " << iActive;
+
+   //挑选出1个虚拟赛跑选手
+   const auto& allProducersByFinishTime = db.get_index<ProducerVotesMultiIndex, byProjectedRaceFinishTime>(); 
+   int runerCount = 0;
+   for (
+	   auto iProducer = allProducersByFinishTime.begin();
+	   iProducer != allProducersByFinishTime.end() && runerCount < config::DPOSRunnerupProducersPerRound;
+	   iProducer++ )
+   {
+	   if(processedProducers.count(iProducer->ownerName))
+		   continue;
+
+	   round.push_back(iProducer->ownerName); 
+	   processedProducers.insert(std::make_pair(iProducer->ownerName, iProducer->ownerName));
+	   runerCount++;
+	   iActive++;
+   }  
+
+   AccountName lastRunnerUpName;
+   if (runerCount > 0)
+   {
+	   lastRunnerUpName = round[iActive - 1];
+   }
+
+   ctrace << "Runerup Producers Count = " << runerCount;
+
+
+   //选出1个POW见证人  
+   const auto& allProducerObjsByPOW = db.get_index<producer_multi_index, by_pow>();
+
+   const auto& gprops = db.get<dynamic_global_property_object>();
+
+   int powCount = 0;
+   for (
+	   auto iProducer = allProducerObjsByPOW.upper_bound(0);
+	   iProducer != allProducerObjsByPOW.end() && powCount <  config::POWProducersPerRound;
+	   iProducer++ )
+   {
+	   if (processedProducers.count(iProducer->owner))
+		   continue;
+
+	   round.push_back(iProducer->owner);
+	   processedProducers.insert(std::make_pair(iProducer->owner, iProducer->owner));
+
+	   //剔除本轮被选中的POW见证人
+	   db.modify(*iProducer, [&](producer_object& prod)
+	   {
+		   prod.pow_worker = 0;
+	   });
+
+	   //当前pow见证人-1
+	   db.modify(gprops, [&](dynamic_global_property_object& obj)
+	   {
+		   obj.num_pow_witnesses--;
+	   });
+
+	   powCount++;
+	   iActive++;
+   }
+
+   //其它空位填空直到21位
+   while (iActive < config::TotalProducersPerRound)
+   {
+	   round.push_back(AccountName());
+	   iActive++;
+   }
+
+   ctrace << "POW Producers Count = " << powCount;
+   ctrace << "Total Producers Count = " << processedProducers.size();
+
+   //没有runer up Producer
+   if (runerCount == 0)
+	   return round;
+
+   //更新虚拟赛跑
 
    // Machinery to update the virtual race tracking for the producers that completed their lap
-   auto lastRunnerUp = AllProducersByFinishTime.iterator_to(db.get<ProducerVotesObject,byOwnerName>(lastRunnerUpName));
+   auto lastRunnerUp = allProducersByFinishTime.iterator_to(db.get<ProducerVotesObject,byOwnerName>(lastRunnerUpName));
    auto newRaceTime = lastRunnerUp->projectedRaceFinishTime();
    auto StartNewLap = [&db, newRaceTime](const ProducerVotesObject& pvo) {
       db.modify(pvo, [newRaceTime](ProducerVotesObject& pvo) {
          pvo.startNewRaceLap(newRaceTime);
       });
    };
-   auto LapCompleters = boost::make_iterator_range(AllProducersByFinishTime.begin(), ++lastRunnerUp);
+   auto LapCompleters = boost::make_iterator_range(allProducersByFinishTime.begin(), ++lastRunnerUp);
 
    // Start each producer that finished his lap on the next one, and update the global race time.
    try {
-	   if ((unsigned)boost::distance(LapCompleters) < AllProducersByFinishTime.size()
-		   && newRaceTime < std::numeric_limits<UInt128>::max()) {
-		   //ilog("Processed producer race. ${count} producers completed a lap at virtual time ${time}",
-		   //     ("count", (int64_t)boost::distance(LapCompleters))("time", newRaceTime));
+	   if ((unsigned)boost::distance(LapCompleters) < allProducersByFinishTime.size()
+		   && newRaceTime < std::numeric_limits<UInt128>::max()) { 
 
 		   // 下面这样写会在访问LapCompleters的过程中修改container，导致使用LapCompleters访问下一个元素时发生错误
 		   //boost::for_each(LapCompleters, StartNewLap);
@@ -147,11 +163,9 @@ ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db
 	   else {
 		   //wlog("Producer race finished; restarting race.");
 		   resetProducerRace(db);
-	   }
-	   //} catch (ProducerRaceOverflowException&) {
-		 } catch (...) {
-      // Virtual race time has overflown. Reset race for everyone.
-      // wlog("Producer race virtual time overflow detected! Resetting race.");
+	   } 
+	 } catch (...) {
+      // Virtual race time has overflown. Reset race for everyone. 
       resetProducerRace(db);
    }
 

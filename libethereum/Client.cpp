@@ -77,6 +77,7 @@ Client::Client(
 	m_working(chainParams().accountStartNonce),
 	m_producer_plugin(make_shared<class producer_plugin>(m_bc, *this))
 {
+	ctrace<< "m_bc.initProds = "<<m_bc.chainParams().initialProducers.size();
 	init(_host, _dbPath, _forceAction, _networkID);
 }
 

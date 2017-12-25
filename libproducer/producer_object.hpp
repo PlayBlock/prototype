@@ -1,7 +1,5 @@
 #pragma once
-//#include <eos/chain/types.hpp>
-//#include <eos/chain/BlockchainConfiguration.hpp>
-
+ 
 #include "types.hpp"
 #include "chainbase.hpp"
 #include "multi_index_includes.hpp"
@@ -20,18 +18,24 @@ class producer_object : public chainbase::object<producer_object_type, producer_
    int64_t          total_missed = 0;
    uint32_t         last_confirmed_block_num = 0;
 
+
+   //移植steemit pow worker在队列中的排位，越小越靠前
+   uint64_t        pow_worker = 0;
    /// The blockchain configuration values this producer recommends
    //BlockchainConfiguration configuration;
 };
 
 struct by_key;
 struct by_owner;
+//用来排序POW worker队列
+struct by_pow;
 using producer_multi_index = chainbase::shared_multi_index_container<
    producer_object,
    indexed_by<
       ordered_unique<tag<by_id>, member<producer_object, producer_object::id_type, &producer_object::id>>,
       ordered_unique<tag<by_owner>, member<producer_object, AccountName, &producer_object::owner>>,
-      ordered_unique<tag<by_key>, member<producer_object, producer_object::id_type, &producer_object::id>>
+      ordered_unique<tag<by_key>, member<producer_object, producer_object::id_type, &producer_object::id>>,
+	  ordered_non_unique<tag<by_pow>, member<producer_object, uint64_t, &producer_object::pow_worker>>
    >
 >;
 
@@ -39,5 +43,8 @@ using producer_multi_index = chainbase::shared_multi_index_container<
 
 CHAINBASE_SET_INDEX_TYPE(eos::chain::producer_object, eos::chain::producer_multi_index)
 
+
+
+#include <fc/reflect/reflect.hpp>
 FC_REFLECT(eos::chain::producer_object::id_type, (_id))
-FC_REFLECT(eos::chain::producer_object, (id)(owner)(last_aslot)(total_missed)(last_confirmed_block_num))
+FC_REFLECT(eos::chain::producer_object, (id)(owner)(last_aslot)(total_missed)(last_confirmed_block_num)(pow_worker))

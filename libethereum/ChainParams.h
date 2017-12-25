@@ -69,7 +69,7 @@ struct ChainParams: public ChainOperationParams
 	ChainParams loadGenesis(std::string const& _json, h256 const& _stateRoot = h256()) const;
 
 	/// for dpos
-	std::array<Address, config::BlocksPerRound> initialProducers;
+	std::vector<Address> initialProducers;
 
 private:
 	void populateFromGenesis(bytes const& _genesisRLP, AccountMap const& _state);

@@ -27,14 +27,21 @@
 #ifdef __APPLE__
 #include <pthread.h>
 #endif
-#include "Guards.h"
+#include "Guards.h" 
+
+
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 using namespace std;
 using namespace dev;
 
 //⊳⊲◀▶■▣▢□▷◁▧▨▩▲◆◉◈◇◎●◍◌○◼☑☒☎☢☣☰☀♽♥♠✩✭❓✔✓✖✕✘✓✔✅⚒⚡⦸⬌∅⁕«««»»»⚙
 
 // Logging
-int dev::g_logVerbosity = 5;
+int dev::g_logVerbosity = 5; 
+
 mutex x_logOverride;
 
 /// Map of Log Channel types to bool, false forces the channel to be disabled, true forces it to be enabled.
@@ -185,7 +192,48 @@ void dev::setThreadName(string const& _n)
 #endif
 }
 
+mutex x_logOut;
+
+#ifdef WIN32
+std::string UTF8_To_string(const std::string & str)
+{
+	int nwLen = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
+
+	wchar_t * pwBuf = new wchar_t[nwLen + 1];//一定要加1，不然会出现尾巴 
+	memset(pwBuf, 0, nwLen * 2 + 2);
+
+	MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), pwBuf, nwLen);
+
+	int nLen = WideCharToMultiByte(CP_ACP, 0, pwBuf, -1, NULL, NULL, NULL, NULL);
+
+	char * pBuf = new char[nLen + 1];
+	memset(pBuf, 0, nLen + 1);
+
+	WideCharToMultiByte(CP_ACP, 0, pwBuf, nwLen, pBuf, nLen, NULL, NULL);
+
+	std::string retStr = pBuf;
+
+	delete[]pBuf;
+	delete[]pwBuf;
+
+	pBuf = NULL;
+	pwBuf = NULL;
+
+	return retStr;
+}
+#endif
+ 
+
 void dev::debugOut(std::string const& _s)
 {
-	cerr << _s << '\n';
+	Guard l(x_logOut); 
+
+#ifdef WIN32 
+	cerr << UTF8_To_string(_s).c_str() << endl;
+#else
+	cerr << _s.c_str() << endl;
+#endif
+
+
 }
+

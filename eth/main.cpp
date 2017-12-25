@@ -74,6 +74,7 @@ namespace fs = boost::filesystem;
 namespace
 {
 
+
 std::atomic<bool> g_silence = {false};
 unsigned const c_lineWidth = 160;
 
@@ -178,7 +179,7 @@ bool ExitHandler::s_shouldExit = false;
 int main(int argc, char** argv)
 {
 	setDefaultOrCLocale();
-
+	 
 	// Init secp256k1 context by calling one of the functions.
 	toPublic({});
 

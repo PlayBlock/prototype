@@ -6,9 +6,7 @@
 #include "producer_object.hpp"
 #include "chainbase.hpp"
 #include <libethereum/Block.h>
-#include <map>
-//#include "producer_objects.hpp"
-//#include <libevm/Vote.h>
+#include <map> 
 #include <libethereum/BlockChain.h>
 
 namespace dev {

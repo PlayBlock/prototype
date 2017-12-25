@@ -37,7 +37,7 @@ namespace dev
 void debugOut(std::string const& _s);
 
 /// The logging system's current verbosity.
-extern int g_logVerbosity;
+extern int g_logVerbosity; 
 
 class LogOverrideAux
 {
@@ -251,7 +251,12 @@ public:
 	LogOutputStream(): LogOutputStreamBase(Id::name(), &typeid(Id), Id::verbosity, _AutoSpacing) {}
 
 	/// Destructor. Posts the accrued log entry to the output stream.
-	~LogOutputStream() { if (Id::verbosity <= g_logVerbosity) debugOut(m_sstr.str()); }
+	~LogOutputStream()
+		{ 
+		if (Id::verbosity <= g_logVerbosity) { 
+			debugOut(m_sstr.str()); 
+			}
+		}
 
 	LogOutputStream& operator<<(std::string const& _t) { if (Id::verbosity <= g_logVerbosity) { if (_AutoSpacing && m_sstr.str().size() && m_sstr.str().back() != ' ') m_sstr << " "; comment(_t); } return *this; }
 
@@ -260,6 +265,8 @@ public:
 	/// Shift arbitrary data to the log. Spaces will be added between items as required.
 	template <class T> LogOutputStream& operator<<(T const& _t) { if (Id::verbosity <= g_logVerbosity) { if (_AutoSpacing && m_sstr.str().size() && m_sstr.str().back() != ' ') m_sstr << " "; append(_t); } return *this; }
 };
+
+
 
 /// A "hacky" way to execute the next statement on COND.
 /// We need such a thing due to the dangling else problem and the need

@@ -12,9 +12,8 @@
 #include "multi_index_includes.hpp"
 #include "chainbase.hpp"
 #include "types.hpp"
-#include <boost/multi_index/mem_fun.hpp>
-
-#include <libdevcore/Log.h>
+#include <boost/multi_index/mem_fun.hpp> 
+#include <libdevcore/Log.h> 
 
 
 namespace native {
@@ -217,7 +216,7 @@ using ProducerVotesMultiIndex = chainbase::shared_multi_index_container<
       ordered_non_unique<tag<byVotes>,
          const_mem_fun<ProducerVotesObject, std::pair<types::ShareType,ProducerVotesObject::id_type>, &ProducerVotesObject::getVoteOrder>,
          std::greater< std::pair<types::ShareType, ProducerVotesObject::id_type> >
-       >,
+       >, 
       ordered_unique<tag<byProjectedRaceFinishTime>,
          const_mem_fun<ProducerVotesObject, ProducerVotesObject::rft_order_type, &ProducerVotesObject::projectedRaceFinishTimeOrder>
       >

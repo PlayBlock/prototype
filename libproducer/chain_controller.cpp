@@ -11,7 +11,7 @@ using namespace dev::eth::chain;
 using namespace eos::chain;
 using native::eos::ProducerVotesMultiIndex;
 using native::eos::ProducerScheduleMultiIndex;
-
+using native::eos::ProducerVotesObject;
 
 chain_controller::chain_controller(const dev::eth::BlockChain& bc, chainbase::database& db): _db(db), _bc(bc){
 
@@ -68,11 +68,12 @@ void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 				auto initial_timestamp = fc::time_point_sec(1513580324);
 
 				// Create global properties
-				_db.create<global_property_object>([&](global_property_object& p) {
-					//p.configuration = starter.get_chain_start_configuration();
-					//p.active_producers = starter.get_chain_start_producers();
+				_db.create<global_property_object>([&](global_property_object& p) { 
 					
-					p.active_producers = bc.chainParams().initialProducers;
+					for (int i = 0; i < bc.chainParams().initialProducers.size(); i++)
+					{
+						p.active_producers[i] = bc.chainParams().initialProducers[i];
+					} 
 				});
 				_db.create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {
 					p.time = initial_timestamp;
@@ -84,8 +85,13 @@ void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 
 				for (const auto& a : _db.get<global_property_object>().active_producers)
 				{
+					ctrace << "genesis active producer:" << a;
 					_db.create<producer_object>([&](producer_object& p) {
 						p.owner = a;
+					});
+
+					_db.create<ProducerVotesObject>([&](ProducerVotesObject& p) {
+						p.ownerName = a;
 					});
 				}
 
@@ -177,10 +183,6 @@ const producer_object& chain_controller::get_producer(const types::AccountName& 
 
 ProducerRound chain_controller::calculate_next_round(const BlockHeader& next_block) {
 	auto schedule = native::eos::ProducerScheduleObject::get(_db).calculateNextRound(_db);
-	//auto changes = get_global_properties().active_producers - schedule;
-	//EOS_ASSERT(boost::range::equal(next_block.producer_changes, changes), block_validate_exception,
-	//	"Unexpected round changes in new block header",
-	//	("expected changes", changes)("block changes", next_block.producer_changes));
 
 	utilities::rand::random rng(next_block.timestamp().convert_to<uint64_t>());
 	rng.shuffle(schedule);
@@ -191,14 +193,19 @@ ProducerRound chain_controller::calculate_next_round(const BlockHeader& next_blo
 void chain_controller::update_global_properties(const BlockHeader& b) {
 	// If we're at the end of a round, update the BlockchainConfiguration, producer schedule
 	// and "producers" special account authority
-	if (b.number().convert_to<uint32_t>() % config::BlocksPerRound == 0) {
+	ctrace << "============>BlockNum = "<<b.number().convert_to<uint32_t>();
+	if (b.number().convert_to<uint32_t>() % config::TotalProducersPerRound == 0) {
 		try {
 			auto schedule = calculate_next_round(b);
 			//auto config = _admin->get_blockchain_configuration(_db, schedule);
 
 			const auto& gpo = get_global_properties();
-			_db.modify(gpo, [schedule = std::move(schedule)](global_property_object& gpo) {
-				gpo.active_producers = std::move(schedule);
+			_db.modify(gpo, [schedule](global_property_object& gpo) {
+				for (int i = 0; i < schedule.size(); i++)
+				{
+					gpo.active_producers[i] = schedule[i];
+				}
+				
 				//gpo.configuration = std::move(config);
 			});
 		}
@@ -267,68 +274,68 @@ using native::eos::ProducerVotesObject;
 
 void chain_controller::update_pvomi_perblock()
 {
-	////std::map<Address, VoteBace> AllProducers = get_votes();
-	//std::map<Address, uint32_t> AllProducers;
-	//std::unordered_set<Address> InactiveProducers;
-
-	//// check every producer in AllProducers
-	//InactiveProducers.clear();
-	//for (const auto& p : AllProducers)
-	//{
-	//	auto it = _all_votes.find(p.first);
-	//	if (it != _all_votes.end())
-	//	{
-	//		dev::types::Int64 deltaVotes = p.second.m_votedNumber - it->second;
-	//		if (deltaVotes == 0)
-	//			continue;
-
-	//		auto raceTime = ProducerScheduleObject::get(_db).currentRaceTime;
-	//		_db.modify<ProducerVotesObject>(_db.get<ProducerVotesObject, native::eos::byOwnerName>(p.first), [&](ProducerVotesObject& pvo) {
-	//			pvo.updateVotes(deltaVotes, raceTime);
-	//		});
-	//		it->second = p.second.m_votedNumber;
-	//	}
-	//	else
-	//	{
-	//		auto raceTime = ProducerScheduleObject::get(_db).currentRaceTime;
-	//		_db.create<ProducerVotesObject>([&](ProducerVotesObject& pvo) {
-	//			pvo.ownerName = p.first;
-	//			pvo.startNewRaceLap(raceTime);
-	//		});
-
-	//		_db.create<producer_object>([&](producer_object& po) {
-	//			po.owner = p.first;
-	//			//po.signing_key = update.key;
-	//			//po.configuration = update.configuration;
-	//		});
-	//		
-	//		_all_votes.insert(std::make_pair(p.first, p.second.m_votedNumber));
-	//	}
-	//}
-
-	//// remove all inactive producers
-	//for (const auto& p : _all_votes)
-	//{
-	//	if (AllProducers.find(p.first) == AllProducers.end())
-	//	{
-	//		InactiveProducers.insert(p.first);
-	//	}
-	//}
-
-	//for (auto& p : InactiveProducers)
-	//{
-	//	_db.remove<ProducerVotesObject>(_db.get<ProducerVotesObject, native::eos::byOwnerName>(p));
-	//	_db.remove<producer_object>(_db.get<producer_object, eos::chain::by_owner>(p));
-	//	_all_votes.erase(p);
-	//}
-
-	//ctrace << "ProducerVotesMultiIndex: ";
-	//for ( auto& a : _db.get_index<ProducerVotesMultiIndex, native::eos::byProjectedRaceFinishTime>())
-	//{
-	//	ctrace << "name: " << a.ownerName;
-	//	ctrace << "votes: " << a.getVotes();
-	//	ctrace << "finish time: " << a.projectedRaceFinishTime();
-	//}
+//	//std::map<Address, VoteBace> AllProducers = get_votes();
+//	std::map<Address, uint32_t> AllProducers;
+//	std::unordered_set<Address> InactiveProducers;
+//
+//	// check every producer in AllProducers
+//	InactiveProducers.clear();
+//	for (const auto& p : AllProducers)
+//	{
+//		auto it = _all_votes.find(p.first);
+//		if (it != _all_votes.end())
+//		{
+//			dev::types::Int64 deltaVotes = p.second.m_votedNumber - it->second;
+//			if (deltaVotes == 0)
+//				continue;
+//
+//			auto raceTime = ProducerScheduleObject::get(_db).currentRaceTime;
+//			_db.modify<ProducerVotesObject>(_db.get<ProducerVotesObject, native::eos::byOwnerName>(p.first), [&](ProducerVotesObject& pvo) {
+//				pvo.updateVotes(deltaVotes, raceTime);
+//			});
+//			it->second = p.second.m_votedNumber;
+//		}
+//		else
+//		{
+//			auto raceTime = ProducerScheduleObject::get(_db).currentRaceTime;
+//			_db.create<ProducerVotesObject>([&](ProducerVotesObject& pvo) {
+//				pvo.ownerName = p.first;
+//				pvo.startNewRaceLap(raceTime);
+//			});
+//
+//			_db.create<producer_object>([&](producer_object& po) {
+//				po.owner = p.first;
+//				//po.signing_key = update.key;
+//				//po.configuration = update.configuration;
+//			});
+//			
+//			_all_votes.insert(std::make_pair(p.first, p.second.m_votedNumber));
+//		}
+//	}
+//
+//	// remove all inactive producers
+//	for (const auto& p : _all_votes)
+//	{
+//		if (AllProducers.find(p.first) == AllProducers.end())
+//		{
+//			InactiveProducers.insert(p.first);
+//		}
+//	}
+//
+//	for (auto& p : InactiveProducers)
+//	{
+//		_db.remove<ProducerVotesObject>(_db.get<ProducerVotesObject, native::eos::byOwnerName>(p));
+//		_db.remove<producer_object>(_db.get<producer_object, eos::chain::by_owner>(p));
+//		_all_votes.erase(p);
+//	}
+//
+//	ctrace << "ProducerVotesMultiIndex: ";
+//	for ( auto& a : _db.get_index<ProducerVotesMultiIndex, native::eos::byProjectedRaceFinishTime>())
+//	{
+//		ctrace << "name: " << a.ownerName;
+//		ctrace << "votes: " << a.getVotes();
+//		ctrace << "finish time: " << a.projectedRaceFinishTime();
+//	}
 }
 
 void chain_controller::update_global_dynamic_data(const BlockHeader& b) {
@@ -342,17 +349,22 @@ void chain_controller::update_global_dynamic_data(const BlockHeader& b) {
 	//      wlog("Blockchain continuing after gap of ${b} missed blocks", ("b", missed_blocks));
 
 	for (uint32_t i = 0; i < missed_blocks; ++i) {
-		const auto& producer_missed = get_producer(get_scheduled_producer(i + 1));
-		if (producer_missed.owner != b.producer()) {
-			/*
-			const auto& producer_account = producer_missed.producer_account(*this);
-			if( (fc::time_point::now() - b.timestamp) < fc::seconds(30) )
-			wlog( "Producer ${name} missed block ${n} around ${t}", ("name",producer_account.name)("n",b.block_num())("t",b.timestamp) );
-			*/
+		AccountName missed_producer_name = get_scheduled_producer(i + 1);
 
-			_db.modify(producer_missed, [&](producer_object& w) {
-				w.total_missed++;
-			});
+		if (missed_producer_name != AccountName())
+		{//略过空Producer
+			const auto& producer_missed = get_producer(missed_producer_name);
+			if (producer_missed.owner != b.producer()) {
+				/*
+				const auto& producer_account = producer_missed.producer_account(*this);
+				if( (fc::time_point::now() - b.timestamp) < fc::seconds(30) )
+				wlog( "Producer ${name} missed block ${n} around ${t}", ("name",producer_account.name)("n",b.block_num())("t",b.timestamp) );
+				*/
+
+				_db.modify(producer_missed, [&](producer_object& w) {
+					w.total_missed++;
+				});
+			}
 		}
 	}
 
@@ -393,10 +405,17 @@ void chain_controller::update_last_irreversible_block()
 	const global_property_object& gpo = get_global_properties();
 	const dynamic_global_property_object& dpo = get_dynamic_global_properties();
 
-	std::vector<const producer_object*> producer_objs;
-	producer_objs.reserve(gpo.active_producers.size());
-	std::transform(gpo.active_producers.begin(), gpo.active_producers.end(), std::back_inserter(producer_objs),
-		[this](const AccountName& owner) { return &get_producer(owner); });
+	std::vector<const producer_object*> producer_objs; 
+
+	auto it_prod = gpo.active_producers.begin();
+	while (it_prod != gpo.active_producers.end())
+	{
+		if (*it_prod != AccountName())
+		{//若不为空账户，则将其加入producer列表
+			producer_objs.push_back(&get_producer(*it_prod));
+		}
+		it_prod++;
+	}
 
 	static_assert(config::IrreversibleThresholdPercent > 0, "irreversible threshold must be nonzero");
 
