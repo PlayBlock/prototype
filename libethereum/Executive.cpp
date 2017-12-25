@@ -366,7 +366,7 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
 	//by dz
 	if (_type == TransactionType::WASMContractCreation)
 	{
-		m_s.setStorage(Address(6), sha3(m_newAddress), u256(1));
+		m_s.setStorage(WAVMAddress, sha3(m_newAddress), u256(1));
 	}
 	//by dz end
 
@@ -425,7 +425,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 									   //if (m_ext->store(u256(0)) == u256(1))
 									   //if (m_s.storage(Address(0x6d736100))[sha3(m_ext->myAddress)] == u256(1))
 	
-			if (m_s.storage(Address(6), sha3(m_ext->myAddress)) == u256(1))
+			if (m_s.storage(WAVMAddress, sha3(m_ext->myAddress)) == u256(1))
 				//if (true)
 			{
 				vm = VMFactory::createWASM();

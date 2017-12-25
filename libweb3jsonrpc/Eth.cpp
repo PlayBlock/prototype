@@ -31,6 +31,7 @@
 #include <libweb3jsonrpc/JsonHelper.h>
 #include "Eth.h"
 #include "AccountHolder.h"
+#include "../libevm/Vote.h"
 
 using namespace std;
 using namespace jsonrpc;
@@ -654,6 +655,67 @@ Json::Value Eth::eth_syncing()
 	info["highestBlock"] = sync.highestBlockNumber;
 	info["currentBlock"] = sync.currentBlockNumber;
 	return info;
+}
+
+Json::Value Eth::eth_getVote()
+{
+	try
+	{
+		
+		string _blockNumber = "latest";		
+		map<h256, pair<u256, u256>> storageMap = client()->storageAt(VoteInfoAddress, jsToBlockNumber(_blockNumber));
+		std::unordered_map<u256, u256> voteMapChange;
+		unordered_map<Address, VoteBace> returnMap;
+
+		dev::bytes bytes0(12, '\0');
+		for (auto iterator = storageMap.begin(); iterator != storageMap.end(); iterator++)
+		{
+			//dev::u256 iteratorFirst = iterator->first;
+			//dev::bytes iteratorBytes = ((dev::h256)iteratorFirst).asBytes();
+			//dev::bytes iteratorAddress(iteratorBytes.begin(), iteratorBytes.begin() + sizeof(dev::Address));
+			//dev::bytes iteratorExpand(iteratorBytes.begin() + sizeof(dev::Address), iteratorBytes.end());
+			//hashkey:h256->(key:u256,value:u256)
+			dev::u256 key = iterator->second.first;
+			dev::bytes iteratorBytes = ((dev::h256)key).asBytes();
+			dev::bytes iteratorAddress(iteratorBytes.begin(), iteratorBytes.begin() + sizeof(dev::Address));
+			dev::bytes iteratorExpand(iteratorBytes.begin() + sizeof(dev::Address), iteratorBytes.end());
+
+			if (iteratorExpand == bytes0)
+			{
+				Vote reset(storageMap, voteMapChange, dev::Address(iteratorAddress));
+				reset.load();
+				VoteBace vb;
+				vb.m_address = dev::Address(iteratorAddress);
+				vb.m_assignNumber = reset.getAssignNumber();
+				vb.m_isCandidate = reset.getIsCandidate();
+				vb.m_isVoted = reset.getIsVoted();
+				vb.m_receivedVoteNumber = reset.getReceivedVoteNumber();
+				vb.m_unAssignNumber = reset.getUnAssignNumber();
+				vb.m_votedNumber = reset.getVotedNumber();
+				vb.m_voteTo = reset.getVoteTo();
+				returnMap[dev::Address(iteratorAddress)] = vb;
+			}
+		}
+		Json::Value res(Json::objectValue);
+		for (auto i : returnMap)
+		{
+			Json::Value subRes(Json::objectValue);
+			subRes["assignNumber"] = to_string(i.second.m_assignNumber);
+			subRes["isCandidate"] = i.second.m_isCandidate;
+			subRes["isVoted"] = i.second.m_isVoted;
+			subRes["receivedVoteNumber"] = to_string(i.second.m_receivedVoteNumber);
+			subRes["unAssignNumber"] = to_string(i.second.m_unAssignNumber);
+			subRes["votedNumber"] = to_string(i.second.m_votedNumber);
+			subRes["voteTo"] = i.second.m_voteTo.hex();
+
+			res["0x" + i.first.hex()] = subRes;
+		}
+		return res;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
 bool Eth::eth_submitWork(string const& _nonce, string const&, string const& _mixHash)

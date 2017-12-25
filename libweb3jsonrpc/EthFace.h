@@ -65,6 +65,7 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_notePassword", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_notePasswordI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_syncing", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT,  NULL), &dev::rpc::EthFace::eth_syncingI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_estimateGas", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_estimateGasI);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_getVote", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_getVoteI);
                 }
 
                 inline virtual void eth_protocolVersionI(const Json::Value &request, Json::Value &response)
@@ -280,6 +281,11 @@ namespace dev {
                     (void)request;
                     response = this->eth_syncing();
                 }
+				inline virtual void eth_getVoteI(const Json::Value &request, Json::Value &response)
+				{
+					(void)request;
+					response = this->eth_getVote();
+				}
                 inline virtual void eth_estimateGasI(const Json::Value &request, Json::Value &response)
                 {
                     response = this->eth_estimateGas(request[0u]);
@@ -335,6 +341,7 @@ namespace dev {
                 virtual bool eth_notePassword(const std::string& param1) = 0;
                 virtual Json::Value eth_syncing() = 0;
                 virtual std::string eth_estimateGas(const Json::Value& param1) = 0;
+				virtual Json::Value eth_getVote() = 0;
         };
 
     }

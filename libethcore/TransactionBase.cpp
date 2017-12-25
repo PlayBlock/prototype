@@ -66,7 +66,7 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 			m_receiveAddress = Address();
 		}
 		//else if (rlp[field = 3].toHash<Address>(RLP::VeryStrict)==Address(0x6d736100))
-		else if (rlp[3].toHash<Address>(RLP::VeryStrict) == Address(6))
+		else if (rlp[3].toHash<Address>(RLP::VeryStrict) == WAVMAddress)
 		{
 			m_type = WASMContractCreation;
 			m_receiveAddress = Address();
@@ -212,7 +212,7 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forE
 		_s << "";
 	else if (m_type == WASMContractCreation)
 		//_s << Address(0x6d736100);
-		_s << Address(6);
+		_s << WAVMAddress;
 	else
 		_s << m_receiveAddress;
 	//

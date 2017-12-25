@@ -150,7 +150,8 @@ void Vote::saveInMaps(const dev::bytes& data)
 		memcpy(pageH256.data(), data.data() + (i * 32), 32);
 		//m_map[expand(i)] = (dev::u256)pageH256;
 		u256 key = expand(i);
-		h256 const hashedKey(key);
+		dev::h256 hashkey = key;
+		dev::h256 const hashedKey = dev::sha3(hashkey);
 		m_map[hashedKey] = std::make_pair(key, (dev::u256)pageH256);
 		m_mapChange[key] = (dev::u256)pageH256;
 	}
@@ -168,7 +169,8 @@ void Vote::saveInMaps(const dev::bytes& data)
 	//m_mapChange[expand(page)] = (dev::u256)pageH256;
 
 	u256 key = expand(page);
-	h256 const hashedKey(key);
+	h256 hashkey = key;
+	h256 const hashedKey = dev::sha3(hashkey);
 	m_map[hashedKey] = std::make_pair(key, (dev::u256)pageH256);
 	m_mapChange[key] = (dev::u256)pageH256;
 
@@ -187,7 +189,8 @@ dev::bytes Vote::loadFromMap(uint64_t size)
 	for (uint64_t i = 0; i < page; i++)
 	{
 		dev::u256 const key = expand(i);
-		dev::h256 const hashedKey(key);
+		dev::h256 const hashkey = key;
+		dev::h256 const hashedKey = dev::sha3(hashkey);
 		auto it = m_map.find(hashedKey);
 		if (it == m_map.end())
 		{
@@ -201,10 +204,11 @@ dev::bytes Vote::loadFromMap(uint64_t size)
 		bytesTemp = pageH256.asBytes();
 		res.insert(res.end(), bytesTemp.begin(), bytesTemp.end());
 	}
-
+	
 	// Write last page.
 	dev::u256 key = expand(page);
-	dev::h256 const hashedKey(key);
+	dev::h256 const hashkey = key;
+	dev::h256 const hashedKey = dev::sha3(hashkey);
 	//it = m_map.find(key);
 	auto it = m_map.find(hashedKey);
 
@@ -597,7 +601,7 @@ void VoteDelegate::mortgage(uint64_t amount, dev::Address const& _address, dev::
 {
 	if (_state.balance(_address) >= amount)
 	{
-		std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address("0000000000000000000000000000000000000005"));
+		std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
 		std::unordered_map<dev::u256, dev::u256> mapChange;
 		Vote vote(voteMap, mapChange, _address);
 		vote.load();
@@ -607,7 +611,7 @@ void VoteDelegate::mortgage(uint64_t amount, dev::Address const& _address, dev::
 		vote.save();
 		for (auto i : mapChange)
 		{
-			_state.setStorage(Address("0000000000000000000000000000000000000005"), i.first, i.second);
+			_state.setStorage(VoteInfoAddress, i.first, i.second);
 		}
 	}
 
@@ -617,7 +621,7 @@ void VoteDelegate::mortgage(uint64_t amount, dev::Address const& _address, dev::
 
 void VoteDelegate::redeem(uint64_t voteCount, dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address("0000000000000000000000000000000000000005"));
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -629,12 +633,12 @@ void VoteDelegate::redeem(uint64_t voteCount, dev::Address const& _address, dev:
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(Address("0000000000000000000000000000000000000005"), i.first, i.second);
+		_state.setStorage(VoteInfoAddress, i.first, i.second);
 	}
 }
 void VoteDelegate::candidateRegister(dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address("0000000000000000000000000000000000000005"));
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -643,12 +647,13 @@ void VoteDelegate::candidateRegister(dev::Address const& _address, dev::eth::Sta
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(Address("0000000000000000000000000000000000000005"), i.first, i.second);
+		_state.setStorage(VoteInfoAddress, i.first, i.second);
 	}
+
 }
 void VoteDelegate::candidateDeregister(dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address("0000000000000000000000000000000000000005"));
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -657,13 +662,13 @@ void VoteDelegate::candidateDeregister(dev::Address const& _address, dev::eth::S
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(Address("0000000000000000000000000000000000000005"), i.first, i.second);
+		_state.setStorage(VoteInfoAddress, i.first, i.second);
 	}
 }
 
 void VoteDelegate::vote(dev::Address _toAddress, dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address("0000000000000000000000000000000000000005"));
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -672,13 +677,13 @@ void VoteDelegate::vote(dev::Address _toAddress, dev::Address const& _address, d
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(Address("0000000000000000000000000000000000000005"), i.first, i.second);
+		_state.setStorage(VoteInfoAddress, i.first, i.second);
 	}
 }
 
 void VoteDelegate::removeVote(dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address("0000000000000000000000000000000000000005"));
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -687,14 +692,14 @@ void VoteDelegate::removeVote(dev::Address const& _address, dev::eth::State& _st
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(Address("0000000000000000000000000000000000000005"), i.first, i.second);
+		_state.setStorage(VoteInfoAddress, i.first, i.second);
 	}
 
 }
 
 void VoteDelegate::send(dev::Address _toAddress, uint64_t _amount, dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address("0000000000000000000000000000000000000005"));
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -703,13 +708,13 @@ void VoteDelegate::send(dev::Address _toAddress, uint64_t _amount, dev::Address 
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(Address("0000000000000000000000000000000000000005"), i.first, i.second);
+		_state.setStorage(VoteInfoAddress, i.first, i.second);
 	}
 }
 
 void VoteDelegate::assign(uint64_t voteCount, dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address("0000000000000000000000000000000000000005"));
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -718,12 +723,12 @@ void VoteDelegate::assign(uint64_t voteCount, dev::Address const& _address, dev:
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(Address("0000000000000000000000000000000000000005"), i.first, i.second);
+		_state.setStorage(VoteInfoAddress, i.first, i.second);
 	}
 }
 void VoteDelegate::deAssign(uint64_t voteCount, dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address("0000000000000000000000000000000000000005"));
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -732,7 +737,7 @@ void VoteDelegate::deAssign(uint64_t voteCount, dev::Address const& _address, de
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(Address("0000000000000000000000000000000000000005"), i.first, i.second);
+		_state.setStorage(VoteInfoAddress, i.first, i.second);
 	}
 	
 }
