@@ -32,6 +32,7 @@ BOOST_FIXTURE_TEST_SUITE(PrecompiledTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -50,6 +51,7 @@ BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
 
 BOOST_AUTO_TEST_CASE(modexpZeroBase)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -67,6 +69,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroBase)
 
 BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -86,6 +89,7 @@ BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
 
 BOOST_AUTO_TEST_CASE(modexpRightPadding)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -104,6 +108,7 @@ BOOST_AUTO_TEST_CASE(modexpRightPadding)
 
 BOOST_AUTO_TEST_CASE(modexpMissingValues)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -120,6 +125,7 @@ BOOST_AUTO_TEST_CASE(modexpMissingValues)
 
 BOOST_AUTO_TEST_CASE(modexpEmptyValue)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -137,6 +143,7 @@ BOOST_AUTO_TEST_CASE(modexpEmptyValue)
 
 BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -155,6 +162,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
 
 BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -173,6 +181,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
 
 BOOST_AUTO_TEST_CASE(modexpModLengthZero)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -189,6 +198,7 @@ BOOST_AUTO_TEST_CASE(modexpModLengthZero)
 
 BOOST_AUTO_TEST_CASE(modexpCostFermatTheorem)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -205,6 +215,7 @@ BOOST_AUTO_TEST_CASE(modexpCostFermatTheorem)
 
 BOOST_AUTO_TEST_CASE(modexpCostTooLarge)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -220,6 +231,7 @@ BOOST_AUTO_TEST_CASE(modexpCostTooLarge)
 
 BOOST_AUTO_TEST_CASE(modexpCostEmptyExponent)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -238,6 +250,7 @@ BOOST_AUTO_TEST_CASE(modexpCostEmptyExponent)
 
 BOOST_AUTO_TEST_CASE(modexpCostZeroExponent)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -255,6 +268,7 @@ BOOST_AUTO_TEST_CASE(modexpCostZeroExponent)
 
 BOOST_AUTO_TEST_CASE(modexpCostApproximated)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -272,6 +286,7 @@ BOOST_AUTO_TEST_CASE(modexpCostApproximated)
 
 BOOST_AUTO_TEST_CASE(modexpCostApproximatedPartialByte)
 {
+	State* p = nullptr; State NullConference(*p);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -656,6 +671,7 @@ namespace
 {
 void benchmarkPrecompiled(char const name[], vector_ref<const PrecompiledTest> tests, int n)
 {
+	State* p = nullptr; State NullConference(*p);
 	if (!Options::get().all)
 	{
 		std::cout << "Skipping benchmark test because --all option is not specified.\n";
