@@ -209,16 +209,20 @@ void BlockHeader::populate(RLP const& _header)
 		m_extraData = _header[field = 12].toBytes();
 		m_seal.clear();
 
-		uint32_t sealCount = _header.itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields;
-		for (unsigned i = 13; i < 13+sealCount; ++i)
-			m_seal.push_back(_header[i].data().toBytes());
-
 		if (m_number > ETIForkBlock)
 		{
+			uint32_t sealCount = _header.itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields;
+			for (unsigned i = 13; i < 13 + sealCount; ++i)
+				m_seal.push_back(_header[i].data().toBytes());
 			byte v = _header[field = 13 + sealCount].toInt<byte>() - 27;
 			h256 r = _header[field = 14 + sealCount].toInt<u256>();
 			h256 s = _header[field = 15 + sealCount].toInt<u256>();
 			m_signature = { r, s, v };
+		}
+		else
+		{
+			for (unsigned i = 13; i < _header.itemCount(); ++i)
+				m_seal.push_back(_header[i].data().toBytes());
 		}
 	}
 	catch (Exception const& _e)
