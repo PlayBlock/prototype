@@ -4,6 +4,7 @@ set(
     main.cpp
     MinerAux.h
     Register.cpp
+	VotePrecompiled.cpp
 )
 
 
