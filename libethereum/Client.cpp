@@ -75,7 +75,7 @@ Client::Client(
 	m_preSeal(chainParams().accountStartNonce),
 	m_postSeal(chainParams().accountStartNonce),
 	m_working(chainParams().accountStartNonce),
-	m_producer_plugin(make_shared<class producer_plugin>(m_bc, *this))
+	m_producer_plugin(make_shared<class producer_plugin>(m_bc))
 {
 	ctrace<< "m_bc.initProds = "<<m_bc.chainParams().initialProducers.size();
 	init(_host, _dbPath, _forceAction, _networkID);
@@ -124,6 +124,7 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 
 	// for dpos
 	m_producer_plugin->get_chain_controller().setStateDB(m_stateDB);
+	m_producer_plugin->setClient(*this);
 	m_bc.setProducer(m_producer_plugin);
 
 	// for ETIFork

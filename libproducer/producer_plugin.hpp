@@ -31,7 +31,7 @@ namespace block_production_condition {
 
 class producer_plugin {
 public:
-	producer_plugin(const dev::eth::BlockChain& bc, dev::eth::Client& client);
+	producer_plugin(const dev::eth::BlockChain& bc);
 	~producer_plugin() {
 		//_chain.reset();
 		//_db.reset();
@@ -47,12 +47,13 @@ public:
 	const fc::ecc::private_key& get_private_key(types::AccountName& address)const { return _private_keys.at(address); }
 	chainbase::database& get_db() { return *_db; }
 
+	void setClient(Client& c) { _client = &c; };
 private:
 	std::shared_ptr<boost::asio::io_service> _io_server;
 	boost::asio::deadline_timer _timer;
 	std::unique_ptr<chain::chain_controller> _chain;
 	std::shared_ptr<chainbase::database> _db;
-	Client& _client;
+	Client* _client;
 
 	bool _production_enabled = false;
 	types::AccountNames _producers;

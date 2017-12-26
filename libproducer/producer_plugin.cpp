@@ -8,10 +8,9 @@
 
 using namespace dev::eth;
 
-producer_plugin::producer_plugin(const dev::eth::BlockChain& bc, dev::eth::Client& client):
+producer_plugin::producer_plugin(const dev::eth::BlockChain& bc):
 	_io_server(std::make_shared<boost::asio::io_service>()),
-	_timer(*_io_server),
-	_client(client)
+	_timer(*_io_server)
 {
 	auto dbPath = bc.dbPath().string() + "/" + toHex(bc.genesisHash().ref().cropped(0, 4));
 	_db = std::make_shared<chainbase::database>(dbPath, chainbase::database::read_write, 10 * 1024 * 1024);
@@ -161,7 +160,10 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 	/// ³ö¿é
 	try
 	{
-		_client.generate_block(scheduled_time, scheduled_producer, private_key_itr->second);
+		if (_client != nullptr)
+			_client->generate_block(scheduled_time, scheduled_producer, private_key_itr->second);
+		else
+			cwarn << "client is null";
 	}
 	catch(...)
 	{
