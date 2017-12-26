@@ -87,7 +87,7 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 
 	if (_s != CheckNothingNew)
 	{
-		if (_bi.number() < ETIForkBlock) {
+		if (_bi.number() < chainParams().ETIForkBlock) {
 			if (_bi.difficulty() < chainParams().minimumDifficulty)
 				BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError(bigint(chainParams().minimumDifficulty), bigint(_bi.difficulty())));
 		}
@@ -110,7 +110,7 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 	if (_parent)
 	{
 		// Check difficulty is correct given the two timestamps.
-		if (_bi.number() < ETIForkBlock)
+		if (_bi.number() < chainParams().ETIForkBlock)
 		{
 			auto expected = calculateDifficulty(_bi, _parent);
 			auto difficulty = _bi.difficulty();
@@ -249,7 +249,7 @@ void Ethash::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) co
 bool Ethash::quickVerifySeal(BlockHeader const& _bi) const
 {
 	// for dpos: no need to verify pow seal
-    if (_bi.number() > ETIForkBlock)
+    if (_bi.number() > chainParams().ETIForkBlock)
 		return true;
 
 	if (_bi.number() >= ETHASH_EPOCH_LENGTH * 2048)
@@ -270,7 +270,7 @@ bool Ethash::quickVerifySeal(BlockHeader const& _bi) const
 bool Ethash::verifySeal(BlockHeader const& _bi) const
 {
 	// for dpos: no need to verify pow seal
-	if (_bi.number() > ETIForkBlock)
+	if (_bi.number() > chainParams().ETIForkBlock)
 		return true;
 
 	bool pre = quickVerifySeal(_bi);

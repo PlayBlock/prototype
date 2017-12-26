@@ -53,9 +53,6 @@
 #pragma GCC diagnostic pop
 #include "vector_ref.h"
 
-// for ETI fork
-const uint32_t ETIForkBlock = 9999;
-
 // CryptoPP defines byte in the global namespace, so must we.
 using byte = uint8_t;
 

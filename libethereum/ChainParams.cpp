@@ -88,13 +88,15 @@ string const c_registrar = "registrar";
 //for dpos
 string const c_enableStaleProduction = "enableStaleProduction";
 string const c_producerAccounts = "producerAccounts";
+string const c_ETIForkBlock = "ETIForkBlock";
 
 set<string> const c_knownParamNames = {
 	c_minGasLimit, c_maxGasLimit, c_gasLimitBoundDivisor, c_homesteadForkBlock,
 	c_EIP150ForkBlock, c_EIP158ForkBlock, c_accountStartNonce, c_maximumExtraDataSize,
 	c_tieBreakingGas, c_blockReward, c_byzantiumForkBlock, c_constantinopleForkBlock,
 	c_daoHardforkBlock, c_minimumDifficulty, c_difficultyBoundDivisor, c_durationLimit,
-	c_chainID, c_networkID, c_allowFutureBlocks, c_registrar, c_enableStaleProduction, c_producerAccounts
+	c_chainID, c_networkID, c_allowFutureBlocks, c_registrar, c_enableStaleProduction, 
+	c_producerAccounts, c_ETIForkBlock
 };
 } // anonymous namespace
 
@@ -141,6 +143,10 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 		cp.networkID = int(u256(fromBigEndian<u256>(fromHex(params.at(c_networkID).get_str()))));
 	cp.allowFutureBlocks = params.count(c_allowFutureBlocks);
 
+
+	// for ETI Fork
+	setOptionalU256Parameter(cp.ETIForkBlock, c_ETIForkBlock);
+
 	/// for dpos
 	cp.enableStaleProduction = params.count(c_enableStaleProduction);
 
@@ -151,6 +157,7 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 			cp.accountNames.insert(types::AccountName(a.get_str()));
 		}
 	}
+
 
 	// privateKeys
 	if (obj.count("privateKeys") > 0)

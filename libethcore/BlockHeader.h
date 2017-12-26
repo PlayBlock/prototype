@@ -223,10 +223,12 @@ public:
 	types::AccountName const& producer() const;
 	const SignatureStruct& signature() const { return m_signature; }
 
+	static void setETIForkBlock(const u256& num) { m_ETIForkBlock = num; }
 private:
 	
 	SignatureStruct m_signature;
 	mutable types::AccountName m_producer;
+	static u256 m_ETIForkBlock;
 
 };
 

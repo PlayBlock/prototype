@@ -105,6 +105,7 @@ public:
 	/// for dpos
 	bool enableStaleProduction = false;
 	types::AccountNames accountNames;
+	u256 ETIForkBlock;
 
 	/// private keys for producer
 	std::unordered_map<Address, Secret> privateKeys;

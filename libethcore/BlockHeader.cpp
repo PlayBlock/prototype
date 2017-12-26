@@ -32,6 +32,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+u256 BlockHeader::m_ETIForkBlock = 0;
+
 BlockHeader::BlockHeader()
 {
 }
@@ -141,7 +143,7 @@ void BlockHeader::streamRLPFields(RLPStream& _s) const
 
 void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const
 {
-	if (m_number > ETIForkBlock)
+	if (m_number > m_ETIForkBlock)
 	{
 		// ETI fork 后, WithoutSeal用来表示是否添加signature
 		if (_i != OnlySeal)
@@ -209,7 +211,7 @@ void BlockHeader::populate(RLP const& _header)
 		m_extraData = _header[field = 12].toBytes();
 		m_seal.clear();
 
-		if (m_number > ETIForkBlock)
+		if (m_number > m_ETIForkBlock)
 		{
 			uint32_t sealCount = _header.itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields;
 			for (unsigned i = 13; i < 13 + sealCount; ++i)

@@ -722,7 +722,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	// All ok - insert into DB
 	bytes const receipts = br.rlp();
 
-	if (_block.info.number() > ETIForkBlock)
+	if (_block.info.number() > chainParams().ETIForkBlock)
 	{
 		return insertBlockAndExtras4ETI(_block, ref(receipts), td, performanceLogger);
 	}
@@ -743,7 +743,7 @@ ImportRoute BlockChain::insertWithoutParent(bytes const& _block, bytesConstRef _
 
 	ImportPerformanceLogger performanceLogger;
 
-	if (block.info.number() > ETIForkBlock)
+	if (block.info.number() > chainParams().ETIForkBlock)
 	{
 		return insertBlockAndExtras4ETI(block, _receipts, _totalDifficulty, performanceLogger);
 	}
