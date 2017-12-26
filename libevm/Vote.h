@@ -8,17 +8,60 @@
 #define VOTES_PRE_ETH 10000000000000000
 
 class dev::eth::State;
-class Vote
+
+class StateMap
 {
 public:
-	Vote(std::map<dev::h256, std::pair<dev::u256, dev::u256>>& map, std::unordered_map<dev::u256, dev::u256>& mapChange, const dev::Address& address, bool isCandidate = false, uint64_t votedNumber = 0,
-		uint64_t unAssignNumber = 0, uint64_t assignNumbe = 0, bool isVoted = false,
-		const dev::Address& voteTo = dev::Address(), uint64_t receivedVoteNumber = 0);
-	~Vote();
+	StateMap(
+		std::map<dev::h256, std::pair<dev::u256, dev::u256>>& map, 
+		std::unordered_map<dev::u256, dev::u256>& mapChange, 
+		const dev::Address& address);
+	~StateMap();
 
 	void load();
 	void save();
-	uint64_t size();
+	virtual uint64_t size() { return 0; } 
+	std::unordered_map<dev::u256, dev::u256>& getMapChange() { return m_mapChange; }
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>>& getMap() { return m_map; }
+	dev::Address getAddress() const { return m_address; }
+
+	virtual void _loadImpl(const dev::bytes& loadedBytes) = 0;
+	virtual dev::bytes _saveImpl() = 0; 
+
+protected:
+	dev::bytes uint64_tToBytes(uint64_t number);
+	uint64_t bytesToUint64_t(const dev::bytes& bytes);
+	dev::bytes u256ToBytes(dev::u256 number);
+	dev::u256 bytesToU256(const dev::bytes& bytes);
+
+	dev::u256 expand(uint64_t number, uint32_t m = 0);
+	void saveInMaps(const dev::bytes& data);
+	dev::bytes loadFromMap(uint64_t size);
+
+private:
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>>& m_map; ///存储投票信息的map
+	dev::Address m_address;                                      ///投票信息对应的地址
+	std::unordered_map<dev::u256, dev::u256>& m_mapChange;       ///存储投票信息改变的map
+
+};
+
+
+class Vote : public StateMap
+{
+public:
+	Vote(
+		std::map<dev::h256, std::pair<dev::u256, dev::u256>>& map, 
+		std::unordered_map<dev::u256, dev::u256>& mapChange, 
+		const dev::Address& address, 
+		bool isCandidate = false, uint64_t votedNumber = 0,
+		uint64_t unAssignNumber = 0, uint64_t assignNumbe = 0, bool isVoted = false,
+		const dev::Address& voteTo = dev::Address(), uint64_t receivedVoteNumber = 0);
+	~Vote();
+	 
+
+	virtual void _loadImpl(const dev::bytes& loadedBytes);
+	virtual dev::bytes _saveImpl(); 
+	virtual uint64_t size();
 
 	void setIsCandidate(bool number);
 	void setVotedNumber(uint64_t number);
@@ -34,8 +77,7 @@ public:
 	uint64_t getAssignNumber();
 	bool getIsVoted();
 	dev::Address getVoteTo();
-	uint64_t getReceivedVoteNumber();
-	const std::unordered_map<dev::u256, dev::u256>& getMapChange();
+	uint64_t getReceivedVoteNumber(); 
 
 	int mortgage(uint64_t balance);                             ///抵押
 	int redeem(uint64_t voteCount);                             ///赎回
@@ -56,18 +98,7 @@ protected:
 	dev::Address m_voteTo;                                      ///将已分配投票权投给的地址
 	uint64_t m_receivedVoteNumber;                              ///收到他人的投票权，这部分投票权只能作为已分配投票全，不能转为尚未分配投票权
 
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>>& m_map;            ///存储投票信息的map
-	dev::Address m_address;                                     ///投票信息对应的地址
-	std::unordered_map<dev::u256, dev::u256>& m_mapChange;      ///存储投票信息改变的map
-
-	dev::bytes uint64_tToBytes(uint64_t number);
-	uint64_t bytesToUint64_t(const dev::bytes& bytes);
-	dev::bytes u256ToBytes(dev::u256 number);
-	dev::u256 bytesToU256(const dev::bytes& bytes);
-
-	dev::u256 expand(uint64_t number, uint32_t m = 0);
-	void saveInMaps(const dev::bytes& data);
-	dev::bytes loadFromMap(uint64_t size);
+ 
 
 	void resetVotedTo(const dev::Address& address);
 };

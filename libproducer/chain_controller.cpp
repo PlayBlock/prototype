@@ -85,6 +85,9 @@ void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 
 				for (const auto& a : _db.get<global_property_object>().active_producers)
 				{
+					if (a == AccountName())
+						continue;
+
 					ctrace << "genesis active producer:" << a;
 					_db.create<producer_object>([&](producer_object& p) {
 						p.owner = a;
