@@ -24,4 +24,5 @@ Address const MaxAddress{"0xffffffffffffffffffffffffffffffffffffffff"};
 Address const SystemAddress{"0xfffffffffffffffffffffffffffffffffffffffe"};
 Address const WAVMAddress{ "0x0000000000000000000000000000000000000020" };
 Address const VoteInfoAddress{ "0x0000000000000000000000000000000000000021" };
+Address const POWInfoAddress{ "0x000000000000000000000000000000000000002b" };
 }

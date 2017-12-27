@@ -50,5 +50,8 @@ extern Address const WAVMAddress;
 /// The Vote info address
 extern Address const VoteInfoAddress;
 
+//POW 数据区地址
+extern Address const POWInfoAddress;
+
 }
 
