@@ -399,4 +399,9 @@ ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)(bytesConstRef _in)
 //}
 
 
+ETH_REGISTER_PRECOMPILED(powReceive)(bytesConstRef _in, Address const& _address, State& _state)
+{
+	return make_pair(true, bytes());
+}
+
 }

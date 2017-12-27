@@ -2,6 +2,7 @@
 
 #include <libdevcore/Common.h>
 #include <libdevcore/Address.h>
+#include "libproducer/types.hpp"
 
 
 /// 1 Eth = 100 Votes
@@ -33,6 +34,8 @@ protected:
 	uint64_t bytesToUint64_t(const dev::bytes& bytes);
 	dev::bytes u256ToBytes(dev::u256 number);
 	dev::u256 bytesToU256(const dev::bytes& bytes);
+	dev::bytes u160ToBytes(dev::h160 number);
+	dev::h160 bytesToU160(const dev::bytes& bytes);
 
 	dev::u256 expand(uint64_t number, uint32_t m = 0);
 	void saveInMaps(const dev::bytes& data);
@@ -103,6 +106,31 @@ protected:
 	void resetVotedTo(const dev::Address& address);
 };
 
+class POW_Operation : public StateMap
+{
+public:
+	POW_Operation(
+		std::map<dev::h256, std::pair<dev::u256, dev::u256>>& map,
+		std::unordered_map<dev::u256, dev::u256>& mapChange,
+		const dev::Address& address);
+	~POW_Operation();
+
+	virtual void _loadImpl(const dev::bytes& loadedBytes);
+	virtual dev::bytes _saveImpl();
+	virtual uint64_t size();
+
+
+protected:
+	dev::types::AccountName      worker_account; //workerµÄ
+	dev::h256		block_id; //¿éhash
+	uint64_t    nonce = 0; 
+
+	//public_key_type   worker;
+	dev::h256        input;
+	//signature_type    signature;
+	dev::h256        work;
+};
+
 struct VoteBace
 {
 	dev::Address m_address;
@@ -130,5 +158,10 @@ public:
 
 	static void assign(uint64_t amount, dev::Address const& _address, dev::eth::State& _state);
 	static void deAssign(uint64_t amount, dev::Address const& _address, dev::eth::State& _state);
+
+
+	//POWÏà¹Ø
+
+	static void pow(dev::Address const& _address, dev::eth::State& _state);
 };
 
