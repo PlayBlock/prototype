@@ -32,6 +32,9 @@
 #include "Eth.h"
 #include "AccountHolder.h"
 #include "../libevm/Vote.h"
+#include <utils/json_spirit/json_spirit_value.h>
+#include <utils/json_spirit/json_spirit_reader_template.h>
+#include <utils/json_spirit/json_spirit_writer_template.h>
 
 using namespace std;
 using namespace jsonrpc;
@@ -778,6 +781,209 @@ Json::Value Eth::eth_fetchQueuedTransactions(string const& _accountId)
 			ret.append(toJson(t));
 		m_ethAccounts.clearQueue(id);
 		return ret;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string Eth::eth_makeKeys(string const& _a)
+{
+	try
+	{
+		int count = std::stoi(_a);
+		if (count <= 0)
+		{
+			count = 100;
+		}
+
+		json_spirit::mValue v;
+		string s("{""keys"":{}}");
+		json_spirit::read_string(s, v);
+		json_spirit::mObject& m = v.get_obj();
+		for (int i = 0; i < count; i++)
+		{
+			KeyPair k(Secret::random());
+			m[k.address().hex()] = toHex(k.secret().ref());
+		}
+		string filePath(boost::filesystem::current_path().string());
+		writeFile(filePath + "/address-keys.json", asBytes(json_spirit::write_string(v, true)));
+
+		return toJS(count);
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string Eth::eth_testSend1(string const& _a)
+{
+	try
+	{
+		struct myAccount {
+			string address;
+			string secret;
+		};
+		std::vector<myAccount> as;
+		string filePath(boost::filesystem::current_path().string());
+		string s = contentsString(filePath + "/address-keys.json");
+		json_spirit::mValue v;
+		json_spirit::read_string(s, v);
+		json_spirit::mObject keys = v.get_obj();
+		for (const auto& key : keys)
+		{
+			myAccount account{ key.first , key.second.get_str() };
+			as.push_back(std::move(account));
+		}
+
+		int count = std::stoi(_a);
+		if (count >= keys.size())
+		{
+			count = keys.size() - 1;
+		}
+		else if (count <= 0)
+		{
+			count = 1;
+		}
+
+		for (int i = 0; i < count; i++)
+		{
+			TransactionSkeleton ts;
+			ts.type = TransactionType::MessageCall;
+			//ts.from = Address(as[0].address);
+			ts.to = Address(as[i + 1].address);
+			ts.value = u256(1000000000000000);
+			//ts.data = bytes();
+			//ts.nonce = u256();
+			ts.gas = u256(50000);
+			ts.gasPrice = client()->gasBidPrice();
+
+			Secret secret(as[0].secret);
+
+			client()->submitTransaction(ts, secret);
+		}
+
+		return toJS(count);
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string Eth::eth_testSend2(string const& _a)
+{
+	try
+	{
+		struct myAccount {
+			string address;
+			string secret;
+		};
+		std::vector<myAccount> as;
+		string filePath(boost::filesystem::current_path().string());
+		string s = contentsString(filePath + "/address-keys.json");
+		json_spirit::mValue v;
+		json_spirit::read_string(s, v);
+		json_spirit::mObject keys = v.get_obj();
+		for (const auto& key : keys)
+		{
+			myAccount account{ key.first , key.second.get_str() };
+			as.push_back(std::move(account));
+		}
+
+		int count = std::stoi(_a);
+		if (count >= keys.size())
+		{
+			count = keys.size() - 1;
+		}
+		else if (count <= 0)
+		{
+			count = 1;
+		}
+
+		for (int i = 0; i < count; i++)
+		{
+			TransactionSkeleton ts;
+			ts.type = TransactionType::MessageCall;
+			//ts.from = Address(as[0].address);
+			ts.to = Address(as[0].address);
+			ts.value = u256(1000000000000000);
+			//ts.data = bytes();
+			//ts.nonce = u256();
+			ts.gas = u256(50000);
+			ts.gasPrice = client()->gasBidPrice();
+
+			Secret secret(as[i + 1].secret);
+
+			client()->submitTransaction(ts, secret);
+		}
+
+		return toJS(count);
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string Eth::eth_testSendBlock(string const& _a)
+{
+	try
+	{
+		Block block(ChainParams().accountStartNonce);
+		//BlockChain bc();
+		//block.sync(bc);
+
+		TransactionQueue tq;
+
+		block.setAuthor(Address());
+
+		int count = std::stoi(_a);
+		return toJS(count);
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string Eth::eth_sign(string const& _a, string const& _b)
+{
+	try
+	{
+		if (_b.size() != 64)
+		{
+			return "Message length error!";
+		}
+		struct myAccount {
+			string address;
+			string secret;
+		};
+		string filePath(boost::filesystem::current_path().string());
+		string s = contentsString(filePath + "/name-keys.json");
+		json_spirit::mValue v;
+		json_spirit::read_string(s, v);
+		json_spirit::mObject name_keys = v.get_obj();
+		if (!name_keys.count(_a))
+		{
+			return "Not find keys!";
+		}
+		myAccount ma;
+		for (auto i : name_keys[_a].get_obj())
+		{
+			ma.address = i.first;
+			ma.secret = i.second.get_str();
+		}
+
+		Secret secret(ma.secret);
+		bytes b_bytes = fromHex(_b);
+		h256 h;
+		memcpy(h.data(), b_bytes.data(), 32);
+		Signature sig = sign(secret, h);
+
+		return sig.hex();
 	}
 	catch (...)
 	{

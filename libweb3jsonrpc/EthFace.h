@@ -66,6 +66,11 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_syncing", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT,  NULL), &dev::rpc::EthFace::eth_syncingI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_estimateGas", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_estimateGasI);
 					this->bindAndAddMethod(jsonrpc::Procedure("eth_getVote", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_getVoteI);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_makeKeys", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_makeKeysI);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_testSend1", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_testSend1I);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_testSend2", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_testSend2I);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_testSendBlock", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_testSendBlockI);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_sign", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_STRING, "param2", jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_signI);
                 }
 
                 inline virtual void eth_protocolVersionI(const Json::Value &request, Json::Value &response)
@@ -290,6 +295,26 @@ namespace dev {
                 {
                     response = this->eth_estimateGas(request[0u]);
                 }
+				inline virtual void eth_makeKeysI(const Json::Value &request, Json::Value &response)
+				{
+					response = this->eth_makeKeys(request[0u].asString());
+				}
+				inline virtual void eth_testSend1I(const Json::Value &request, Json::Value &response)
+				{
+					response = this->eth_testSend1(request[0u].asString());
+				}
+				inline virtual void eth_testSend2I(const Json::Value &request, Json::Value &response)
+				{
+					response = this->eth_testSend2(request[0u].asString());
+				}
+				inline virtual void eth_testSendBlockI(const Json::Value &request, Json::Value &response)
+				{
+					response = this->eth_testSendBlock(request[0u].asString());
+				}
+				inline virtual void eth_signI(const Json::Value &request, Json::Value &response)
+				{
+					response = this->eth_sign(request[0u].asString(), request[1u].asString());
+				}
                 virtual std::string eth_protocolVersion() = 0;
                 virtual std::string eth_hashrate() = 0;
                 virtual std::string eth_coinbase() = 0;
@@ -342,6 +367,11 @@ namespace dev {
                 virtual Json::Value eth_syncing() = 0;
                 virtual std::string eth_estimateGas(const Json::Value& param1) = 0;
 				virtual Json::Value eth_getVote() = 0;
+				virtual std::string eth_makeKeys(const std::string& param1) = 0;
+				virtual std::string eth_testSend1(const std::string& param1) = 0;
+				virtual std::string eth_testSend2(const std::string& param1) = 0;
+				virtual std::string eth_testSendBlock(const std::string& param1) = 0;
+				virtual std::string eth_sign(const std::string& param1, const std::string& param2) = 0;
         };
 
     }
