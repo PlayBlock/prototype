@@ -809,8 +809,8 @@ TestBlock TestBlockChain::defaultDposGenesisBlock(u256 const& _gasLimit)
 
 	json_spirit::mObject accountMapObj;
 
-	accountMapObj["00000000000000000000000000000000000000020"] = accountVote;
-	accountMapObj["00000000000000000000000000000000000000021"] = accountVote;
+	accountMapObj["0x0000000000000000000000000000000000000020"] = accountVote;
+	accountMapObj["0x0000000000000000000000000000000000000021"] = accountVote;
 
 	//accountMapObj["00000000000000000000000000000000000000022"] = mortgageaccount;
 	//accountMapObj["00000000000000000000000000000000000000023"] = redeemaccount;
