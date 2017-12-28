@@ -252,6 +252,77 @@ void TestBlock::mine(TestBlockChain const& _bc)
 		recalcBlockHeaderBytes();
 }
 
+void TestBlock::dposMine(TestBlockChain const& _bc, fc::time_point_sec when, const types::AccountName& producer, const fc::ecc::private_key& block_signing_private_key)
+{
+	TestBlock const& genesisBlock = _bc.testGenesis();
+	OverlayDB const& genesisDB = genesisBlock.state().db();
+
+	BlockChain const& blockchain = _bc.getInterface();
+
+	Block block = blockchain.genesisBlock(genesisDB);
+	block.setAuthor(genesisBlock.beneficiary());
+
+	//set some header data before mining from original SignedBlockHeader
+	dev::eth::BlockHeader& blockInfo = *const_cast<dev::eth::BlockHeader*>(&block.info());
+
+	try
+	{
+		ZeroGasPricer gp;
+		block.sync(blockchain);  //sync block with blockchain
+
+		premineUpdate(blockInfo);
+
+		size_t transactionsOnImport = m_transactionQueue.topTransactions(1024).size();
+		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
+		if (transactionsOnImport >  m_transactionQueue.topTransactions(1024).size())
+			cnote << "Dropped invalid Transactions when mining!";
+
+		dev::eth::dposMine(block, blockchain, when, producer, block_signing_private_key);
+		//blockchain.sealEngine()->verify(JustSeal, block.info());
+	}
+	catch (Exception const& _e)
+	{
+		//cnote << TestOutputHelperFixture::TestOutputHelperFixture() + "block sync or mining did throw an exception: " << diagnostic_information(_e);
+		return;
+	}
+	catch (std::exception const& _e)
+	{
+		//cnote << TestOutputHelper::testName() + "block sync or mining did throw an exception: " << _e.what();
+		return;
+	}
+
+	size_t validTransactions = m_transactionQueue.topTransactions(100).size();
+	m_receipts = RLPStream(validTransactions);
+	for (size_t i = 0; i < validTransactions; i++)
+	{
+		const dev::bytes receipt = block.receipt(i).rlp();
+		m_receipts.appendRaw(receipt);
+	}
+
+	m_blockHeader = dev::eth::BlockHeader(block.blockData());		// NOTE no longer checked at this point in new API. looks like it was unimportant anyway
+	cnote << "Mined TrRoot: " << m_blockHeader.transactionsRoot();
+	copyStateFrom(block.state());
+
+	//Invalid uncles are dropped when mining. but we restore the hash to produce block with invalid uncles (for later test when importing to blockchain)
+	if (m_uncles.size())
+	{
+		//Fill info with uncles
+		RLPStream uncleStream;
+		uncleStream.appendList(m_uncles.size());
+		for (unsigned i = 0; i < m_uncles.size(); ++i)
+		{
+			RLPStream uncleRlp;
+			m_uncles[i].blockHeader().streamRLP(uncleRlp);
+			uncleStream.appendRaw(uncleRlp.out());
+		}
+
+		m_blockHeader.setSha3Uncles(sha3(uncleStream.out()));
+		updateNonce(_bc);
+	}
+	else
+		recalcBlockHeaderBytes();
+}
+
 void TestBlock::setBlockHeader(BlockHeader const& _header)
 {
 	m_blockHeader = _header;
@@ -609,6 +680,152 @@ TestBlock TestBlockChain::defaultGenesisBlock(u256 const& _gasLimit)
 
 	json_spirit::mObject accountMapObj;
 	accountMapObj["a94f5374fce5edbc8e2a8697c15331677e6ebf0b"] = accountObj;
+
+	return TestBlock(blockObj, accountMapObj);
+}
+
+TestBlock TestBlockChain::defaultDposGenesisBlock(u256 const& _gasLimit)
+{
+	json_spirit::mObject blockObj;
+	blockObj["bloom"] = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+	blockObj["coinbase"] = "0x8888f1f195afa192cfee860698584c030f4c9db1";
+	blockObj["difficulty"] = "131072";
+	blockObj["extraData"] = "0x42";
+	blockObj["gasLimit"] = toString(_gasLimit);
+	blockObj["gasUsed"] = "0";
+	blockObj["mixHash"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+	blockObj["nonce"] = "0x0102030405060708";
+	blockObj["number"] = "0";
+	blockObj["parentHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
+	blockObj["receiptTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+	blockObj["stateRoot"] = "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a";
+	blockObj["timestamp"] = "0x54c98c81";
+	blockObj["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+	blockObj["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+	//blockObj["r"] = "0x00";
+	//blockObj["s"] = "0x00";
+	//blockObj["v"] = "0x1c";
+
+	json_spirit::mObject accountVote;
+	accountVote["balance"] = "1000000000000000000"; // =1 eth
+	accountVote["nonce"] = "0";					//=1for nonce too low exception check
+	accountVote["code"] = "0x00";
+	accountVote["storage"] = json_spirit::mObject();
+
+	json_spirit::mObject accountGenesis;
+	accountGenesis["balance"] = "123000000000000000000";
+	accountGenesis["nonce"] = "0";					//=1for nonce too low exception check
+	accountGenesis["code"] = "";
+	accountGenesis["storage"] = json_spirit::mObject();
+	////mortgage
+	//json_spirit::mObject mortgagelinear;
+	//mortgagelinear["base"] = "70";
+	//mortgagelinear["word"] = "7";
+	//json_spirit::mObject mortgageprecompiled;
+	//mortgageprecompiled["name"] = "mortgage";
+	//mortgageprecompiled["linear"] = mortgagelinear;
+	//json_spirit::mObject mortgageaccount;
+	//mortgageaccount["precompiled"] = mortgageprecompiled;
+	////redeem
+	//json_spirit::mObject redeemlinear;
+	//redeemlinear["base"] = "80";
+	//redeemlinear["word"] = "8";
+	//json_spirit::mObject redeemprecompiled;
+	//redeemprecompiled["name"] = "redeem";
+	//redeemprecompiled["linear"] = redeemlinear;
+	//json_spirit::mObject redeemaccount;
+	//redeemaccount["precompiled"] = redeemprecompiled;
+
+	////candidateRegister
+	//json_spirit::mObject candidateRegisterlinear;
+	//candidateRegisterlinear["base"] = "90";
+	//candidateRegisterlinear["word"] = "9";
+	//json_spirit::mObject candidateRegisterprecompiled;
+	//candidateRegisterprecompiled["name"] = "candidateRegister";
+	//candidateRegisterprecompiled["linear"] = candidateRegisterlinear;
+	//json_spirit::mObject candidateRegisteraccount;
+	//candidateRegisteraccount["precompiled"] = candidateRegisterprecompiled;
+
+	////candidateDeregister
+	//json_spirit::mObject candidateDeregisterlinear;
+	//candidateDeregisterlinear["base"] = "100";
+	//candidateDeregisterlinear["word"] = "10";
+	//json_spirit::mObject candidateDeregisterprecompiled;
+	//candidateDeregisterprecompiled["name"] = "candidateDeregister";
+	//candidateDeregisterprecompiled["linear"] = candidateDeregisterlinear;
+	//json_spirit::mObject candidateDeregisteraccount;
+	//candidateDeregisteraccount["precompiled"] = candidateDeregisterprecompiled;
+
+	////vote
+	//json_spirit::mObject votelinear;
+	//votelinear["base"] = "60";
+	//votelinear["word"] = "6";
+	//json_spirit::mObject voteprecompiled;
+	//voteprecompiled["name"] = "vote";
+	//voteprecompiled["linear"] = votelinear;
+	//json_spirit::mObject voteaccount;
+	//voteaccount["precompiled"] = voteprecompiled;
+
+	////removeVote
+	//json_spirit::mObject removeVotelinear;
+	//removeVotelinear["base"] = "60";
+	//removeVotelinear["word"] = "6";
+	//json_spirit::mObject removeVoteprecompiled;
+	//removeVoteprecompiled["name"] = "removeVote";
+	//removeVoteprecompiled["linear"] = removeVotelinear;
+	//json_spirit::mObject removeVoteaccount;
+	//removeVoteaccount["precompiled"] = removeVoteprecompiled;
+
+	////assign
+	//json_spirit::mObject assignlinear;
+	//assignlinear["base"] = "60";
+	//assignlinear["word"] = "6";
+	//json_spirit::mObject assignprecompiled;
+	//assignprecompiled["name"] = "assign";
+	//assignprecompiled["linear"] = assignlinear;
+	//json_spirit::mObject assignaccount;
+	//assignaccount["precompiled"] = assignprecompiled;
+
+	////deAssign
+	//json_spirit::mObject deAssignlinear;
+	//deAssignlinear["base"] = "60";
+	//deAssignlinear["word"] = "6";
+	//json_spirit::mObject deAssignprecompiled;
+	//deAssignprecompiled["name"] = "deAssign";
+	//deAssignprecompiled["linear"] = deAssignlinear;
+	//json_spirit::mObject deAssignaccount;
+	//deAssignaccount["precompiled"] = deAssignprecompiled;
+
+	////send
+	//json_spirit::mObject sendlinear;
+	//sendlinear["base"] = "60";
+	//sendlinear["word"] = "6";
+	//json_spirit::mObject sendprecompiled;
+	//sendprecompiled["name"] = "send";
+	//sendprecompiled["linear"] = sendlinear;
+	//json_spirit::mObject sendaccount;
+	//sendaccount["precompiled"] = sendprecompiled;
+
+
+	json_spirit::mObject accountMapObj;
+
+	accountMapObj["00000000000000000000000000000000000000020"] = accountVote;
+	accountMapObj["00000000000000000000000000000000000000021"] = accountVote;
+
+	//accountMapObj["00000000000000000000000000000000000000022"] = mortgageaccount;
+	//accountMapObj["00000000000000000000000000000000000000023"] = redeemaccount;
+
+	//accountMapObj["00000000000000000000000000000000000000024"] = candidateRegisteraccount;
+	//accountMapObj["00000000000000000000000000000000000000025"] = candidateDeregisteraccount;
+
+	//accountMapObj["00000000000000000000000000000000000000026"] = voteaccount;
+	//accountMapObj["00000000000000000000000000000000000000027"] = removeVoteaccount;
+
+	//accountMapObj["00000000000000000000000000000000000000028"] = assignaccount;
+	//accountMapObj["00000000000000000000000000000000000000029"] = deAssignaccount;
+	//accountMapObj["0000000000000000000000000000000000000002a"] = sendaccount;
+
+	accountMapObj["0x110e3e0a01EcE3a91e04a818F840E9E3D17B3C8f"] = accountGenesis;
 
 	return TestBlock(blockObj, accountMapObj);
 }

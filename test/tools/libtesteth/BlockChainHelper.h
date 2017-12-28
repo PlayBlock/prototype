@@ -25,12 +25,15 @@
 #include <libdevcore/TransientDirectory.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethashseal/Ethash.h>
+#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <fc/time.hpp>
 
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
-
+namespace fs = boost::filesystem;
 
 namespace dev {  namespace test {
 
@@ -70,6 +73,7 @@ public:
 	void setPremine(std::string const& _parameter) { m_premineUpdate[_parameter] = true; }
 	void noteDirty() { m_dirty = true; }
 	void mine(TestBlockChain const& _bc);
+	void dposMine(TestBlockChain const& _bc, fc::time_point_sec when, const types::AccountName& producer, const fc::ecc::private_key& block_signing_private_key);
 	void updateNonce(TestBlockChain const& _bc);
 	void verify(TestBlockChain const& _bc) const;
 
@@ -129,6 +133,7 @@ public:
 
 	static json_spirit::mObject defaultGenesisBlockJson();
 	static TestBlock defaultGenesisBlock(u256 const& _gasLimit = DefaultBlockGasLimit);
+	static TestBlock defaultDposGenesisBlock(u256 const& _gasLimit = DefaultBlockGasLimit);
 	static AccountMap defaultAccountMap();
 	static eth::Network s_sealEngineNetwork;
 private:

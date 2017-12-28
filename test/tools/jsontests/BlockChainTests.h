@@ -60,6 +60,7 @@ struct ChainBranch
 	void restoreFromHistory(size_t _importBlockNumber);
 	TestBlockChain blockchain;
 	vector<TestBlock> importedBlocks;
+	//std::shared_ptr<class producer_plugin> producer;
 
 	static void forceBlockchain(string const& chainname);
 	static void resetBlockchain();

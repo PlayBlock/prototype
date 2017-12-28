@@ -40,6 +40,7 @@ int randomNumber();
 Json::Value loadJsonFromFile(boost::filesystem::path const& _path);
 boost::filesystem::path toTestFilePath(std::string const& _filename);
 boost::filesystem::path getRandomPath();
+std::string getFolder(std::string const& _file);
 
 }
 

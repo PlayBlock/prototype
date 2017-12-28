@@ -37,6 +37,7 @@
 #include <test/tools/libtesteth/ImportTest.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/TestSuite.h>
+#include <fc/time.hpp>
 
 namespace dev
 {
@@ -51,6 +52,7 @@ void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
 void mine(Block& _s, BlockChain const& _bc, SealEngineFace* _sealer);
 void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify = true);
+void dposMine(Block& s, BlockChain const& _bc, fc::time_point_sec when, const types::AccountName& producer, const fc::ecc::private_key& block_signing_private_key);
 }
 
 namespace test

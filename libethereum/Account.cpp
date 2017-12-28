@@ -160,7 +160,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 					ret[a].setStorage(u256(j.first), u256(j.second.get_str()));
 		}
 
-		if (o_mask)
+		if (o_mask )
 		{
 			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage, shouldNotExists);
 			if (!haveStorage && !haveCode && !haveNonce && !haveBalance && shouldNotExists) //defined only shouldNotExists field

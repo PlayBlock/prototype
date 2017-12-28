@@ -187,6 +187,7 @@ ChainBranch::ChainBranch(TestBlock const& _genesis): blockchain(_genesis)
 void ChainBranch::reset()
 {
 	blockchain.reset(importedBlocks.at(0));
+
 }
 
 void ChainBranch::restoreFromHistory(size_t _importBlockNumber)

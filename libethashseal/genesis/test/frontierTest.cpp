@@ -89,8 +89,20 @@ R"E(
 		"0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
 		"0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
 		"0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
-		"0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } }
-	}
+		"0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
+        "0000000000000000000000000000000000000020": { "wei": "1", "code":"0x00" },
+		"0000000000000000000000000000000000000021": { "wei": "1", "code":"0x00" },
+		"0000000000000000000000000000000000000022": { "wei": "7", "precompiled": { "name": "mortgage", "linear": { "base": 70, "word": 7 } } },
+		"0000000000000000000000000000000000000023": { "wei": "8", "precompiled": { "name": "redeem", "linear": { "base": 80, "word": 8 } } },
+		"0000000000000000000000000000000000000024": { "wei": "9", "precompiled": { "name": "candidateRegister", "linear": { "base": 90, "word": 9 } } },
+		"0000000000000000000000000000000000000025": { "wei": "10", "precompiled": { "name": "candidateDeregister", "linear": { "base": 100, "word": 10 } } },
+		"0000000000000000000000000000000000000026": {"precompiled": { "name": "vote", "linear": { "base": 60, "word": 6 } } },
+		"0000000000000000000000000000000000000027": {"precompiled": { "name": "removeVote", "linear": { "base": 60, "word": 6 } } },
+		"0000000000000000000000000000000000000028": {"precompiled": { "name": "assign", "linear": { "base": 60, "word": 6 } } },
+		"0000000000000000000000000000000000000029": {"precompiled": { "name": "deAssign", "linear": { "base": 60, "word": 6 } } },
+		"000000000000000000000000000000000000002a": {"precompiled": { "name": "send", "linear": { "base": 60, "word": 6 } } }
 }
+	}
+   
 )E";
 

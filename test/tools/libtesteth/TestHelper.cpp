@@ -88,6 +88,24 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify)
 		_sealer->verify(JustSeal, _bi);
 }
 
+void dposMine(Block& s, BlockChain const& _bc, fc::time_point_sec when, const types::AccountName& producer, const fc::ecc::private_key& block_signing_private_key)
+{
+	s.currentBlock().setTimestamp(u256(when.sec_since_epoch()));
+
+	s.commitToSeal(_bc, s.info().extraData());
+	//static std::unique_ptr<class EthashCPUMiner> m_miner = make_unique<class EthashCPUMiner>(std::make_pair(nullptr, 1));
+	BlockHeader m_sealingInfo = s.info();
+	//bytes header = m_miner->generateSeal(m_sealingInfo);
+	//generateSeal(m_sealingInfo);
+
+	m_sealingInfo.sign(block_signing_private_key);
+
+	RLPStream header;
+	m_sealingInfo.streamRLP(header);
+
+	s.sealBlock(header.out());
+}
+
 }
 
 namespace test
