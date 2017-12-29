@@ -355,6 +355,7 @@ public:
 
 private:
 	void generateSeal(BlockHeader& bh);
+	void Client::newMineWork();
 	std::shared_ptr<class producer_plugin> m_producer_plugin;
 };
 

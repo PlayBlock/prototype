@@ -543,9 +543,28 @@ void Client::resetState()
 	onTransactionQueueReady();
 }
 
+void Client::newMineWork() 
+{
+	ctrace << "newMineWork";
+	BlockHeader bh = bc().info();
+
+	// 注册回调函数，等待miners找到解后调用
+	sealEngine()->onSealGenerated([=](bytes const& header) {
+
+			clog(ClientNote) << "onSealGenerated...";
+	});
+
+	// 给miners发送新的任务
+	sealEngine()->generateSeal(bh);
+}
+
 void Client::onChainChanged(ImportRoute const& _ir)
 {
 //	ctrace << "onChainChanged()";
+
+	// reload new mining work
+	newMineWork();
+
 	h256Hash changeds;
 	onDeadBlocks(_ir.deadBlocks, changeds);
 	for (auto const& t: _ir.goodTranactions)

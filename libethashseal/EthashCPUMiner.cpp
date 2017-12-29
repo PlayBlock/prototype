@@ -57,29 +57,24 @@ void EthashCPUMiner::pause()
 
 void EthashCPUMiner::workLoop()
 {
+	ctrace << "EthashCPUMiner start mining";
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
 	auto tid = std::this_thread::get_id();
 	static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
 
 	uint64_t tryNonce = s_eng();
-	ethash_return_value ethashReturn;
 
 	WorkPackage w = work();
 
-	EthashAux::FullType dag;
-	while (!shouldStop() && !dag)
-	{
-		while (!shouldStop() && EthashAux::computeFull(w.seedHash, true) != 100)
-			this_thread::sleep_for(chrono::milliseconds(500));
-		dag = EthashAux::full(w.seedHash, false);
-	}
 
 	h256 boundary = w.boundary;
 	unsigned hashCount = 1;
 	for (; !shouldStop(); tryNonce++, hashCount++)
 	{
-		ethashReturn = ethash_full_compute(dag->full, *(ethash_h256_t*)w.headerHash().data(), tryNonce);
-		h256 value = h256((uint8_t*)&ethashReturn.result, h256::ConstructFromPointer);
-		if (value <= boundary && submitProof(EthashProofOfWork::Solution{(h64)(u64)tryNonce, h256((uint8_t*)&ethashReturn.mix_hash, h256::ConstructFromPointer)}))
+		u256 value = 0;
+		// 计算结果小于等于target的时候退出，报告找到的这个解
+		if (value <= boundary)//&& submitProof())
 			break;
 		if (!(hashCount % 100))
 			accumulateHashes(100);
