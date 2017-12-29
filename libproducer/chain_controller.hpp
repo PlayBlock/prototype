@@ -8,6 +8,7 @@
 #include <libethereum/Block.h>
 #include <map> 
 #include <libethereum/BlockChain.h>
+#include "libevm/Vote.h"
 
 namespace dev {
 namespace eth {
@@ -63,20 +64,22 @@ public:
 //	void setStateDB(const OverlayDB& db) { _db.setStateDB(db); }
 //	const chainbase::database& db() { return _db; }
 //
-//
+//  
+	void update_pow_perblock(const Block& newBlock);
+
 	void setStateDB(const OverlayDB& db) { _stateDB = &db; }
 
 	void databaseReversion(uint32_t _firstvalid);
 
 	//std::map<Address, VoteBace> chain_controller::get_votes(h256 const& _hash = h256()) const;
-
+	
 private:
 	void update_global_dynamic_data(const BlockHeader& b);
 	void update_global_properties(const BlockHeader& b);
 	void update_signing_producer(const producer_object& signing_producer, const BlockHeader& new_block);
 
 	void update_pvomi_perblock();
-
+	void update_pow();
 	void update_last_irreversible_block();
 
 	void apply_block(const BlockHeader& b);
@@ -87,6 +90,9 @@ private:
 	const BlockChain& _bc;
 	const OverlayDB* _stateDB;
 	std::unordered_map<Address, uint64_t> _all_votes;
+
+	//用来誊写从当前块获取得所有pow命令，每次接到新块会更新
+	std::unordered_map<Address, POW_Operation> _temp_pow_ops;
 };
 
 }

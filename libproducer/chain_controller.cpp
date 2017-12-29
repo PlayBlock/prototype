@@ -341,6 +341,49 @@ void chain_controller::update_pvomi_perblock()
 //	}
 }
 
+ 
+
+void dev::eth::chain::chain_controller::update_pow()
+{
+
+}
+
+void dev::eth::chain::chain_controller::update_pow_perblock(const Block& newBlock)
+{  
+
+	_temp_pow_ops.clear();
+
+	std::map<h256, std::pair<u256, u256>> powMap = newBlock.storage(POWInfoAddress); 
+	std::map<dev::h160,dev::h160> addressTab;
+
+	//收集所有的POW Address
+	for (auto itpow : powMap)
+	{ 
+		dev::bytes buff = dev::h256(itpow.second.first).asBytes();
+		dev::bytes addrBuff; 
+		for (int i = 0; i < 20; i++)
+		{
+			addrBuff.push_back(buff[i]);
+		}
+
+		dev::h160 powAddr(addrBuff);
+		if (!addressTab.count(powAddr)) {
+			addressTab.insert(std::make_pair(powAddr, powAddr)); 
+		}
+	}
+
+	//将所有OP放到临时列表
+	for (auto itaddr : addressTab)
+	{
+		std::unordered_map<dev::u256, dev::u256> mapChange; 
+		POW_Operation powop(powMap, mapChange, itaddr.first);
+		powop.load(); 
+		_temp_pow_ops.insert(std::make_pair(itaddr.first, powop));
+	} 
+	 
+}
+
+
 void chain_controller::update_global_dynamic_data(const BlockHeader& b) {
 	const dynamic_global_property_object& _dgp = _db.get<dynamic_global_property_object>();
 
@@ -467,12 +510,15 @@ void chain_controller::push_block(const BlockHeader& b)
 void chain_controller::apply_block(const BlockHeader& b)
 {
 	const producer_object& signing_producer = validate_block_header(b);
-	
-	update_pvomi_perblock();
+
+	 
+	update_pvomi_perblock(); 
 	update_global_dynamic_data(b);
 	update_global_properties(b);
 	update_signing_producer(signing_producer, b);
 	update_last_irreversible_block();
+
+	std::cout <<"currentHash: "<< _bc.currentHash().hex() << std::endl;
 }
 
 const producer_object& chain_controller::validate_block_header(const BlockHeader& bh)const

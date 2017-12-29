@@ -694,14 +694,17 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		auto tdIncrease = s.enactOn(_block, *this);
 
 		for (unsigned i = 0; i < s.pending().size(); ++i)
-			br.receipts.push_back(s.receipt(i));
-
+			br.receipts.push_back(s.receipt(i)); 
+		 
 		s.cleanup();
 
 		td = pd.totalDifficulty + tdIncrease;
 
-		performanceLogger.onStageFinished("enactment");
+		performanceLogger.onStageFinished("enactment"); 
 
+		//根据当前新块，提取新块里的所有pow_op供后面更新全局数据库使用
+		m_producer_plugin->get_chain_controller().update_pow_perblock(s);
+		
 #if ETH_PARANOIA
 		checkConsistency();
 #endif // ETH_PARANOIA

@@ -34,8 +34,13 @@ protected:
 	uint64_t bytesToUint64_t(const dev::bytes& bytes);
 	dev::bytes u256ToBytes(dev::u256 number);
 	dev::u256 bytesToU256(const dev::bytes& bytes);
-	dev::bytes u160ToBytes(dev::h160 number);
-	dev::h160 bytesToU160(const dev::bytes& bytes);
+	dev::bytes h160ToBytes(dev::h160 number);
+	dev::h160 bytesToH160(const dev::bytes& bytes);
+
+	dev::bytes h256ToBytes(dev::h256 number);
+	dev::h256 bytesToH256(const dev::bytes& bytes);
+
+	
 
 	dev::u256 expand(uint64_t number, uint32_t m = 0);
 	void saveInMaps(const dev::bytes& data);
@@ -119,16 +124,25 @@ public:
 	virtual dev::bytes _saveImpl();
 	virtual uint64_t size();
 
+	//根据block_id与nonce生成input
+	dev::h256 work_input();
 
-protected:
-	dev::types::AccountName      worker_account; //worker的
-	dev::h256		block_id; //块hash
-	uint64_t    nonce = 0; 
+	//验证结果是否正确
+	bool validate();
 
-	//public_key_type   worker;
-	dev::h256        input;
-	//signature_type    signature;
-	dev::h256        work;
+	//算hash
+	void create(const fc::ecc::private_key& w, const dev::h256& i);
+
+
+//protected:
+
+	dev::h512			 worker_pubkey;	//pow worker公钥
+	dev::h256		 block_id;		//当前块hash
+	uint64_t		 nonce = 0;  
+	dev::h256        input; 
+	dev::h256        work; 
+	dev::Signature		 signature; 
+	
 };
 
 struct VoteBace
@@ -157,11 +171,14 @@ public:
 	static void send(dev::Address _toAddress, uint64_t amount, dev::Address const& _address, dev::eth::State& _state);
 
 	static void assign(uint64_t amount, dev::Address const& _address, dev::eth::State& _state);
-	static void deAssign(uint64_t amount, dev::Address const& _address, dev::eth::State& _state);
+	static void deAssign(uint64_t amount, dev::Address const& _address, dev::eth::State& _state); 
 
-
-	//POW相关
-
-	static void pow(dev::Address const& _address, dev::eth::State& _state);
+	//POW相关 
+	static void pow(
+		dev::Address const& _address, dev::eth::State& _state, 
+		dev::h256 block_id, //块hash
+		uint64_t nonce, 
+		dev::h256 input, 
+		dev::h256 work);
 };
 

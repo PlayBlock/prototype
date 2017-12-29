@@ -280,7 +280,17 @@ ETH_REGISTER_PRECOMPILED(deAssign)(bytesConstRef _in, Address const& _address, S
 
 ETH_REGISTER_PRECOMPILED(powReceive)(bytesConstRef _in, Address const& _address, State& _state)
 {
-	VoteDelegate::pow(_address, _state);
+	std::cout << "pow recv:" << _address.hex() << std::endl; 
+	//uint64_t nonce = boost::lexical_cast<uint64_t>(_in.toString()); 
+	uint64_t nonce = 4321;
+	std::cout << "nonce:" << nonce << std::endl;
+	//for (int i = 7; i >= 0; i--)
+	//{
+	//	nonce *= 8;
+	//	nonce += _in[i];
+	//} 
+
+ 	VoteDelegate::pow(_address, _state,dev::h256(),nonce,dev::h256(),dev::h256());
 	return make_pair(true, bytes());
 }
 

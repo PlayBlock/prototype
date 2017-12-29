@@ -872,6 +872,9 @@ int main(int argc, char** argv)
 		chainParams.allowFutureBlocks = true;
 	}
 
+	//强制测试模式
+	testingMode = true;
+
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("eth"),
 		getDataDir(),
