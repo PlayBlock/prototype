@@ -114,13 +114,6 @@ void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 			});
 		}
 
-		const auto& AllProducers = _db.get_index<ProducerVotesMultiIndex, native::eos::byVotes>();
-
-		for (auto& p : AllProducers)
-		{
-			_all_votes.insert(std::pair<Address, uint64_t>(p.ownerName, p.getVotes()));
-		}
-
 	}
 	catch (...) {
 		cdebug << "initialize_chain error";
