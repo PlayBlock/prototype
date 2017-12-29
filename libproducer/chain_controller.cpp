@@ -339,6 +339,11 @@ void chain_controller::update_pvomi_perblock()
 void dev::eth::chain::chain_controller::update_pow()
 {
 	auto last_block_id = _bc.currentHash();
+
+	dev::h256 target = get_pow_target();
+
+	auto& dgp = _db.get<dynamic_global_property_object>();
+
 	for (auto i : _temp_pow_ops)
 	{
 		POW_Operation& opref = i.second;
@@ -347,8 +352,51 @@ void dev::eth::chain::chain_controller::update_pow()
 			continue;
 		}
 
-		
+		if(opref.work >= target ) continue;
+
+
+		const producer_object* pow_producer = _db.find<producer_object, by_owner>(opref.getAddress());
+
+		if (pow_producer != nullptr)
+		{
+			if (pow_producer->pow_worker != 0)
+			{//尚在队列中，略过
+				continue;
+			}
+		}
+
+		_db.modify(dgp, [&](dynamic_global_property_object& p) {
+			p.total_pow += p.num_pow_witnesses;
+			p.num_pow_witnesses++;
+		});
+
+
+
+		if (pow_producer == nullptr)
+		{//此Produer尚未存在，创建
+			_db.create<producer_object>([&](producer_object& po) {
+				po.owner = opref.getAddress(); 
+				po.pow_worker = dgp.total_pow;
+			});
+		}
+		else {//修改pow次序
+			_db.modify(*pow_producer, [&](producer_object& po) {
+				po.pow_worker = dgp.total_pow; 
+			});
+		}
+
+
+		//const auto& witnesses_by_name = _db.get_index_type< producer_object >().indices().get<by_owner>();
 	}
+}
+
+dev::h256 dev::eth::chain::chain_controller::get_pow_target() 
+{  
+	const auto& dgp = _db.get<dynamic_global_property_object>(); 
+	dev::u256 target;
+	target = -1;
+	target >>= ((dgp.num_pow_witnesses / 4) + 4); 
+	return dev::h256(target);
 }
 
 void dev::eth::chain::chain_controller::update_pow_perblock(const Block& newBlock)

@@ -85,6 +85,8 @@ private:
 	void apply_block(const BlockHeader& b);
 	const producer_object& validate_block_header(const BlockHeader& bh)const;
 
+	dev::h256 get_pow_target();
+
 private:
 	chainbase::database& _db;
 	const BlockChain& _bc;
