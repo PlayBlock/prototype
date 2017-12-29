@@ -301,6 +301,16 @@ bool Ethash::verifySeal(BlockHeader const& _bi) const
 
 	return slow;
 }
+void Ethash::newETIWork(const ETIProofOfWork::WorkPackage& work)
+{
+	Guard l(m_submitLock);
+
+	m_farm.setETIWork(work);
+	m_farm.start(m_sealer);
+	m_farm.setETIWork(work);
+}
+
+
 
 void Ethash::generateSeal(BlockHeader const& _bi)
 {

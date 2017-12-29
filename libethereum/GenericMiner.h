@@ -25,6 +25,7 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/Worker.h>
 #include <libethcore/Common.h>
+#include <libethashseal/ETIProofOfWork.h>
 
 namespace dev
 {
@@ -74,6 +75,7 @@ template <class PoW> class GenericMiner
 {
 public:
 	using WorkPackage = typename PoW::WorkPackage;
+	using ETIWorkPackage = ETIProofOfWork::WorkPackage;
 	using Solution = typename PoW::Solution;
 	using FarmFace = GenericFarmFace<PoW>;
 	using ConstructionInfo = std::pair<FarmFace*, unsigned>;
@@ -103,6 +105,23 @@ public:
 		else if (!_work && old_exists)
 			pause();
 		Guard l(x_hashCount);
+		m_hashCount = 0;
+	}
+
+	void setETIWork(ETIWorkPackage const& _work)
+	{
+		if (m_ETIWork.blockId == _work.blockId)
+			return;
+
+		Guard l(x_work);
+		m_ETIWork = _work;
+
+		DEV_TIMED_ABOVE("pause", 250)
+			pause();
+		DEV_TIMED_ABOVE("kickOff", 250)
+			kickOff();
+
+		Guard ll(x_hashCount);
 		m_hashCount = 0;
 	}
 
@@ -148,6 +167,7 @@ protected:
 	}
 
 	WorkPackage const& work() const { Guard l(x_work); return m_work; }
+	ETIWorkPackage const& ETIWork() const { Guard l(x_work); return m_ETIWork; }
 
 	void accumulateHashes(unsigned _n) { Guard l(x_hashCount); m_hashCount += _n; }
 
@@ -159,6 +179,7 @@ private:
 	mutable Mutex x_hashCount;
 
 	WorkPackage m_work;
+	ETIWorkPackage m_ETIWork;
 	mutable Mutex x_work;
 };
 

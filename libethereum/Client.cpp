@@ -554,8 +554,23 @@ void Client::newMineWork()
 			clog(ClientNote) << "onSealGenerated...";
 	});
 
+
+	static Secret priviteKey = Secret("5c02eb8b326c56e8b68caea90da49fb781c6a998ce5c73806f67c27531938e57");
+	static AccountName workerAccount("0x0c338296B1bEa1e4529D173ea5Ae95508144d9f3");
+
+
+	auto tid = std::this_thread::get_id();
+	static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
+
+	uint64_t tryNonce = s_eng();
+	uint64_t start = tryNonce;
+	uint64_t nonce = start;// +thread_num;
+
+	ETIProofOfWork::WorkPackage newWork = { bh.hash(), priviteKey, workerAccount, nonce };
+
 	// 给miners发送新的任务
-	sealEngine()->generateSeal(bh);
+	//sealEngine()->generateSeal();
+	sealEngine()->newETIWork(newWork);
 }
 
 void Client::onChainChanged(ImportRoute const& _ir)

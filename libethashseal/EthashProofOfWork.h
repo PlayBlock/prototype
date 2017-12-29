@@ -31,6 +31,9 @@ namespace dev
 namespace eth
 {
 
+
+
+
 /// Proof of work definition for Ethash.
 struct EthashProofOfWork
 {

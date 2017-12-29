@@ -46,6 +46,7 @@ class GenericFarm: public GenericFarmFace<PoW>
 {
 public:
 	using WorkPackage = typename PoW::WorkPackage;
+	using ETIWorkPackage = ETIProofOfWork::WorkPackage;
 	using Solution = typename PoW::Solution;
 	using Miner = GenericMiner<PoW>;
 
@@ -72,6 +73,17 @@ public:
 		m_work = _wp;
 		for (auto const& m: m_miners)
 			m->setWork(m_work);
+		resetTimer();
+	}
+
+	void setETIWork(ETIWorkPackage const& _wp)
+	{
+		WriteGuard l(x_minerWork);
+		if (_wp.blockId == m_ETIWork.blockId)
+			return;
+		m_ETIWork = _wp;
+		for (auto const& m : m_miners)
+			m->setETIWork(m_ETIWork);
 		resetTimer();
 	}
 
@@ -187,6 +199,7 @@ private:
 	mutable SharedMutex x_minerWork;
 	std::vector<std::shared_ptr<Miner>> m_miners;
 	WorkPackage m_work;
+	ETIWorkPackage m_ETIWork;
 
 	std::atomic<bool> m_isMining = {false};
 

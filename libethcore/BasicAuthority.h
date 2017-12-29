@@ -44,7 +44,7 @@ public:
 	void verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const override;
 	bool shouldSeal(Interface*) override;
 	void generateSeal(BlockHeader const& _bi) override;
-
+	void newETIWork(const ETIProofOfWork::WorkPackage& work) override {};
 	static Signature sig(BlockHeader const& _bi) { return _bi.seal<Signature>(); }
 	static BlockHeader& setSig(BlockHeader& _bi, Signature const& _sig) { _bi.setSeal(_sig); return _bi; }
 	void setSecret(Secret const& _s) { m_secret = _s; }

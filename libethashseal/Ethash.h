@@ -54,6 +54,7 @@ public:
 	void setSealer(std::string const& _sealer) override { m_sealer = _sealer; }
 	void cancelGeneration() override { m_farm.stop(); }
 	void generateSeal(BlockHeader const& _bi) override;
+	void newETIWork(const ETIProofOfWork::WorkPackage& work) override;
 	bool shouldSeal(Interface* _i) override;
 
 	eth::GenericFarm<EthashProofOfWork>& farm() { return m_farm; }

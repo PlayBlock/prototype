@@ -26,6 +26,7 @@
 #include <chrono>
 #include <boost/algorithm/string.hpp>
 #include <random>
+#include <libevm/Vote.h>
 
 using namespace std;
 using namespace dev;
@@ -65,17 +66,16 @@ void EthashCPUMiner::workLoop()
 
 	uint64_t tryNonce = s_eng();
 
-	WorkPackage w = work();
+	ETIWorkPackage w = ETIWork();
 
-
-	h256 boundary = w.boundary;
+	//h256 boundary = w.boundary;
 	unsigned hashCount = 1;
 	for (; !shouldStop(); tryNonce++, hashCount++)
 	{
 		u256 value = 0;
 		// 计算结果小于等于target的时候退出，报告找到的这个解
-		if (value <= boundary)//&& submitProof())
-			break;
+		//if (value <= boundary)//&& submitProof())
+		//	break;
 		if (!(hashCount % 100))
 			accumulateHashes(100);
 	}

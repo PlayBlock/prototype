@@ -29,6 +29,7 @@
 #include <libdevcore/RLP.h>
 #include "BlockHeader.h"
 #include "Common.h"
+#include <libethashseal/ETIProofOfWork.h>
 
 namespace dev
 {
@@ -69,6 +70,7 @@ public:
 
 	virtual bool shouldSeal(Interface*) { return true; }
 	virtual void generateSeal(BlockHeader const& _bi) = 0;
+	virtual void newETIWork(const ETIProofOfWork::WorkPackage& work) = 0;
 	virtual void onSealGenerated(std::function<void(bytes const& s)> const& _f) = 0;
 	virtual void cancelGeneration() {}
 
@@ -105,6 +107,8 @@ public:
 		if (m_onSealGenerated)
 			m_onSealGenerated(ret.out());
 	}
+	void newETIWork(const ETIProofOfWork::WorkPackage& work) override {}
+
 	void onSealGenerated(std::function<void(bytes const&)> const& _f) override { m_onSealGenerated = _f; }
 	EVMSchedule const& evmSchedule(u256 const& _blockNumber) const override;
 	u256 blockReward(u256 const& _blockNumber) const override;
