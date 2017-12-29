@@ -338,7 +338,17 @@ void chain_controller::update_pvomi_perblock()
 
 void dev::eth::chain::chain_controller::update_pow()
 {
+	auto last_block_id = _bc.currentHash();
+	for (auto i : _temp_pow_ops)
+	{
+		POW_Operation& opref = i.second;
 
+		if (opref.block_id != last_block_id) { //若pow结果不是上一个块的略过
+			continue;
+		}
+
+		
+	}
 }
 
 void dev::eth::chain::chain_controller::update_pow_perblock(const Block& newBlock)
@@ -504,7 +514,7 @@ void chain_controller::apply_block(const BlockHeader& b)
 {
 	const producer_object& signing_producer = validate_block_header(b);
 
-	 
+	update_pow();
 	update_pvomi_perblock(); 
 	update_global_dynamic_data(b);
 	update_global_properties(b);

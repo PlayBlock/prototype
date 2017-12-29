@@ -280,17 +280,42 @@ ETH_REGISTER_PRECOMPILED(deAssign)(bytesConstRef _in, Address const& _address, S
 
 ETH_REGISTER_PRECOMPILED(powReceive)(bytesConstRef _in, Address const& _address, State& _state)
 {
-	std::cout << "pow recv:" << _address.hex() << std::endl; 
-	//uint64_t nonce = boost::lexical_cast<uint64_t>(_in.toString()); 
-	uint64_t nonce = 4321;
-	std::cout << "nonce:" << nonce << std::endl;
-	//for (int i = 7; i >= 0; i--)
-	//{
-	//	nonce *= 8;
-	//	nonce += _in[i];
-	//} 
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> map;
+	std::unordered_map<dev::u256, dev::u256> mapChange;
+	dev::Address fakeAddr;
+	POW_Operation op(map,mapChange,fakeAddr);
+	const uint64_t sizeOfBuf = op.size();
 
- 	VoteDelegate::pow(_address, _state,dev::h256(),nonce,dev::h256(),dev::h256());
+	if (sizeOfBuf != _in.size())
+	{
+		std::cout << "illegal _in buf size : " << _in.size() << " size should be : " << sizeOfBuf << std::endl;
+		return make_pair(false, bytes());
+	}
+
+	dev::bytes inBuf;
+	for (int i = 0; i < _in.size(); i++)
+	{
+		inBuf.push_back(_in[i]);
+	}
+
+	op._loadImpl(inBuf);
+
+	if (!op.validate()) {//未验证成功
+		std::cout << "illegal pow answer !!!!" << std::endl;
+		return make_pair(false, bytes());
+	}
+
+	std::cout << "POW Worker Pass Answer Validation!! address = " << _address.hex() << std::endl;  
+
+	//记录pow信息到state
+ 	VoteDelegate::pow(_address, _state,
+		op.worker_pubkey,
+		op.block_id,
+		op.nonce,
+		op.input,
+		op.work,
+		op.signature);
+
 	return make_pair(true, bytes());
 }
 

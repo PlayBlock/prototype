@@ -176,9 +176,11 @@ public:
 	//POWÏà¹Ø 
 	static void pow(
 		dev::Address const& _address, dev::eth::State& _state, 
+		dev::h512 worker_pubkey,
 		dev::h256 block_id, //¿éhash
 		uint64_t nonce, 
 		dev::h256 input, 
-		dev::h256 work);
+		dev::h256 work,
+		dev::Signature signature);
 };
 
