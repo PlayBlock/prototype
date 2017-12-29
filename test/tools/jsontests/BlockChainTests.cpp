@@ -28,6 +28,7 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/jsontests/BlockChainTests.h>
+#include <libproducer/producer_plugin.hpp>
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
@@ -182,12 +183,17 @@ fs::path TransitionTestsSuite::suiteFillerFolder() const {
 ChainBranch::ChainBranch(TestBlock const& _genesis): blockchain(_genesis)
 {
 	importedBlocks.push_back(_genesis);
+	producer = make_shared<class producer_plugin>(blockchain.getInterface());
+	producer->get_chain_controller().setStateDB(blockchain.testGenesis().state().db());
+	blockchain.interfaceUnsafe().setProducer(producer);
 }
 
 void ChainBranch::reset()
 {
 	blockchain.reset(importedBlocks.at(0));
-
+	producer = make_shared<class producer_plugin>(blockchain.getInterface());
+	producer->get_chain_controller().setStateDB(blockchain.testGenesis().state().db());
+	blockchain.interfaceUnsafe().setProducer(producer);
 }
 
 void ChainBranch::restoreFromHistory(size_t _importBlockNumber)
@@ -241,6 +247,11 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 
 	TestBlockChain testChain(genesisBlock);
 	assert(testChain.getInterface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
+
+	//创建生产者
+	std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(testChain.getInterface());
+	p->get_chain_controller().setStateDB(testChain.testGenesis().state().db());
+	testChain.interfaceUnsafe().setProducer(p);
 
 	output["genesisBlockHeader"] = writeBlockHeaderToJson(genesisBlock.blockHeader());
 	output["genesisRLP"] = toHexPrefixed(genesisBlock.bytes());
@@ -308,7 +319,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		TestBlock block;
 		TestBlockChain& blockchain = chainMap[chainname]->blockchain;
 		vector<TestBlock>& importedBlocks = chainMap[chainname]->importedBlocks;
-
+		chain::chain_controller & _chain(chainMap[chainname]->producer->get_chain_controller());
 		//Import Transactions
 		BOOST_REQUIRE(blObjInput.count("transactions"));
 		for (auto const& txObj: blObjInput.at("transactions").get_array())
@@ -338,7 +349,12 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 			overwriteBlockHeaderForTest(blObjInput.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname]);
 
 		cnote << "Mining block" <<  importBlockNumber << "for chain" << chainname << "at test " << testName;
-		block.mine(blockchain);
+		//block.mine(blockchain);
+		//生产块
+		auto slot = 1;
+		auto pro = _chain.get_producer(_chain.get_scheduled_producer(slot));
+		auto private_key = chainMap[chainname]->producer->get_private_key(pro.owner);
+		block.dposMine(blockchain, _chain.get_slot_time(slot), pro.owner, private_key);
 		cnote << "Block mined with...";
 		cnote << "Transactions: " << block.transactionQueue().topTransactions(100).size();
 		cnote << "Uncles: " << block.uncles().size();
@@ -370,6 +386,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 			blockchain.addBlock(alterBlock);
 			if (testChain.addBlock(alterBlock))
 				cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testName;
+			
 
 			bool isException = (blObjInput.count("expectException"+test::netIdToString(test::TestBlockChain::s_sealEngineNetwork))
 								|| blObjInput.count("expectExceptionALL"));
@@ -432,14 +449,23 @@ void testBCTest(json_spirit::mObject const& _o)
 	TestBlock genesisBlock(_o.at("genesisBlockHeader").get_obj(), _o.at("pre").get_obj());
 	TestBlockChain blockchain(genesisBlock);
 
+
+	std::shared_ptr<class producer_plugin> producer = make_shared<class producer_plugin>(blockchain.getInterface());
+	producer->get_chain_controller().setStateDB(blockchain.testGenesis().state().db());
+	blockchain.interfaceUnsafe().setProducer(producer);
+
 	TestBlockChain testChain(genesisBlock);
 	assert(testChain.getInterface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
+	std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(testChain.getInterface());
+	p->get_chain_controller().setStateDB(testChain.testGenesis().state().db());
+	testChain.interfaceUnsafe().setProducer(p);
 
 	if (_o.count("genesisRLP") > 0)
 	{
 		TestBlock genesisFromRLP(_o.at("genesisRLP").get_str());
 		checkBlocks(genesisBlock, genesisFromRLP, testName);
 	}
+
 
 	for (auto const& bl: _o.at("blocks").get_array())
 	{
@@ -846,9 +872,11 @@ mObject writeBlockHeaderToJson(BlockHeader const& _bi)
 	o["gasUsed"] = toCompactHexPrefixed(_bi.gasUsed(), 1);
 	o["timestamp"] = toCompactHexPrefixed(_bi.timestamp(), 1);
 	o["extraData"] = (_bi.extraData().size()) ? toHexPrefixed(_bi.extraData()) : "";
-	o["mixHash"] = toString(Ethash::mixHash(_bi));
-	o["nonce"] = toString(Ethash::nonce(_bi));
 	o["hash"] = toString(_bi.hash());
+	o["r"] = toCompactHexPrefixed(_bi.signature().r, 1);
+	o["s"] = toCompactHexPrefixed(_bi.signature().s, 1);
+	o["v"] = toCompactHexPrefixed(_bi.signature().v +27, 1);
+
 	o = ImportTest::makeAllFieldsHex(o, true);
 	return o;
 }

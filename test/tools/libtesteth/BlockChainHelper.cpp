@@ -406,6 +406,16 @@ dev::bytes TestBlock::createBlockRLPFromFields(mObject const& _tObj, h256 const&
 	if (_tObj.count("nonce"))
 		rlpStream << importByteArray(_tObj.at("nonce").get_str());
 
+	if (_tObj.count("v"))
+		rlpStream << bigint(_tObj.at("v").get_str());
+
+	if (_tObj.count("r"))
+		rlpStream << bigint(_tObj.at("r").get_str());
+
+	if (_tObj.count("s"))
+		rlpStream << bigint(_tObj.at("s").get_str());
+
+
 	return rlpStream.out();
 }
 
@@ -717,113 +727,11 @@ TestBlock TestBlockChain::defaultDposGenesisBlock(u256 const& _gasLimit)
 	accountGenesis["nonce"] = "0";					//=1for nonce too low exception check
 	accountGenesis["code"] = "";
 	accountGenesis["storage"] = json_spirit::mObject();
-	////mortgage
-	//json_spirit::mObject mortgagelinear;
-	//mortgagelinear["base"] = "70";
-	//mortgagelinear["word"] = "7";
-	//json_spirit::mObject mortgageprecompiled;
-	//mortgageprecompiled["name"] = "mortgage";
-	//mortgageprecompiled["linear"] = mortgagelinear;
-	//json_spirit::mObject mortgageaccount;
-	//mortgageaccount["precompiled"] = mortgageprecompiled;
-	////redeem
-	//json_spirit::mObject redeemlinear;
-	//redeemlinear["base"] = "80";
-	//redeemlinear["word"] = "8";
-	//json_spirit::mObject redeemprecompiled;
-	//redeemprecompiled["name"] = "redeem";
-	//redeemprecompiled["linear"] = redeemlinear;
-	//json_spirit::mObject redeemaccount;
-	//redeemaccount["precompiled"] = redeemprecompiled;
-
-	////candidateRegister
-	//json_spirit::mObject candidateRegisterlinear;
-	//candidateRegisterlinear["base"] = "90";
-	//candidateRegisterlinear["word"] = "9";
-	//json_spirit::mObject candidateRegisterprecompiled;
-	//candidateRegisterprecompiled["name"] = "candidateRegister";
-	//candidateRegisterprecompiled["linear"] = candidateRegisterlinear;
-	//json_spirit::mObject candidateRegisteraccount;
-	//candidateRegisteraccount["precompiled"] = candidateRegisterprecompiled;
-
-	////candidateDeregister
-	//json_spirit::mObject candidateDeregisterlinear;
-	//candidateDeregisterlinear["base"] = "100";
-	//candidateDeregisterlinear["word"] = "10";
-	//json_spirit::mObject candidateDeregisterprecompiled;
-	//candidateDeregisterprecompiled["name"] = "candidateDeregister";
-	//candidateDeregisterprecompiled["linear"] = candidateDeregisterlinear;
-	//json_spirit::mObject candidateDeregisteraccount;
-	//candidateDeregisteraccount["precompiled"] = candidateDeregisterprecompiled;
-
-	////vote
-	//json_spirit::mObject votelinear;
-	//votelinear["base"] = "60";
-	//votelinear["word"] = "6";
-	//json_spirit::mObject voteprecompiled;
-	//voteprecompiled["name"] = "vote";
-	//voteprecompiled["linear"] = votelinear;
-	//json_spirit::mObject voteaccount;
-	//voteaccount["precompiled"] = voteprecompiled;
-
-	////removeVote
-	//json_spirit::mObject removeVotelinear;
-	//removeVotelinear["base"] = "60";
-	//removeVotelinear["word"] = "6";
-	//json_spirit::mObject removeVoteprecompiled;
-	//removeVoteprecompiled["name"] = "removeVote";
-	//removeVoteprecompiled["linear"] = removeVotelinear;
-	//json_spirit::mObject removeVoteaccount;
-	//removeVoteaccount["precompiled"] = removeVoteprecompiled;
-
-	////assign
-	//json_spirit::mObject assignlinear;
-	//assignlinear["base"] = "60";
-	//assignlinear["word"] = "6";
-	//json_spirit::mObject assignprecompiled;
-	//assignprecompiled["name"] = "assign";
-	//assignprecompiled["linear"] = assignlinear;
-	//json_spirit::mObject assignaccount;
-	//assignaccount["precompiled"] = assignprecompiled;
-
-	////deAssign
-	//json_spirit::mObject deAssignlinear;
-	//deAssignlinear["base"] = "60";
-	//deAssignlinear["word"] = "6";
-	//json_spirit::mObject deAssignprecompiled;
-	//deAssignprecompiled["name"] = "deAssign";
-	//deAssignprecompiled["linear"] = deAssignlinear;
-	//json_spirit::mObject deAssignaccount;
-	//deAssignaccount["precompiled"] = deAssignprecompiled;
-
-	////send
-	//json_spirit::mObject sendlinear;
-	//sendlinear["base"] = "60";
-	//sendlinear["word"] = "6";
-	//json_spirit::mObject sendprecompiled;
-	//sendprecompiled["name"] = "send";
-	//sendprecompiled["linear"] = sendlinear;
-	//json_spirit::mObject sendaccount;
-	//sendaccount["precompiled"] = sendprecompiled;
-
 
 	json_spirit::mObject accountMapObj;
 
 	accountMapObj["0x0000000000000000000000000000000000000020"] = accountVote;
 	accountMapObj["0x0000000000000000000000000000000000000021"] = accountVote;
-
-	//accountMapObj["00000000000000000000000000000000000000022"] = mortgageaccount;
-	//accountMapObj["00000000000000000000000000000000000000023"] = redeemaccount;
-
-	//accountMapObj["00000000000000000000000000000000000000024"] = candidateRegisteraccount;
-	//accountMapObj["00000000000000000000000000000000000000025"] = candidateDeregisteraccount;
-
-	//accountMapObj["00000000000000000000000000000000000000026"] = voteaccount;
-	//accountMapObj["00000000000000000000000000000000000000027"] = removeVoteaccount;
-
-	//accountMapObj["00000000000000000000000000000000000000028"] = assignaccount;
-	//accountMapObj["00000000000000000000000000000000000000029"] = deAssignaccount;
-	//accountMapObj["0000000000000000000000000000000000000002a"] = sendaccount;
 
 	accountMapObj["0x110e3e0a01EcE3a91e04a818F840E9E3D17B3C8f"] = accountGenesis;
 

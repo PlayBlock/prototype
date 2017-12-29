@@ -26,7 +26,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/filesystem/path.hpp>
 
 using namespace dev;
-
+using namespace dev::eth;
 namespace dev
 {
 namespace test
@@ -60,7 +60,7 @@ struct ChainBranch
 	void restoreFromHistory(size_t _importBlockNumber);
 	TestBlockChain blockchain;
 	vector<TestBlock> importedBlocks;
-	//std::shared_ptr<class producer_plugin> producer;
+	shared_ptr<class producer_plugin> producer;
 
 	static void forceBlockchain(string const& chainname);
 	static void resetBlockchain();

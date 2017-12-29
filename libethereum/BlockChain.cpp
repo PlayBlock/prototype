@@ -1047,7 +1047,7 @@ ImportRoute BlockChain::insertBlockAndExtras4ETI(VerifiedBlockRef const& _block,
 			// don't include bi.hash() in treeRoute, since it's not yet in details DB...
 			// just tack it on afterwards.
 			unsigned commonIndex;
-			tie(route, common, commonIndex) = treeRoute(last, _block.info.parentHash(), true, true, true);
+			tie(route, common, commonIndex) = treeRoute(last, _block.info.parentHash(), true, true, true,true);
 			route.push_back(_block.info.hash());
 
 			// Most of the time these two will be equal - only when we're doing a chain revert will they not be
@@ -1204,8 +1204,9 @@ ImportRoute BlockChain::insertBlockAndExtras4ETI(VerifiedBlockRef const& _block,
 						RLP blockRLP(curBlock == _block.info.hash() ? _block.block : &(blockBytes = block(curBlock)));
 						TransactionAddress ta;
 						ta.blockHash = tbi.hash();
-						for (ta.index = 0; ta.index < blockRLP[1].itemCount(); ++ta.index)
-							extrasBatch.Put(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+						RLP transactionsRLP = blockRLP[1];
+						for (ta.index = 0; ta.index < transactionsRLP.itemCount(); ++ta.index)
+							extrasBatch.Put(toSlice(sha3(transactionsRLP[ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
 					}
 
 					// Update database with them.
