@@ -399,6 +399,8 @@ dev::h256 dev::eth::chain::chain_controller::get_pow_target()
 	return dev::h256(target);
 }
 
+
+
 void dev::eth::chain::chain_controller::update_pow_perblock(const Block& newBlock)
 {  
 
@@ -556,6 +558,26 @@ void chain_controller::push_block(const BlockHeader& b)
 		throw;
 	}
 
+}
+
+void dev::eth::chain::chain_controller::push_block_revert(const BlockHeader& b)
+{
+	try {
+		auto session = _db.start_undo_session(true);
+
+		Block block(_bc, *_stateDB);
+		block.populateFromChain(_bc, _bc.currentHash());
+
+		update_pow_perblock(block);
+
+		apply_block(b);
+		session.push();
+	}
+	catch (...)
+	{
+		cwarn << "apply block error: " << b.number();
+		throw;
+	}
 }
 
 void chain_controller::apply_block(const BlockHeader& b)

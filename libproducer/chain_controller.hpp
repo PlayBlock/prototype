@@ -37,6 +37,8 @@ public:
 
 	void push_block(const BlockHeader& b);
 
+	//push block的回退分支版本
+	void push_block_revert(const BlockHeader& b);
 
 
 	//void init_global_property();
@@ -68,6 +70,7 @@ public:
 	void update_pow_perblock(const Block& newBlock);
 
 	void setStateDB(const OverlayDB& db) { _stateDB = &db; }
+	const OverlayDB* getStateDB() { return _stateDB; }
 
 	void databaseReversion(uint32_t _firstvalid);
 
