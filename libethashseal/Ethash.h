@@ -26,6 +26,7 @@
 #include <libethcore/SealEngine.h>
 #include <libethereum/GenericFarm.h>
 #include "EthashProofOfWork.h"
+#include "ETIProofOfWork.h"
 
 namespace dev
 {
@@ -59,6 +60,7 @@ public:
 
 	eth::GenericFarm<EthashProofOfWork>& farm() { return m_farm; }
 
+
 	enum { MixHashField = 0, NonceField = 1 };
 	static h256 seedHash(BlockHeader const& _bi);
 	static Nonce nonce(BlockHeader const& _bi) { return _bi.seal<Nonce>(NonceField); }
@@ -81,8 +83,11 @@ private:
 	bool quickVerifySeal(BlockHeader const& _bi) const;
 
 	eth::GenericFarm<EthashProofOfWork> m_farm;
+	eth::GenericFarm<ETIProofOfWork> m_ETIFarm;
 	std::string m_sealer = "cpu";
 	BlockHeader m_sealing;
+
+	ETIProofOfWork::WorkPackage m_ETIWorking;
 
 	/// A mutex covering m_sealing
 	Mutex m_submitLock;

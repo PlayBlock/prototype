@@ -31,6 +31,8 @@
 #include "EthereumHost.h"
 #include "Block.h"
 #include "TransactionQueue.h"
+#include <libethashseal/ETIProofOfWork.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -548,41 +550,9 @@ void Client::resetState()
 	onTransactionQueueReady();
 }
 
-void Client::newMineWork() 
-{
-	ctrace << "newMineWork";
-	BlockHeader bh = bc().info();
-
-	// 注册回调函数，等待miners找到解后调用
-	sealEngine()->onSealGenerated([=](bytes const& header) {
-
-			clog(ClientNote) << "onSealGenerated...";
-	});
-
-
-	static Secret priviteKey = Secret("5c02eb8b326c56e8b68caea90da49fb781c6a998ce5c73806f67c27531938e57");
-	static AccountName workerAccount("0x0c338296B1bEa1e4529D173ea5Ae95508144d9f3");
-
-
-	auto tid = std::this_thread::get_id();
-	static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
-
-	uint64_t tryNonce = s_eng();
-	uint64_t start = tryNonce;
-	uint64_t nonce = start;// +thread_num;
-
-	ETIProofOfWork::WorkPackage newWork = { bh.hash(), priviteKey, workerAccount, nonce };
-
-	// 给miners发送新的任务
-	//sealEngine()->generateSeal();
-	sealEngine()->newETIWork(newWork);
-}
-
 void Client::onChainChanged(ImportRoute const& _ir)
 {
 //	ctrace << "onChainChanged()";
-
-	// reload new mining work
 	newMineWork();
 
 	h256Hash changeds;
@@ -622,6 +592,45 @@ void Client::startSealing()
 	}
 	else
 		clog(ClientNote) << "You need to set an author in order to seal!";
+}
+
+void Client::newMineWork()
+{
+	BlockHeader bh = bc().info();
+
+	static Secret priviteKey = Secret("5c02eb8b326c56e8b68caea90da49fb781c6a998ce5c73806f67c27531938e57");
+	static AccountName workerAccount("0x0c338296B1bEa1e4529D173ea5Ae95508144d9f3");
+
+	// 注册回调函数，等待miners找到解后调用
+	sealEngine()->onETISealGenerated([=](const ETIProofOfWork::Solution& _sol) {
+
+		ETIProofOfWork::Solution sol = _sol;
+		TransactionSkeleton ts;
+		ts.type = TransactionType::MessageCall;
+		//ts.from = Address(as[0].address);
+		ts.to = POWInfoAddress;
+		//ts.value = u256(1000000000000000);
+		ts.data = sol.op._saveImpl();
+		//ts.nonce = u256();
+		ts.gas = u256(50000);
+		ts.gasPrice = gasBidPrice();
+
+		submitTransaction(ts, priviteKey);
+	});
+
+	auto tid = std::this_thread::get_id();
+	static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
+
+	uint64_t tryNonce = s_eng();
+	uint64_t start = tryNonce;
+	uint64_t nonce = start;// +thread_num;
+	auto target = m_producer_plugin->get_chain_controller().get_pow_target();
+
+	ETIProofOfWork::WorkPackage newWork{ bh.hash(), priviteKey, workerAccount, nonce, target };
+
+	// 给miners发送新的任务
+	//sealEngine()->generateSeal();
+	sealEngine()->newETIWork(newWork);
 }
 
 void Client::generateSeal(BlockHeader& bh)

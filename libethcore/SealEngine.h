@@ -70,8 +70,12 @@ public:
 
 	virtual bool shouldSeal(Interface*) { return true; }
 	virtual void generateSeal(BlockHeader const& _bi) = 0;
-	virtual void newETIWork(const ETIProofOfWork::WorkPackage& work) = 0;
 	virtual void onSealGenerated(std::function<void(bytes const& s)> const& _f) = 0;
+
+	/// for ETI POW
+	virtual void newETIWork(const ETIProofOfWork::WorkPackage& work) = 0;
+	virtual void onETISealGenerated(std::function<void(const ETIProofOfWork::Solution&)> const& _f) = 0;
+
 	virtual void cancelGeneration() {}
 
 	ChainOperationParams const& chainParams() const { return m_params; }
@@ -107,14 +111,17 @@ public:
 		if (m_onSealGenerated)
 			m_onSealGenerated(ret.out());
 	}
-	void newETIWork(const ETIProofOfWork::WorkPackage& work) override {}
-
 	void onSealGenerated(std::function<void(bytes const&)> const& _f) override { m_onSealGenerated = _f; }
+
+	void newETIWork(const ETIProofOfWork::WorkPackage& work) override {}
+	void onETISealGenerated(std::function<void(const ETIProofOfWork::Solution&)> const& _f) override { m_onETISealGenerated = _f; }
+
 	EVMSchedule const& evmSchedule(u256 const& _blockNumber) const override;
 	u256 blockReward(u256 const& _blockNumber) const override;
 
 protected:
 	std::function<void(bytes const& s)> m_onSealGenerated;
+	std::function<void(const ETIProofOfWork::Solution&)> m_onETISealGenerated;
 };
 
 using SealEngineFactory = std::function<SealEngineFace*()>;

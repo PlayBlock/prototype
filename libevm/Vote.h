@@ -3,12 +3,12 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Address.h>
 #include "libproducer/types.hpp"
-
+#include <libethereum/State.h>
 
 /// 1 Eth = 100 Votes
 #define VOTES_PRE_ETH 10000000000000000
 
-class dev::eth::State;
+//using dev::eth::State;
 
 class StateMap
 {

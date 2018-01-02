@@ -26,6 +26,8 @@
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/CommonJS.h>
 #include "EthashCPUMiner.h"
+#include "ETICPUMiner.h"
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -58,12 +60,27 @@ Ethash::Ethash()
 		}
 		return true;
 	});
+
+	map<string, GenericFarm<ETIProofOfWork>::SealerDescriptor> sealers2;
+	sealers2["cpu"] = GenericFarm<ETIProofOfWork>::SealerDescriptor{ &EthashCPUMiner::instances, [](GenericMiner<ETIProofOfWork>::ConstructionInfo ci) { return new ETICPUMiner(ci); } };
+	m_ETIFarm.setSealers(sealers2);
+	m_ETIFarm.onSolutionFound([=](ETIProofOfWork::Solution const& sol)
+	{
+		std::unique_lock<Mutex> l(m_submitLock);
+
+		if (m_onETISealGenerated)
+		{
+			m_onETISealGenerated(sol);
+		}
+		return true;
+	});
 }
 
 Ethash::~Ethash()
 {
 	// onSolutionFound closure sometimes has references to destroyed members.
 	m_farm.onSolutionFound({});
+	m_ETIFarm.onSolutionFound({});
 }
 
 strings Ethash::sealers() const
@@ -301,16 +318,6 @@ bool Ethash::verifySeal(BlockHeader const& _bi) const
 
 	return slow;
 }
-void Ethash::newETIWork(const ETIProofOfWork::WorkPackage& work)
-{
-	Guard l(m_submitLock);
-
-	m_farm.setETIWork(work);
-	m_farm.start(m_sealer);
-	m_farm.setETIWork(work);
-}
-
-
 
 void Ethash::generateSeal(BlockHeader const& _bi)
 {
@@ -324,6 +331,15 @@ void Ethash::generateSeal(BlockHeader const& _bi)
 	bytes shouldPrecompute = option("precomputeDAG");
 	if (!shouldPrecompute.empty() && shouldPrecompute[0] == 1)
 		ensurePrecomputed((unsigned)_bi.number());
+}
+
+void Ethash::newETIWork(const ETIProofOfWork::WorkPackage& work)
+{
+	Guard l(m_submitLock);
+	m_ETIWorking = work;
+	m_ETIFarm.setWork(work);
+	m_ETIFarm.start(m_sealer);
+	m_ETIFarm.setWork(work);
 }
 
 bool Ethash::shouldSeal(Interface*)
