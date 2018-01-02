@@ -969,7 +969,7 @@ BOOST_FIXTURE_TEST_SUITE(DposBlockTests, DpTestFixture)
 
 BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
 BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
-//BOOST_AUTO_TEST_CASE(bcTransactionLimitTest) {}
+BOOST_AUTO_TEST_CASE(bcTransactionLimitTest) {}
 
 BOOST_AUTO_TEST_SUITE_END()
 

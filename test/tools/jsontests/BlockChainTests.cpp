@@ -321,12 +321,44 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		TestBlockChain& blockchain = chainMap[chainname]->blockchain;
 		vector<TestBlock>& importedBlocks = chainMap[chainname]->importedBlocks;
 		chain::chain_controller & _chain(chainMap[chainname]->producer->get_chain_controller());
+		
 		//Import Transactions
-		BOOST_REQUIRE(blObjInput.count("transactions"));
-		for (auto const& txObj: blObjInput.at("transactions").get_array())
+		if (blObjInput.count("transactions"))
 		{
-			TestTransaction transaction(txObj.get_obj());
-			block.addTransaction(transaction);
+			BOOST_REQUIRE(blObjInput.count("transactions"));
+			for (auto const& txObj : blObjInput.at("transactions").get_array())
+			{
+				TestTransaction transaction(txObj.get_obj());
+				block.addTransaction(transaction);
+			}
+			
+		}
+		else//transaction limit add
+		{
+			mArray a;
+			for (auto i = 0; i < config::TransactionOfBlockLimit; i++)
+			{
+				mObject o;
+				o["data"] = "0x";
+				o["gasLimit"] = "21000";
+				o["gasPrice"] = "0x01";
+				o["nonce"] = toString(i);
+				o["value"] = "0x0a";
+				o["to"] = "095e7baea6a6c7c4c2dfeb977efac326af552d87";
+				o["secretKey"] = "2da746698973b986e3b8fb1ba1f1f922c50ed5d546e9cf9cfa348daba73034fd";
+
+				TestTransaction tx(o);
+				a.push_back(o);
+			}
+			blObj["transactions"] = a;
+
+			BOOST_REQUIRE(blObj.count("transactions"));
+			for (auto const& txObj : blObj.at("transactions").get_array())
+			{
+				TestTransaction transaction(txObj.get_obj());
+				block.addTransaction(transaction);
+			}
+
 		}
 
 		//Import Uncles
