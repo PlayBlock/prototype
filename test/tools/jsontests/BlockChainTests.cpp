@@ -240,6 +240,7 @@ void spellCheckNetworkNamesInExpectField(json_spirit::mArray const& _expects)
 
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 {
+	g_logVerbosity = 14;
 	json_spirit::mObject output;
 	string const& testName = TestOutputHelper::get().testName();
 	TestBlock genesisBlock(_input.at("genesisBlockHeader").get_obj(), _input.at("pre").get_obj());
@@ -352,7 +353,10 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		//block.mine(blockchain);
 		//Éú²ú¿é
 		auto slot = 1;
-		auto pro = _chain.get_producer(_chain.get_scheduled_producer(slot));
+		auto accountName = _chain.get_scheduled_producer(slot);
+		while(accountName == AccountName())
+			accountName = _chain.get_scheduled_producer(++slot);
+		auto pro = _chain.get_producer(accountName);
 		auto private_key = chainMap[chainname]->producer->get_private_key(pro.owner);
 		block.dposMine(blockchain, _chain.get_slot_time(slot), pro.owner, private_key);
 		cnote << "Block mined with...";

@@ -83,7 +83,11 @@ void DposTestClient::produce_blocks(uint32_t count)
 	for (int i = 0; i < count; i++)
 	{
 		auto slot = 1;
-		auto producer =  _chain.get_scheduled_producer(slot);
+		auto producer = _chain.get_scheduled_producer(slot);
+		while (producer == AccountName())
+			producer = _chain.get_scheduled_producer(++slot);
+
+		//auto producer =  _chain.get_scheduled_producer(slot);
 		auto& private_key = get_private_key(producer);
 		m_working.dposMine(m_bc, _chain.get_slot_time(slot), producer, private_key);
 		m_bc.addBlock(m_working);
