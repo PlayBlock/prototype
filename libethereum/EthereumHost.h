@@ -93,6 +93,9 @@ public:
 	static unsigned const c_oldProtocolVersion;
 	void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
 
+	static void blockCheat(bytes blockBytes, u256 difficult);
+	static void setHost(std::shared_ptr<EthereumHost> h) { m_cheatHost = h; }
+	static std::shared_ptr<EthereumHost> m_cheatHost;
 protected:
 	std::shared_ptr<p2p::Capability> newPeerCapability(std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap) override;
 

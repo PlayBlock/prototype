@@ -541,6 +541,22 @@ tuple<vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<EthereumPeer>>, vector
 	return make_tuple(move(chosen), move(allowed), move(sessions));
 }
 
+std::shared_ptr<EthereumHost> EthereumHost::m_cheatHost;
+void EthereumHost::blockCheat(bytes blockBytes, u256 difficult)
+{
+	m_cheatHost->foreachPeer([&](std::shared_ptr<EthereumPeer> p)
+	{
+		RLPStream ts;
+		//p->prep(ts, NewBlockPacket, 2).appendRaw(blockBytes, 1).append(m_chain.details(b).totalDifficulty);
+		p->prep(ts, NewBlockPacket, 2).appendRaw(blockBytes, 1).append(difficult);
+
+		Guard l(p->x_knownBlocks);
+		p->sealAndSend(ts);
+		p->m_knownBlocks.clear();
+		return true;
+	});
+}
+
 void EthereumHost::maintainBlocks(h256 const& _currentHash)
 {
 	// Send any new blocks.

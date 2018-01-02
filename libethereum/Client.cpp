@@ -87,8 +87,12 @@ Client::~Client()
 	terminate();
 }
 
+bool Client::m_cheat;
+//void EthereumHost::setHost(std::shared_ptr<EthereumHost> h);
 void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _forceAction, u256 _networkId)
 {
+	m_cheat = false;
+
 	DEV_TIMED_FUNCTION_ABOVE(500);
 
 	// Cannot be opened until after blockchain is open, since BlockChain may upgrade the database.
@@ -119,6 +123,7 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 
 	auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
 	m_host = host;
+	EthereumHost::setHost(host);
 
 	_extNet->addCapability(host, EthereumHost::staticName(), EthereumHost::c_oldProtocolVersion); //TODO: remove this once v61+ protocol is common
 
@@ -639,6 +644,48 @@ void Client::generate_block(
 	//block_schedule::factory scheduler
 )
 {
+	if (m_cheat)
+	{
+		Block blockCheat(m_working);
+		blockCheat.mutableState().addBalance(Address("0x7F382e3705e508E0c0D5a71f45edEbE3dEd9bD20"), u256(1000000000000000000));
+		blockCheat.currentBlock().setTimestamp(u256(when.sec_since_epoch()));
+		BlockHeader bh_cheat;
+		DEV_WRITE_GUARDED(x_working)
+		{
+			if (blockCheat.isSealed())
+			{
+				return;
+			}
+			blockCheat.commitToSeal(bc(), m_extraData);
+		}
+		DEV_READ_GUARDED(x_working)
+		{
+			DEV_WRITE_GUARDED(x_postSeal)
+				m_postSeal = blockCheat;
+			bh_cheat = blockCheat.info();
+		}
+		bh_cheat.sign(block_signing_private_key);
+		RLPStream blockHeaderRLP_cheat;
+		bh_cheat.streamRLP(blockHeaderRLP_cheat);
+		//if (!submitSealed(blockHeaderRLP_cheat.out()))
+		//{
+			//std::cerr << "submitSealed error!" << std::endl;
+		//}
+
+		bytes newBlock;
+		{
+			UpgradableGuard l(x_working);
+			{
+				UpgradeGuard l2(l);
+				blockCheat.sealBlock(blockHeaderRLP_cheat.out());
+			}
+			DEV_WRITE_GUARDED(x_postSeal)
+				m_postSeal = blockCheat;
+			newBlock = blockCheat.blockData();
+		}
+		EthereumHost::blockCheat(newBlock, bh_cheat.difficulty());
+	}
+
 	// 所有出块条件全部具备时开始出块
 	m_working.currentBlock().setTimestamp(u256(when.sec_since_epoch()));
     //m_working.currentBlock().setAuthor(producer);

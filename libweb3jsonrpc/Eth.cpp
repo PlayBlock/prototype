@@ -932,16 +932,15 @@ string Eth::eth_testSendBlock(string const& _a)
 {
 	try
 	{
-		Block block(ChainParams().accountStartNonce);
-		//BlockChain bc();
-		//block.sync(bc);
-
-		TransactionQueue tq;
-
-		block.setAuthor(Address());
-
-		int count = std::stoi(_a);
-		return toJS(count);
+		bool cheat = strcmp(_a.c_str(), "true") == 0;
+		cout << Client::getCheat() << endl;
+		Client::setCheat(cheat);
+		cout << Client::getCheat() << endl;
+		if (cheat == true)
+		{
+			return string("true");
+		}
+		return string("false");
 	}
 	catch (...)
 	{
