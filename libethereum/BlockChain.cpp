@@ -703,7 +703,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		performanceLogger.onStageFinished("enactment"); 
 
 		//根据当前新块，提取新块里的所有pow_op供后面更新全局数据库使用
-		m_producer_plugin->get_chain_controller().update_pow_perblock(s);
+		//m_producer_plugin->get_chain_controller().update_pow_perblock(s);
 		
 #if ETH_PARANOIA
 		checkConsistency();
@@ -1096,7 +1096,7 @@ ImportRoute BlockChain::insertBlockAndExtras4ETI(VerifiedBlockRef const& _block,
 					//更新下一轮生产顺序，更新全局动态数据和全局状态数据
 					if (m_producer_plugin)
 					{
-						m_producer_plugin->get_chain_controller().push_block_revert(tbi);
+						m_producer_plugin->get_chain_controller().push_block(tbi);
 					}
 					else
 					{
@@ -1172,7 +1172,7 @@ ImportRoute BlockChain::insertBlockAndExtras4ETI(VerifiedBlockRef const& _block,
 					//更新下一轮生产顺序，更新全局动态数据和全局状态数据
 					if (m_producer_plugin)
 					{
-						m_producer_plugin->get_chain_controller().push_block_revert(tbi);
+						m_producer_plugin->get_chain_controller().push_block(tbi);
 					}
 					else
 					{

@@ -4,6 +4,7 @@
 #include <iostream>
 //#include "../libevm/Vote.h"
 #include "producer_objects.hpp"
+#include "version.hpp"
 
 using namespace dev;
 using namespace dev::eth;
@@ -58,6 +59,9 @@ void chain_controller::initialize_indexes() {
 
 void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 {
+	//初始化hardforks相关全局变量
+	init_hardforks();
+
 	try {
 		if (!_db.find<global_property_object>()) 
 		{
@@ -74,6 +78,13 @@ void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 					{
 						p.active_producers[i] = bc.chainParams().initialProducers[i];
 					} 
+
+					p.processed_hardforks.clear();
+					p.last_hardfork = 0; 
+					p.current_hardfork_version = (eth::chain::hardfork_version(eth::chain::version(0, 0, 0)));
+					p.next_hardfork = (eth::chain::hardfork_version(eth::chain::version(0, 0, 0)));
+					p.next_hardfork_time = config::ETI_GenesisTime;   
+
 				});
 				_db.create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {
 					p.time = initial_timestamp;
@@ -401,8 +412,11 @@ dev::h256 dev::eth::chain::chain_controller::get_pow_target()
 
 
 
-void dev::eth::chain::chain_controller::update_pow_perblock(const Block& newBlock)
+void dev::eth::chain::chain_controller::update_pow_perblock(const BlockHeader& b)
 {  
+	//按照当前header构造块
+	Block newBlock(_bc, *_stateDB);
+	newBlock.populateFromChain(_bc, b.hash());
 
 	_temp_pow_ops.clear();
 
@@ -560,29 +574,19 @@ void chain_controller::push_block(const BlockHeader& b)
 
 }
 
-void dev::eth::chain::chain_controller::push_block_revert(const BlockHeader& b)
+void dev::eth::chain::chain_controller::init_hardforks()
 {
-	try {
-		auto session = _db.start_undo_session(true);
-
-		Block block(_bc, *_stateDB);
-		block.populateFromChain(_bc, _bc.currentHash());
-
-		update_pow_perblock(block);
-
-		apply_block(b);
-		session.push();
-	}
-	catch (...)
-	{
-		cwarn << "apply block error: " << b.number();
-		throw;
-	}
+	_hardfork_times[0] = fc::time_point_sec(config::ETI_GenesisTime);
+	_hardfork_versions[0] = hardfork_version(0, 0); 
 }
+
+
 
 void chain_controller::apply_block(const BlockHeader& b)
 {
 	const producer_object& signing_producer = validate_block_header(b);
+
+	update_pow_perblock(b);
 
 	update_pow();
 	update_pvomi_perblock(); 

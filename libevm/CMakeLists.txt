@@ -44,7 +44,12 @@ foreach (l ${WASM_LIB_LIST})
 endforeach()
 
 target_link_libraries(evm PUBLIC ethcore devcore PRIVATE jsoncpp_lib_static)
-target_include_directories(evm PUBLIC ${CMAKE_SOURCE_DIR}/evmjit/include ${WAVM_INCLUDE_DIRS})
+target_include_directories(evm PUBLIC 
+${CMAKE_SOURCE_DIR}/evmjit/include 
+${WAVM_INCLUDE_DIRS}
+"${UTILS_INCLUDE_DIR}/fc/include" 
+"${UTILS_INCLUDE_DIR}"
+)
 
 if (EVMJIT)
 	target_link_libraries(evm PRIVATE evmjit)

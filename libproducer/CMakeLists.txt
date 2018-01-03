@@ -11,9 +11,9 @@ target_include_directories(producer SYSTEM PUBLIC ${LEVELDB_INCLUDE_DIRS})
 set_property(TARGET producer PROPERTY CXX_STANDARD 14)
 
 target_include_directories(producer PRIVATE 
-	${CMAKE_SOURCE_DIR}/evmjit/include 
-	"${UTILS_INCLUDE_DIR}" 
+	${CMAKE_SOURCE_DIR}/evmjit/include  
 	"${UTILS_INCLUDE_DIR}/fc/include" 
+	"${UTILS_INCLUDE_DIR}" 
 	${Boost_INCLUDE_DIR}
 
 	)

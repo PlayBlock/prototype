@@ -1,6 +1,8 @@
 #pragma once
 //#include <boost/multiprecision/cpp_int.hpp>
 #include <libdevcore/Common.h>
+#include <fc/time.hpp>
+#include <libproducer/version.hpp>
 
 namespace dev {
 
@@ -30,6 +32,20 @@ namespace config {
 	const static int POWProducersPerRound = 1;
 	//每轮见证人总数
 	const static int TotalProducersPerRound = 5;
+
+
+	//ETI创世时间
+	const static fc::time_point_sec ETI_GenesisTime = (fc::time_point_sec(0));
+
+	//ETI当前版本
+	const static eth::chain::version ETI_BlockchainVersion = (eth::chain::version(0, 0, 0));
+
+	//ETI当前硬分叉版本
+	const static eth::chain::hardfork_version ETI_BlockchainHardforkVersion = (eth::chain::hardfork_version(ETI_BlockchainVersion));
+
+	//ETI目前硬分叉数
+	const static int ETI_HardforkNum = 0;
+	
 
 
 	const static int Percent100 = 10000;

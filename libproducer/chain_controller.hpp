@@ -10,10 +10,7 @@
 #include <libethereum/BlockChain.h>
 #include "libevm/Vote.h"
 
-namespace dev {
-namespace eth {
-
-namespace chain {
+namespace dev { namespace eth { namespace chain {
 	using namespace eos::chain;
 
 class chain_controller {
@@ -26,6 +23,7 @@ public:
 
 	void initialize_indexes();
 	void initialize_chain(const dev::eth::BlockChain& bc);
+	void init_hardforks();
 
 
 	fc::time_point_sec get_slot_time(const uint32_t slot_num) const;
@@ -36,13 +34,7 @@ public:
 
 
 	void push_block(const BlockHeader& b);
-
-	//push block的回退分支版本
-	void push_block_revert(const BlockHeader& b);
-
-
-	//void init_global_property();
-
+	
 
 	const global_property_object&          get_global_properties()const;
 	const dynamic_global_property_object&  get_dynamic_global_properties()const;
@@ -67,7 +59,6 @@ public:
 //	const chainbase::database& db() { return _db; }
 //
 //  
-	void update_pow_perblock(const Block& newBlock);
 
 	void setStateDB(const OverlayDB& db) { _stateDB = &db; }
 	const OverlayDB* getStateDB() { return _stateDB; }
@@ -81,6 +72,7 @@ private:
 	void update_global_properties(const BlockHeader& b);
 	void update_signing_producer(const producer_object& signing_producer, const BlockHeader& new_block);
 
+	void update_pow_perblock(const BlockHeader& b);
 	void update_pvomi_perblock();
 	void update_pow();
 	void update_last_irreversible_block();
@@ -98,8 +90,10 @@ private:
 
 	//用来誊写从当前块获取得所有pow命令，每次接到新块会更新
 	std::unordered_map<Address, POW_Operation> _temp_pow_ops;
+
+
+	fc::time_point_sec   _hardfork_times[config::ETI_HardforkNum + 1];
+	hardfork_version     _hardfork_versions[config::ETI_HardforkNum + 1];
 };
 
-}
-}
-}
+} } }

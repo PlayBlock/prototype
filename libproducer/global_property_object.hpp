@@ -13,11 +13,14 @@
 #include "fc/time.hpp"
 
 #include "multi_index_includes.hpp"
+#include <vector>
+#include "version.hpp"
 
 using dev::Address;
 using dev::types::AccountName;
 using dev::types::block_id_type;
 using dev::eth::config::TotalProducersPerRound;
+using dev::eth::chain::hardfork_version;
 
 namespace eos { namespace chain {
 
@@ -33,9 +36,17 @@ namespace eos { namespace chain {
    {
       OBJECT_CTOR(global_property_object)
 
-      id_type id; 
-      //std::vector<AccountName> active_producers;
+      id_type id;  
 	  std::array<AccountName, TotalProducersPerRound> active_producers;
+
+
+	  //==============Hardfork¸üÐÂ=======================
+
+	  std::vector< fc::time_point_sec > processed_hardforks;
+	  int							last_hardfork = 0;
+	  hardfork_version				current_hardfork_version;
+	  hardfork_version				next_hardfork;
+	  fc::time_point_sec			next_hardfork_time;
    };
 
 
@@ -140,4 +151,9 @@ FC_REFLECT(eos::chain::dynamic_global_property_object,
 
 FC_REFLECT(eos::chain::global_property_object,
            (active_producers)
+		   (processed_hardforks)
+		   (last_hardfork)
+		   (current_hardfork_version)
+		   (next_hardfork)
+		   (next_hardfork_time)
           )
