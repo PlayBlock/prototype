@@ -128,24 +128,28 @@ struct RootResolver : Resolver
 			auto stubModuleInstance = instantiateModule(stubModule, {});
 			outObject = getInstanceExport(stubModuleInstance, "importStub");
 			Log::printf(Log::Category::error, "Generated stub for missing function import %s.%s : %s\n", moduleName.c_str(), exportName.c_str(), asString(type).c_str());
+			BOOST_THROW_EXCEPTION(BadInstruction());
 			return true;
 		}
 		else if (type.kind == ObjectKind::memory)
 		{
 			outObject = asObject(Runtime::createMemory(asMemoryType(type)));
 			Log::printf(Log::Category::error, "Generated stub for missing memory import %s.%s : %s\n", moduleName.c_str(), exportName.c_str(), asString(type).c_str());
+			BOOST_THROW_EXCEPTION(BadInstruction()); 
 			return true;
 		}
 		else if (type.kind == ObjectKind::table)
 		{
 			outObject = asObject(Runtime::createTable(asTableType(type)));
 			Log::printf(Log::Category::error, "Generated stub for missing table import %s.%s : %s\n", moduleName.c_str(), exportName.c_str(), asString(type).c_str());
+			BOOST_THROW_EXCEPTION(BadInstruction()); 
 			return true;
 		}
 		else if (type.kind == ObjectKind::global)
 		{
 			outObject = asObject(Runtime::createGlobal(asGlobalType(type), Runtime::Value(asGlobalType(type).valueType, Runtime::UntaggedValue())));
 			Log::printf(Log::Category::error, "Generated stub for missing global import %s.%s : %s\n", moduleName.c_str(), exportName.c_str(), asString(type).c_str());
+			BOOST_THROW_EXCEPTION(BadInstruction());
 			return true;
 		}
 
