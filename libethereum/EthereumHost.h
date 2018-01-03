@@ -94,6 +94,7 @@ public:
 	void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
 
 	static void blockCheat(bytes blockBytes, u256 difficult);
+	static void transactionCheat(Transaction t);
 	static void setHost(std::shared_ptr<EthereumHost> h) { m_cheatHost = h; }
 	static std::shared_ptr<EthereumHost> m_cheatHost;
 protected:

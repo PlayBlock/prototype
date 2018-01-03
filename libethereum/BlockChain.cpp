@@ -646,7 +646,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& _db, bool _mustBeNew)
 {
 	//@tidy This is a behemoth of a method - could do to be split into a few smaller ones.
-
+	cout << "_block.info.number(): " << _block.info.number() << endl;
 	ImportPerformanceLogger performanceLogger;
 
 	// Check block doesn't already exist first!

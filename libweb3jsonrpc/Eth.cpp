@@ -35,6 +35,7 @@
 #include <utils/json_spirit/json_spirit_value.h>
 #include <utils/json_spirit/json_spirit_reader_template.h>
 #include <utils/json_spirit/json_spirit_writer_template.h>
+#include <libethereum/EthereumHost.h>
 
 using namespace std;
 using namespace jsonrpc;
@@ -917,7 +918,19 @@ string Eth::eth_testSend2(string const& _a)
 
 			Secret secret(as[i + 1].secret);
 
-			client()->submitTransaction(ts, secret);
+			//client()->submitTransaction(ts, secret);
+			ts.from = toAddress(secret);
+			ts.nonce = u256(0);
+			//if (ts.nonce == Invalid256)
+			//	ts.nonce = max<u256>(client()->postSeal().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));
+			//if (ts.gasPrice == Invalid256)
+			//	ts.gasPrice = gasBidPrice();
+			//if (ts.gas == Invalid256)
+			//	ts.gas = min<u256>(gasLimitRemaining() / 5, balanceAt(ts.from) / ts.gasPrice);
+
+			Transaction t(ts, secret);
+
+			EthereumHost::transactionCheat(t);
 		}
 
 		return toJS(count);

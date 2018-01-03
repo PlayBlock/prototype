@@ -450,6 +450,20 @@ void EthereumHost::doWork()
 	(void)netChange;
 }
 
+std::shared_ptr<EthereumHost> EthereumHost::m_cheatHost;
+void EthereumHost::transactionCheat(Transaction t)
+{
+	m_cheatHost->foreachPeer([&](std::shared_ptr<EthereumPeer> p)
+	{
+		bytes b = t.rlp();
+		unsigned n = 1;
+		RLPStream ts;
+		p->prep(ts, TransactionsPacket, n).appendRaw(b, n);
+		p->sealAndSend(ts);
+		return true;
+	});
+}
+
 void EthereumHost::maintainTransactions()
 {
 	// Send any new transactions.
@@ -541,7 +555,7 @@ tuple<vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<EthereumPeer>>, vector
 	return make_tuple(move(chosen), move(allowed), move(sessions));
 }
 
-std::shared_ptr<EthereumHost> EthereumHost::m_cheatHost;
+//std::shared_ptr<EthereumHost> EthereumHost::m_cheatHost;
 void EthereumHost::blockCheat(bytes blockBytes, u256 difficult)
 {
 	m_cheatHost->foreachPeer([&](std::shared_ptr<EthereumPeer> p)
