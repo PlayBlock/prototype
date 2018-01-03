@@ -377,7 +377,7 @@ void dev::eth::chain::chain_controller::update_pow()
 		}
 
 		_db.modify(dgp, [&](dynamic_global_property_object& p) {
-			p.total_pow += p.num_pow_witnesses;
+			p.total_pow++;
 			p.num_pow_witnesses++;
 		});
 
