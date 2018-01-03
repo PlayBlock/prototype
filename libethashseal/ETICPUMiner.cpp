@@ -53,7 +53,7 @@ void ETICPUMiner::workLoop()
 
 	op.block_id = w.blockId;
 	op.nonce = tryNonce;
-
+	op.worker_pubkey = toPublic(w.privateKey);
 
 	//h256 boundary = w.boundary;
 	unsigned hashCount = 1;

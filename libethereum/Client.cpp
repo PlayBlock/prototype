@@ -608,7 +608,7 @@ void Client::newMineWork()
 		TransactionSkeleton ts;
 		ts.type = TransactionType::MessageCall;
 		//ts.from = Address(as[0].address);
-		ts.to = POWInfoAddress;
+		ts.to = Address("0x000000000000000000000000000000000000002c");
 		//ts.value = u256(1000000000000000);
 		ts.data = sol.op._saveImpl();
 		//ts.nonce = u256();
