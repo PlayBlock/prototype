@@ -211,7 +211,7 @@ public:
 	// State-change operations
 
 	/// Construct state object from arbitrary point in blockchain.
-	PopulationStatistics populateFromChain(BlockChain const& _bc, h256 const& _hash, ImportRequirements::value _ir = ImportRequirements::None);
+	PopulationStatistics populateFromChain(BlockChain const& _bc, h256 const& _hash, ImportRequirements::value _ir = ImportRequirements::None, bool _isCurrent = true);
 
 	/// Execute a given transaction.
 	/// This will append @a _t to the transaction list and change the state accordingly.

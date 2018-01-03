@@ -1032,6 +1032,26 @@ ImportRoute BlockChain::insertBlockAndExtras4ETI(VerifiedBlockRef const& _block,
 		throw;
 	}
 
+	ldb::Status o = m_blocksDB->Write(m_writeOptions, &blocksBatch);
+	if (!o.ok())
+	{
+		cwarn << "Error writing to blockchain database: " << o.ToString();
+		WriteBatchNoter n;
+		blocksBatch.Iterate(&n);
+		cwarn << "Fail writing to blockchain database. Bombing out.";
+		exit(-1);
+	}
+
+	o = m_extrasDB->Write(m_writeOptions, &extrasBatch);
+	if (!o.ok())
+	{
+		cwarn << "Error writing to extras database: " << o.ToString();
+		WriteBatchNoter n;
+		extrasBatch.Iterate(&n);
+		cwarn << "Fail writing to extras database. Bombing out.";
+		exit(-1);
+	}
+
 	h256s route;
 	h256 common;
 	bool isImportedAndBest = false;
@@ -1252,25 +1272,7 @@ ImportRoute BlockChain::insertBlockAndExtras4ETI(VerifiedBlockRef const& _block,
 	}
 
 
-	ldb::Status o = m_blocksDB->Write(m_writeOptions, &blocksBatch);
-	if (!o.ok())
-	{
-		cwarn << "Error writing to blockchain database: " << o.ToString();
-		WriteBatchNoter n;
-		blocksBatch.Iterate(&n);
-		cwarn << "Fail writing to blockchain database. Bombing out.";
-		exit(-1);
-	}
-
-	o = m_extrasDB->Write(m_writeOptions, &extrasBatch);
-	if (!o.ok())
-	{
-		cwarn << "Error writing to extras database: " << o.ToString();
-		WriteBatchNoter n;
-		extrasBatch.Iterate(&n);
-		cwarn << "Fail writing to extras database. Bombing out.";
-		exit(-1);
-	}
+	
 
 #if ETH_PARANOIA
 	if (isKnown(_block.info.hash()) && !details(_block.info.hash()))

@@ -73,7 +73,7 @@ private:
 	void update_signing_producer(const producer_object& signing_producer, const BlockHeader& new_block);
 
 	void update_pow_perblock(const BlockHeader& b);
-	void update_pvomi_perblock();
+	void update_pvomi_perblock(const BlockHeader& b);
 	void update_pow();
 	void update_last_irreversible_block();
 

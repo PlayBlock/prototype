@@ -159,13 +159,13 @@ void Block::noteChain(BlockChain const& _bc)
 	}
 }
 
-PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const& _h, ImportRequirements::value _ir)
+PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const& _h, ImportRequirements::value _ir, bool _isCurrent)
 {
 	noteChain(_bc);
 
 	PopulationStatistics ret { 0.0, 0.0 };
 
-	if (!_bc.isKnown(_h))
+	if (!_bc.isKnown(_h, _isCurrent))
 	{
 		// Might be worth throwing here.
 		cwarn << "Invalid block given for state population: " << _h;
