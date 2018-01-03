@@ -62,7 +62,8 @@ BlockHeader::BlockHeader(BlockHeader const& _other) :
 	m_seal(_other.seal()),
 	m_hash(_other.hashRawRead()),
 	m_hashWithout(_other.hashWithoutRawRead()),
-	m_signature(_other.signature())
+	m_signature(_other.signature()),
+	m_hardfork_vote(_other.hardforkVote())
 {
 	assert(*this == _other);
 }
@@ -85,6 +86,8 @@ BlockHeader& BlockHeader::operator=(BlockHeader const& _other)
 	m_author = _other.author();
 	m_difficulty = _other.difficulty();
 	m_signature = _other.signature();
+	m_hardfork_vote = _other.hardforkVote();
+
 	std::vector<bytes> seal = _other.seal();
 	{
 		Guard l(m_sealLock);
@@ -118,6 +121,7 @@ void BlockHeader::clear()
 	m_extraData.clear();
 	m_seal.clear();
 	m_signature = { h256(), h256(), 0 };
+	m_hardfork_vote = hardfork_version(eth::chain::version(0, 0, 0));
 	noteDirty();
 }
 
@@ -157,6 +161,9 @@ void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const
 
 		if (_i != WithoutSeal)
 			_s << (m_signature.v + 27) << (u256)m_signature.r << (u256)m_signature.s;
+
+		//写入hardfork投票信息
+		_s << (m_hardfork_vote.hf_version.v_num) << (m_hardfork_vote.hf_time.sec_since_epoch());
 	}
 	else
 	{
@@ -220,6 +227,12 @@ void BlockHeader::populate(RLP const& _header)
 			h256 r = _header[field = 14 + sealCount].toInt<u256>();
 			h256 s = _header[field = 15 + sealCount].toInt<u256>();
 			m_signature = { r, s, v };
+
+			//读取hardfork投票
+			uint32_t hf_ver = _header[field = 16 + sealCount].toInt<uint32_t>();
+			uint32_t hf_t = _header[field = 17 + sealCount].toInt<uint32_t>();
+			m_hardfork_vote.hf_version.v_num = hf_ver;
+			m_hardfork_vote.hf_time = fc::time_point_sec(hf_t);
 		}
 		else
 		{

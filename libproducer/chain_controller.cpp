@@ -401,13 +401,18 @@ void dev::eth::chain::chain_controller::update_pow()
 	}
 }
 
-dev::h256 dev::eth::chain::chain_controller::get_pow_target() 
+dev::h256 dev::eth::chain::chain_controller::get_pow_target()
 {  
 	const auto& dgp = _db.get<dynamic_global_property_object>(); 
 	dev::u256 target;
 	target = -1;
 	target >>= ((dgp.num_pow_witnesses / 4) + 4); 
 	return dev::h256(target);
+}
+
+void dev::eth::chain::chain_controller::process_block_header(const BlockHeader& b)
+{
+
 }
 
 

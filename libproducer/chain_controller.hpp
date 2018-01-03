@@ -72,6 +72,8 @@ private:
 	void update_global_properties(const BlockHeader& b);
 	void update_signing_producer(const producer_object& signing_producer, const BlockHeader& new_block);
 
+
+	void process_block_header(const BlockHeader& b);
 	void update_pow_perblock(const BlockHeader& b);
 	void update_pvomi_perblock(const BlockHeader& b);
 	void update_pow();
@@ -81,6 +83,7 @@ private:
 	const producer_object& validate_block_header(const BlockHeader& bh)const;
 
 	dev::h256 get_pow_target();
+
 
 private:
 	chainbase::database& _db;

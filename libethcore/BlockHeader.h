@@ -31,11 +31,15 @@
 #include "ChainOperationParams.h"
 #include "Exceptions.h"
 #include <libproducer/types.hpp>
+#include "libproducer/version.hpp"
 
 namespace dev
 {
 namespace eth
 {
+
+	using dev::eth::chain::hardfork_version;
+	using dev::eth::chain::hardfork_version_vote;
 
 enum IncludeSeal
 {
@@ -230,6 +234,13 @@ private:
 	mutable types::AccountName m_producer;
 	static u256 m_ETIForkBlock;
 
+public:
+	
+	const hardfork_version_vote& hardforkVote() const { return m_hardfork_vote; }
+
+private: //hardforkÕ∂∆±œ‡πÿ
+
+	hardfork_version_vote m_hardfork_vote;
 };
 
 inline std::ostream& operator<<(std::ostream& _out, BlockHeader const& _bi)
