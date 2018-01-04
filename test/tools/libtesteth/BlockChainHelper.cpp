@@ -732,6 +732,7 @@ TestBlock TestBlockChain::defaultDposGenesisBlock(u256 const& _gasLimit)
 
 	accountMapObj["0x0000000000000000000000000000000000000020"] = accountVote;
 	accountMapObj["0x0000000000000000000000000000000000000021"] = accountVote;
+	accountMapObj["0x000000000000000000000000000000000000002b"] = accountVote;
 
 	accountMapObj["0x110e3e0a01EcE3a91e04a818F840E9E3D17B3C8f"] = accountGenesis;
 

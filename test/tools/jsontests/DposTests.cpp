@@ -253,6 +253,65 @@ void DposTestClient::unmake_producer(Account& _from)
 
 	_from.nonce++;
 }
+void DposTestClient::make_pow_transaction(Account& _from, ETIProofOfWork::Solution& _sol)
+{
+	string gasLimit = "0xc350";
+	string gasPrice = "0x04a817c800";
+	string to = "000000000000000000000000000000000000002c";
+	string value = "0x0";
+	string nonce = boost::lexical_cast<string>(_from.nonce);
+	string data = toString(_sol.op._saveImpl());
+	string secretKey = _from.secret;
+
+	json_spirit::mObject obj;
+	obj.emplace(make_pair("gasLimit", gasLimit));
+	obj.emplace(make_pair("gasPrice", gasPrice));
+	obj.emplace(make_pair("to", to));
+	obj.emplace(make_pair("value", value));
+	obj.emplace(make_pair("nonce", nonce));
+	obj.emplace(make_pair("data", data));
+	obj.emplace(make_pair("secretKey", secretKey));
+	TestTransaction tx(obj);
+	m_working.addTransaction(tx);
+
+	_from.nonce++;
+}
+void DposTestClient::make_pow_producer(Account& _from)
+{
+	BlockHeader bh = m_bc.getInterface().info();
+
+	static Secret priviteKey = Secret(_from.secret);
+	static AccountName workerAccount(_from.address);
+	// 注册回调函数，等待miners找到解后调用
+	Notified<bool> sealed = false;
+
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> map;
+	std::unordered_map<dev::u256, dev::u256> mapChange;
+	POW_Operation op(map, mapChange, Address());
+	ETIProofOfWork::Solution sol = { op };
+
+	sealEngine()->onETISealGenerated([&](const ETIProofOfWork::Solution& _sol) {
+		sol.op = _sol.op;
+		sealed = true;
+	});
+	
+	auto tid = std::this_thread::get_id();
+	static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
+
+	uint64_t tryNonce = s_eng();
+	uint64_t start = tryNonce;
+	uint64_t nonce = start;// +thread_num;
+	auto target = _producer_plugin->get_chain_controller().get_pow_target();
+
+	ETIProofOfWork::WorkPackage newWork{ bh.hash(), priviteKey, workerAccount, nonce, target };
+
+	// 给miners发送新的任务
+	sealEngine()->newETIWork(newWork);
+	sealed.waitNot(false);
+	sealEngine()->onETISealGenerated([](const ETIProofOfWork::Solution&) {});
+	make_pow_transaction(_from,sol);
+
+}
 
 void DposTestClient::send(Account& _from, const Account& on, uint64_t voteCount)
 {
@@ -386,13 +445,6 @@ u256 DposTestClient::balance(const Address& _address) const
 	Block block(m_bc.getInterface(), m_bc.testGenesis().state().db());
 	block.populateFromChain(m_bc.getInterface(),m_bc.getInterface().currentHash());
 	return block.balance(_address);
-}
-
-bytes DposTestClient::code(const Address& _address) const
-{
-	Block block(m_bc.getInterface(), m_bc.testGenesis().state().db());
-	block.populateFromChain(m_bc.getInterface(), m_bc.getInterface().currentHash());
-	return block.code(_address);
 }
 
 void DposTestClient::sendTransaction(const string & gasLimit, const string & gasPrice, const string & to, const string & value, const string & data, Account& _from)
@@ -983,6 +1035,39 @@ BOOST_AUTO_TEST_CASE(dtVeryFewVotes)
 	}
 
 }
+
+
+BOOST_AUTO_TEST_CASE(dtPow) {
+	g_logVerbosity = 14;
+	//创建生产者
+	DposTestClient client;
+	int num = 0;
+	// pick an account
+	BOOST_REQUIRE(client.get_accounts().size() >= 1);
+	auto& account = client.get_accounts()[0];
+
+	//当前轮次没有pow，即：当前有一个accountname为空
+	auto currentProducers = client.get_active_producers();
+	for (auto pro : currentProducers)
+	{
+		if (types::AccountName(account.address) == types::AccountName(pro))
+			num++;
+	}
+	BOOST_REQUIRE(num == 0);
+	
+	client.make_pow_producer(account);
+	client.produce_blocks(config::TotalProducersPerRound);
+	//下轮次pow矿工成功加入生产块的轮次
+	currentProducers = client.get_active_producers();
+	for (auto pro : currentProducers)
+	{
+		if (types::AccountName(account.address) == types::AccountName(pro))
+			num++;
+	}
+	BOOST_REQUIRE(num == 1);
+}
+
+
 
 
 BOOST_AUTO_TEST_SUITE_END()

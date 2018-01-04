@@ -100,7 +100,9 @@ R"E(
 		"0000000000000000000000000000000000000027": {"precompiled": { "name": "removeVote", "linear": { "base": 60, "word": 6 } } },
 		"0000000000000000000000000000000000000028": {"precompiled": { "name": "assign", "linear": { "base": 60, "word": 6 } } },
 		"0000000000000000000000000000000000000029": {"precompiled": { "name": "deAssign", "linear": { "base": 60, "word": 6 } } },
-		"000000000000000000000000000000000000002a": {"precompiled": { "name": "send", "linear": { "base": 60, "word": 6 } } }
+		"000000000000000000000000000000000000002a": {"precompiled": { "name": "send", "linear": { "base": 60, "word": 6 } } },
+		"000000000000000000000000000000000000002b": { "wei": "1", "code":"0x00" },
+		"000000000000000000000000000000000000002c": {"precompiled": { "name": "powReceive", "linear": { "base": 60, "word": 6 } } }
 }
 	}
    

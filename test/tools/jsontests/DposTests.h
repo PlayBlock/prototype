@@ -30,7 +30,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <test/tools/libtestutils/Common.h>
 #include <libproducer/producer_plugin.hpp>
 #include <test/tools/libtesteth/BlockChainHelper.h>
-
+#include <libethcore/SealEngine.h>
 
 using namespace json_spirit;
 namespace dev {
@@ -72,6 +72,9 @@ namespace dev {
 
 			void unmake_producer(Account& _from);
 
+			void make_pow_producer(Account& _from);
+			void make_pow_transaction(Account& _from, ETIProofOfWork::Solution& _sol);
+
 			void send(Account& _from, const Account& on, uint64_t voteCount);
 
 			void approve_producer(Account& voter, const Account& on);
@@ -90,9 +93,9 @@ namespace dev {
 
 			u256 balance(const Address& _address) const;
 
-			bytes code(const Address& _address) const;
+		    void sendTransaction(const string& gasLimit, const string& gasPrice, const string& to, const string& value, const string& data, Account& _from);
 
-			void sendTransaction(const string& gasLimit, const string& gasPrice, const string& to, const string& value, const string& data, Account& _from);
+			SealEngineFace* sealEngine() const  { return m_bc.getInterface().sealEngine(); };
 
 		private:
 
