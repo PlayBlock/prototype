@@ -447,6 +447,13 @@ u256 DposTestClient::balance(const Address& _address) const
 	return block.balance(_address);
 }
 
+bytes DposTestClient::code(const Address& _address) const
+{
+	Block block(m_bc.getInterface(), m_bc.testGenesis().state().db());
+	block.populateFromChain(m_bc.getInterface(), m_bc.getInterface().currentHash());
+	return block.code(_address);
+}
+
 void DposTestClient::sendTransaction(const string & gasLimit, const string & gasPrice, const string & to, const string & value, const string & data, Account& _from)
 {
 	json_spirit::mObject obj;
@@ -1077,6 +1084,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_FIXTURE_TEST_SUITE(DposBlockTests, DpTestFixture)
 
 BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
+BOOST_AUTO_TEST_CASE(bcForkChainTest) {}
 BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
 BOOST_AUTO_TEST_CASE(bcTransactionLimitTest) {}
 

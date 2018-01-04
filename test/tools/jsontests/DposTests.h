@@ -93,6 +93,8 @@ namespace dev {
 
 			u256 balance(const Address& _address) const;
 
+			bytes code(const Address& _address) const;
+
 		    void sendTransaction(const string& gasLimit, const string& gasPrice, const string& to, const string& value, const string& data, Account& _from);
 
 			SealEngineFace* sealEngine() const  { return m_bc.getInterface().sealEngine(); };
