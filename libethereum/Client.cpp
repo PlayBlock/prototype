@@ -598,8 +598,11 @@ void Client::newMineWork()
 {
 	BlockHeader bh = bc().info();
 
-	static Secret priviteKey = Secret("5c02eb8b326c56e8b68caea90da49fb781c6a998ce5c73806f67c27531938e57");
-	static AccountName workerAccount("0x0c338296B1bEa1e4529D173ea5Ae95508144d9f3");
+	static AccountName workerAccount = bc().chainParams().powWorker;
+	static Secret priviteKey = m_producer_plugin->get_private_key(workerAccount);
+
+	if (workerAccount == AccountName() || priviteKey == Secret())
+		return;
 
 	// 注册回调函数，等待miners找到解后调用
 	sealEngine()->onETISealGenerated([=](const ETIProofOfWork::Solution& _sol) {

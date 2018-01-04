@@ -87,6 +87,7 @@ string const c_registrar = "registrar";
 
 //for dpos
 string const c_enableStaleProduction = "enableStaleProduction";
+string const c_powWorker = "powWorker";
 string const c_producerAccounts = "producerAccounts";
 string const c_ETIForkBlock = "ETIForkBlock";
 
@@ -96,7 +97,7 @@ set<string> const c_knownParamNames = {
 	c_tieBreakingGas, c_blockReward, c_byzantiumForkBlock, c_constantinopleForkBlock,
 	c_daoHardforkBlock, c_minimumDifficulty, c_difficultyBoundDivisor, c_durationLimit,
 	c_chainID, c_networkID, c_allowFutureBlocks, c_registrar, c_enableStaleProduction, 
-	c_producerAccounts, c_ETIForkBlock
+	c_producerAccounts, c_ETIForkBlock, c_powWorker
 };
 } // anonymous namespace
 
@@ -158,11 +159,15 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 		}
 	}
 
+	if (params.count(c_powWorker))
+	{
+		cp.powWorker = types::AccountName(params[c_powWorker].get_str());
+	}
 
 	// privateKeys
-	if (obj.count("privateKeys") > 0)
+	if (obj.count(c_privateKeys) > 0)
 	{
-		js::mObject keys = obj["privateKeys"].get_obj();
+		js::mObject keys = obj[c_privateKeys].get_obj();
 		for (const auto& key : keys)
 			cp.privateKeys[Address(key.first)] = Secret(key.second.get_str());
 	}

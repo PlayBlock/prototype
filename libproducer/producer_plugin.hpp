@@ -44,7 +44,13 @@ public:
 	block_production_condition::block_production_condition_enum maybe_produce_block();
 
 	chain::chain_controller& get_chain_controller() { return *_chain; }
-	const fc::ecc::private_key& get_private_key(types::AccountName& address)const { return _private_keys.at(address); }
+	const fc::ecc::private_key& get_private_key(types::AccountName& address)const {
+		if (_private_keys.find(address) != _private_keys.end())
+			return _private_keys.at(address);
+		else
+			return fc::ecc::private_key();
+	}
+
 	chainbase::database& get_db() { return *_db; }
 
 	void setClient(Client& c) { _client = &c; };

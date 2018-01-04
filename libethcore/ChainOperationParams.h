@@ -106,6 +106,7 @@ public:
 	bool enableStaleProduction = false;
 	types::AccountNames accountNames;
 	u256 ETIForkBlock;
+	types::AccountName powWorker;
 
 	/// private keys for producer
 	std::unordered_map<Address, Secret> privateKeys;
