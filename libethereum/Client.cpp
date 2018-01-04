@@ -702,6 +702,9 @@ void Client::generate_block(
 	m_working.currentBlock().setTimestamp(u256(when.sec_since_epoch()));
     //m_working.currentBlock().setAuthor(producer);
 
+
+	
+
 	clog(ClientTrace) << "Rejigging seal engine...";
 	DEV_WRITE_GUARDED(x_working)
 	{
@@ -711,6 +714,9 @@ void Client::generate_block(
 			return;
 		}
 		m_working.commitToSeal(bc(), m_extraData);
+
+		//为hardfork投票
+		vote_for_hardforks(m_working.currentBlock(),producer);
 	}
 	DEV_READ_GUARDED(x_working)
 	{
@@ -720,10 +726,7 @@ void Client::generate_block(
 	}
 
 	//generateSeal(m_sealingInfo);
-	m_sealingInfo.sign(block_signing_private_key);
-
-	//为hardfork投票
-	vote_for_hardforks(m_sealingInfo);
+	m_sealingInfo.sign(block_signing_private_key); 
 
 	RLPStream blockHeaderRLP;
 	m_sealingInfo.streamRLP(blockHeaderRLP);
@@ -735,7 +738,7 @@ void Client::generate_block(
 }
 
 
-void dev::eth::Client::vote_for_hardforks(BlockHeader& bh)
+void dev::eth::Client::vote_for_hardforks(BlockHeader& bh, const types::AccountName& producer)
 {  
 		bh.m_running_ver = config::ETI_BlockchainVersion;
 
@@ -743,7 +746,7 @@ void dev::eth::Client::vote_for_hardforks(BlockHeader& bh)
 			m_producer_plugin->get_chain_controller().get_global_properties();
 
 		const eos::chain::producer_object& po =
-			m_producer_plugin->get_chain_controller().get_producer(bh.producer());
+			m_producer_plugin->get_chain_controller().get_producer(producer);
 
 		const hardfork_version* _hardfork_versions = m_producer_plugin->get_chain_controller().hardfork_versions();
 		const fc::time_point_sec* _hardfork_times = m_producer_plugin->get_chain_controller().hardfork_times();
