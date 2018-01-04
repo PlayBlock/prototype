@@ -425,8 +425,8 @@ bool Executive::go(OnOpFunc const& _onOp)
 									   //if (m_ext->store(u256(0)) == u256(1))
 									   //if (m_s.storage(Address(0x6d736100))[sha3(m_ext->myAddress)] == u256(1))
 	
-			if (m_s.storage(WAVMAddress, sha3(m_ext->myAddress)) == u256(1))
-				//if (true)
+			//if (m_s.storage(WAVMAddress, sha3(m_ext->myAddress)) == u256(1))
+			if (true)
 			{
 				vm = VMFactory::createWASM();
 			}

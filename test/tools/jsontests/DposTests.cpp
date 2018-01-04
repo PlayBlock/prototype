@@ -454,6 +454,13 @@ bytes DposTestClient::code(const Address& _address) const
 	return block.code(_address);
 }
 
+u256 DposTestClient::storage(Address const & _contract, u256 const & _memory) const
+{
+	Block block(m_bc.getInterface(), m_bc.testGenesis().state().db());
+	block.populateFromChain(m_bc.getInterface(), m_bc.getInterface().currentHash());
+	return block.storage(_contract, _memory);
+}
+
 void DposTestClient::sendTransaction(const string & gasLimit, const string & gasPrice, const string & to, const string & value, const string & data, Account& _from)
 {
 	json_spirit::mObject obj;
@@ -468,6 +475,14 @@ void DposTestClient::sendTransaction(const string & gasLimit, const string & gas
 	m_working.addTransaction(tx);
 
 	_from.nonce++;
+}
+
+void DposTestClient::setGasLimit(u256 const & _v)
+{
+	cout << "_v.str(): " << _v.str() << endl;
+	BlockHeader bh(m_working.blockHeader());
+	bh.setGasLimit(_v);
+	m_working.setBlockHeader(bh);
 }
 
 
