@@ -1044,7 +1044,7 @@ BOOST_AUTO_TEST_CASE(dtVeryFewVotes)
 }
 
 
-BOOST_AUTO_TEST_CASE(dtPow) {
+BOOST_AUTO_TEST_CASE(dtMakePowProducer) {
 	g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
