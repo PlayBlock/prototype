@@ -46,7 +46,8 @@ namespace config {
 	//ETI目前硬分叉数
 	const static int ETI_HardforkNum = 0;
 	
-
+	//硬分叉投票最小人数
+	const static int ETI_HardforkRequiredProducers = 1;
 
 	const static int Percent100 = 10000;
 	const static int Percent1 = 100;

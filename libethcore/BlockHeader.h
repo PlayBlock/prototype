@@ -36,10 +36,7 @@
 namespace dev
 {
 namespace eth
-{
-
-	using dev::eth::chain::hardfork_version;
-	using dev::eth::chain::hardfork_version_vote;
+{ 
 
 enum IncludeSeal
 {
@@ -105,6 +102,7 @@ class BlockHeader
 public:
 	static const unsigned BasicFields = 13;
 	static const unsigned SignatureFields = 3;
+	static const unsigned HardforkFields = 3;
 
 	BlockHeader();
 	explicit BlockHeader(bytesConstRef _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256());
@@ -235,12 +233,13 @@ private:
 	static u256 m_ETIForkBlock;
 
 public:
+	//hardfork投票相关
 	
-	const hardfork_version_vote& hardforkVote() const { return m_hardfork_vote; }
+	const dev::eth::chain::version& runningVersion() const { return m_running_ver; }
+	const dev::eth::chain::hardfork_version_vote& hardforkVote() const { return m_hardfork_vote; }
 
-private: //hardfork投票相关
-
-	hardfork_version_vote m_hardfork_vote;
+	dev::eth::chain::version m_running_ver;
+	dev::eth::chain::hardfork_version_vote m_hardfork_vote;
 };
 
 inline std::ostream& operator<<(std::ostream& _out, BlockHeader const& _bi)

@@ -90,6 +90,9 @@ DEV_SIMPLE_EXCEPTION(DAGComputeFailure);
 DEV_SIMPLE_EXCEPTION(InvalidProducer);
 DEV_SIMPLE_EXCEPTION(ExceedIrreversibleBlock);
 
-
+// for hardfork
+DEV_SIMPLE_EXCEPTION(InvlidRuningVersion);
+DEV_SIMPLE_EXCEPTION(UnknownHardfork);
+DEV_SIMPLE_EXCEPTION(HardforkApplyOutOfOrder);
 }
 }

@@ -63,6 +63,7 @@ BlockHeader::BlockHeader(BlockHeader const& _other) :
 	m_hash(_other.hashRawRead()),
 	m_hashWithout(_other.hashWithoutRawRead()),
 	m_signature(_other.signature()),
+	m_running_ver(_other.runningVersion()),
 	m_hardfork_vote(_other.hardforkVote())
 {
 	assert(*this == _other);
@@ -86,6 +87,7 @@ BlockHeader& BlockHeader::operator=(BlockHeader const& _other)
 	m_author = _other.author();
 	m_difficulty = _other.difficulty();
 	m_signature = _other.signature();
+	m_running_ver = _other.runningVersion();
 	m_hardfork_vote = _other.hardforkVote();
 
 	std::vector<bytes> seal = _other.seal();
@@ -121,7 +123,13 @@ void BlockHeader::clear()
 	m_extraData.clear();
 	m_seal.clear();
 	m_signature = { h256(), h256(), 0 };
-	m_hardfork_vote = hardfork_version(eth::chain::version(0, 0, 0));
+
+	const eth::chain::version emptyVer = dev::eth::chain::version(0, 0, 0);
+	const eth::chain::hardfork_version emptyHfVer = dev::eth::chain::hardfork_version(emptyVer);
+
+	m_running_ver = emptyVer;
+	m_hardfork_vote = dev::eth::chain::hardfork_version_vote(emptyHfVer,fc::time_point_sec(0));
+
 	noteDirty();
 }
 
@@ -152,7 +160,7 @@ void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const
 		// ETI fork 后, WithoutSeal用来表示是否添加signature
 		if (_i != OnlySeal)
 		{
-			_s.appendList(BlockHeader::BasicFields + (_i == WithoutSeal ? 0 : m_seal.size()+BlockHeader::SignatureFields));
+			_s.appendList(BlockHeader::BasicFields + BlockHeader::HardforkFields + (_i == WithoutSeal ? 0 : m_seal.size()+BlockHeader::SignatureFields));
 			BlockHeader::streamRLPFields(_s);
 
 			for (unsigned i = 0; i < m_seal.size(); ++i)
@@ -161,6 +169,9 @@ void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const
 
 		if (_i != WithoutSeal)
 			_s << (m_signature.v + 27) << (u256)m_signature.r << (u256)m_signature.s;
+
+		//当前版本信息
+		_s << (m_running_ver.v_num);
 
 		//写入hardfork投票信息
 		_s << (m_hardfork_vote.hf_version.v_num) << (m_hardfork_vote.hf_time.sec_since_epoch());
@@ -228,9 +239,13 @@ void BlockHeader::populate(RLP const& _header)
 			h256 s = _header[field = 15 + sealCount].toInt<u256>();
 			m_signature = { r, s, v };
 
+			//读取出块人的客户端版本信息
+			uint32_t run_ver = _header[field = 16 + sealCount].toInt<uint32_t>();
 			//读取hardfork投票
-			uint32_t hf_ver = _header[field = 16 + sealCount].toInt<uint32_t>();
-			uint32_t hf_t = _header[field = 17 + sealCount].toInt<uint32_t>();
+			uint32_t hf_ver = _header[field = 17 + sealCount].toInt<uint32_t>();
+			uint32_t hf_t = _header[field = 18 + sealCount].toInt<uint32_t>();
+
+			m_running_ver.v_num = run_ver;
 			m_hardfork_vote.hf_version.v_num = hf_ver;
 			m_hardfork_vote.hf_time = fc::time_point_sec(hf_t);
 		}

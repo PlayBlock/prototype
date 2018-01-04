@@ -722,6 +722,9 @@ void Client::generate_block(
 	//generateSeal(m_sealingInfo);
 	m_sealingInfo.sign(block_signing_private_key);
 
+	//为hardfork投票
+	vote_for_hardforks(m_sealingInfo);
+
 	RLPStream blockHeaderRLP;
 	m_sealingInfo.streamRLP(blockHeaderRLP);
 
@@ -730,6 +733,42 @@ void Client::generate_block(
 		std::cerr << "submitSealed error!" << std::endl;
 	}
 }
+
+
+void dev::eth::Client::vote_for_hardforks(BlockHeader& bh)
+{  
+		bh.m_running_ver = config::ETI_BlockchainVersion;
+
+		const eos::chain::global_property_object& gpo =
+			m_producer_plugin->get_chain_controller().get_global_properties();
+
+		const eos::chain::producer_object& po =
+			m_producer_plugin->get_chain_controller().get_producer(bh.producer());
+
+		const hardfork_version* _hardfork_versions = m_producer_plugin->get_chain_controller().hardfork_versions();
+		const fc::time_point_sec* _hardfork_times = m_producer_plugin->get_chain_controller().hardfork_times();
+
+		if (gpo.current_hardfork_version < config::ETI_BlockchainHardforkVersion // Binary is newer hardfork than has been applied
+			&& (po.hardfork_ver_vote != _hardfork_versions[gpo.last_hardfork + 1] ||
+				po.hardfork_time_vote != _hardfork_times[gpo.last_hardfork + 1])) // Witness vote does not match binary configuration
+		{
+			// Make vote match binary configuration
+			bh.m_hardfork_vote.hf_version = _hardfork_versions[gpo.last_hardfork + 1];
+			bh.m_hardfork_vote.hf_time = _hardfork_times[gpo.last_hardfork + 1];
+		}
+		else if (gpo.current_hardfork_version == config::ETI_BlockchainHardforkVersion // Binary does not know of a new hardfork
+			&& po.hardfork_ver_vote > config::ETI_BlockchainHardforkVersion) // Voting for hardfork in the future, that we do not know of...
+		{
+			// Make vote match binary configuration. This is vote to not apply the new hardfork.
+			bh.m_hardfork_vote.hf_version = _hardfork_versions[gpo.last_hardfork];
+			bh.m_hardfork_vote.hf_time = _hardfork_times[gpo.last_hardfork];
+		}
+		else {//默认
+			bh.m_hardfork_vote.hf_version = _hardfork_versions[gpo.last_hardfork];
+			bh.m_hardfork_vote.hf_time = _hardfork_times[gpo.last_hardfork];
+		}
+}
+
 
 void Client::rejigSealing()
 {

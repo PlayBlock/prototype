@@ -1161,7 +1161,7 @@ ImportRoute BlockChain::insertBlockAndExtras4ETI(VerifiedBlockRef const& _block,
 					extrasBatch.Put(toSlice(h256(tbi.number()), ExtraBlockHash), (ldb::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
 				}
 			}
-			catch (dev::eth::InvalidProducer) {
+			catch (...) { //捕获到任何错误皆回滚
 				/// 切换分叉时，验证分叉上的块出现异常，切换会之前的分叉
 
 				// bloom 回滚到common块

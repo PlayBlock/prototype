@@ -7,8 +7,7 @@
 #include "version.hpp"
 
 using dev::types::AccountName;
-using dev::eth::chain::public_key_type;
-using dev::eth::chain::hardfork_version;
+using dev::eth::chain::public_key_type; 
 using fc::time_point_sec;
 
 namespace eos { namespace chain {
@@ -28,9 +27,12 @@ class producer_object : public chainbase::object<producer_object_type, producer_
    /// The blockchain configuration values this producer recommends
    //BlockchainConfiguration configuration;
 
+   //Producer跑的客户端版本
+   dev::eth::chain::version running_version;
+
    //Hardfork 投票相关
-   hardfork_version  hardfork_ver_vote;
-   time_point_sec    hardfork_time_vote = eth::config::ETI_GenesisTime;
+   dev::eth::chain::hardfork_version  hardfork_ver_vote;
+   time_point_sec    hardfork_time_vote = dev::eth::config::ETI_GenesisTime;
 };
 
 struct by_key;
@@ -55,4 +57,4 @@ CHAINBASE_SET_INDEX_TYPE(eos::chain::producer_object, eos::chain::producer_multi
 
 #include <fc/reflect/reflect.hpp>
 FC_REFLECT(eos::chain::producer_object::id_type, (_id))
-FC_REFLECT(eos::chain::producer_object, (id)(owner)(last_aslot)(total_missed)(last_confirmed_block_num)(pow_worker)(hardfork_ver_vote)(hardfork_time_vote))
+FC_REFLECT(eos::chain::producer_object, (id)(owner)(last_aslot)(total_missed)(last_confirmed_block_num)(pow_worker)(running_version)(hardfork_ver_vote)(hardfork_time_vote))

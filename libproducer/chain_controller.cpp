@@ -5,6 +5,8 @@
 //#include "../libevm/Vote.h"
 #include "producer_objects.hpp"
 #include "version.hpp"
+#include "boost\container\flat_map.hpp"
+#include <tuple>
 
 using namespace dev;
 using namespace dev::eth;
@@ -207,6 +209,10 @@ void chain_controller::update_global_properties(const BlockHeader& b) {
 			//auto config = _admin->get_blockchain_configuration(_db, schedule);
 
 			const auto& gpo = get_global_properties();
+
+			//更新硬分叉选票
+			update_hardfork_votes(gpo.active_producers);
+
 			_db.modify(gpo, [schedule](global_property_object& gpo) {
 				for (int i = 0; i < schedule.size(); i++)
 				{
@@ -412,10 +418,121 @@ dev::h256 dev::eth::chain::chain_controller::get_pow_target()
 
 void dev::eth::chain::chain_controller::process_block_header(const BlockHeader& b)
 {
+	const types::AccountName& producer = b.producer();
+	const producer_object& producer_obj = get_producer(producer);
 
+	if (b.runningVersion() != producer_obj.running_version)
+	{
+		_db.modify(producer_obj, [&](producer_object& po)
+		{
+			po.running_version = b.runningVersion();
+		});
+	} 
+
+	if (b.hardforkVote().hf_version != producer_obj.hardfork_ver_vote ||
+		b.hardforkVote().hf_time != producer_obj.hardfork_time_vote)
+	{//更新producer的hardfork选票
+
+		_db.modify(producer_obj, [&](producer_object& po) {
+			po.hardfork_ver_vote = b.hardforkVote().hf_version;
+			po.hardfork_time_vote = b.hardforkVote().hf_time;
+		});
+	} 
+	const global_property_object& gpo = get_global_properties();
+
+	if (producer_obj.running_version >= gpo.current_hardfork_version)
+	{
+		ctrace << "Block produced by witness that is not running current hardfork";
+		BOOST_THROW_EXCEPTION(InvlidRuningVersion());
+	}
 }
 
 
+
+void dev::eth::chain::chain_controller::process_hardforks()
+{
+	const eos::chain::global_property_object& gpo = get_global_properties();
+
+	while (
+		_hardfork_versions[gpo.last_hardfork] < gpo.next_hardfork && 
+		gpo.next_hardfork_time <= head_block_time())
+	{
+		if (gpo.last_hardfork < config::ETI_HardforkNum)
+			apply_hardfork(gpo.last_hardfork + 1);
+		else
+			BOOST_THROW_EXCEPTION(UnknownHardfork());
+	}
+}
+
+void dev::eth::chain::chain_controller::apply_hardfork(uint32_t hardfork)
+{
+	const eos::chain::global_property_object& gpo = get_global_properties();
+
+	_db.modify(gpo, [&](global_property_object& gpo)
+	{
+		if (hardfork != gpo.last_hardfork + 1)
+		{
+			ctrace << "Hardfork being applied out of order" << " hardfork = " << hardfork << " gpo.last_hardfork = " << gpo.last_hardfork;
+			BOOST_THROW_EXCEPTION(HardforkApplyOutOfOrder());
+		}  
+		gpo.processed_hardforks.push_back(_hardfork_times[hardfork]);
+		gpo.last_hardfork = hardfork;
+		gpo.current_hardfork_version = _hardfork_versions[hardfork]; 
+	});
+}
+
+void dev::eth::chain::chain_controller::update_hardfork_votes(const std::array<AccountName, TotalProducersPerRound>& active_producers)
+{
+	const eos::chain::global_property_object& gpo = get_global_properties();
+	
+	boost::container::flat_map< version, uint32_t, std::greater< version > > producer_versions;
+	boost::container::flat_map< std::tuple< hardfork_version, time_point_sec >, uint32_t > hardfork_version_votes;
+
+	//统计硬分叉投票
+	for (uint32_t i = 0; i < active_producers.size(); i++)
+	{ 
+		auto producer_obj = get_producer(active_producers[i]);
+
+
+		if (producer_versions.find(producer_obj.running_version) == producer_versions.end())
+			producer_versions[producer_obj.running_version] = 1;
+		else
+			producer_versions[producer_obj.running_version] += 1;
+
+		auto version_vote = std::make_tuple(producer_obj.hardfork_ver_vote, producer_obj.hardfork_time_vote);
+		if (hardfork_version_votes.find(version_vote) == hardfork_version_votes.end())
+			hardfork_version_votes[version_vote] = 1;
+		else
+			hardfork_version_votes[version_vote] += 1;
+	}
+ 
+	auto hf_itr = hardfork_version_votes.begin();
+
+	while (hf_itr != hardfork_version_votes.end())
+	{
+		if (hf_itr->second >= config::ETI_HardforkRequiredProducers)
+		{
+			_db.modify(gpo, [&](global_property_object& gpo)
+			{
+				gpo.next_hardfork = std::get<0>(hf_itr->first);
+				gpo.next_hardfork_time = std::get<1>(hf_itr->first);
+			});
+
+			break;
+		}
+
+		hf_itr++;
+	}
+
+	// We no longer have a majority
+	if (hf_itr == hardfork_version_votes.end())
+	{
+		_db.modify(gpo, [&](global_property_object& gpo)
+		{
+			gpo.next_hardfork = gpo.current_hardfork_version;
+		});
+	}
+}
 
 void dev::eth::chain::chain_controller::update_pow_perblock(const BlockHeader& b)
 {  
@@ -590,6 +707,8 @@ void dev::eth::chain::chain_controller::init_hardforks()
 void chain_controller::apply_block(const BlockHeader& b)
 {
 	const producer_object& signing_producer = validate_block_header(b);
+
+	process_block_header(b);
 
 	update_pow_perblock(b);
 
