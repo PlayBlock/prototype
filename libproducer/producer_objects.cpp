@@ -79,7 +79,7 @@ ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db
    }
 
    ctrace << "Runerup Producers Count = " << runerCount;
-
+    
 
    //选出1个POW见证人  
    const auto& allProducerObjsByPOW = db.get_index<producer_multi_index, by_pow>();
@@ -93,10 +93,7 @@ ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db
 	   iProducer++ )
    {
 	   if (processedProducers.count(iProducer->owner))
-		   continue;
-
-	   round.push_back(iProducer->owner);
-	   processedProducers.insert(std::make_pair(iProducer->owner, iProducer->owner));
+		   continue; 
 
 	   //剔除本轮被选中的POW见证人
 	   db.modify(*iProducer, [&](producer_object& prod)
@@ -110,8 +107,14 @@ ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db
 		   obj.num_pow_witnesses--;
 	   });
 
-	   powCount++;
-	   iActive++;
+	   //只有非DPOS注册见证人才有权POW出块
+	   if (db.find<ProducerVotesObject, byOwnerName>(iProducer->owner) == NULL)
+	   {
+		   round.push_back(iProducer->owner);
+		   processedProducers.insert(std::make_pair(iProducer->owner, iProducer->owner));
+		   powCount++;
+		   iActive++;
+	   } 
    }
 
    //其它空位填空直到21位

@@ -440,7 +440,7 @@ void dev::eth::chain::chain_controller::process_block_header(const BlockHeader& 
 	} 
 	const global_property_object& gpo = get_global_properties();
 
-	if (producer_obj.running_version >= gpo.current_hardfork_version)
+	if (producer_obj.running_version < gpo.current_hardfork_version)
 	{
 		ctrace << "Block produced by witness that is not running current hardfork";
 		BOOST_THROW_EXCEPTION(InvlidRuningVersion());
@@ -491,6 +491,11 @@ void dev::eth::chain::chain_controller::update_hardfork_votes(const std::array<A
 	//统计硬分叉投票
 	for (uint32_t i = 0; i < active_producers.size(); i++)
 	{ 
+
+		//略过空位
+		if (active_producers[i] == AccountName())
+			continue;
+
 		auto producer_obj = get_producer(active_producers[i]);
 
 
@@ -700,6 +705,8 @@ void dev::eth::chain::chain_controller::init_hardforks()
 {
 	_hardfork_times[0] = fc::time_point_sec(config::ETI_GenesisTime);
 	_hardfork_versions[0] = hardfork_version(0, 0); 
+	//_hardfork_times[1] = fc::time_point_sec(1);
+	//_hardfork_versions[1] = hardfork_version(0, 1);
 }
 
 
@@ -718,6 +725,8 @@ void chain_controller::apply_block(const BlockHeader& b)
 	update_global_properties(b);
 	update_signing_producer(signing_producer, b);
 	update_last_irreversible_block();
+
+	process_hardforks();
 
 	std::cout <<"currentHash: "<< _bc.currentHash().hex() << std::endl;
 }

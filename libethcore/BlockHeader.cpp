@@ -163,6 +163,11 @@ void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const
 			_s.appendList(BlockHeader::BasicFields + BlockHeader::HardforkFields + (_i == WithoutSeal ? 0 : m_seal.size()+BlockHeader::SignatureFields));
 			BlockHeader::streamRLPFields(_s);
 
+			//当前版本信息
+			_s << (m_running_ver.v_num); 
+			//写入hardfork投票信息
+			_s << (m_hardfork_vote.hf_version.v_num) << (m_hardfork_vote.hf_time.sec_since_epoch());
+
 			for (unsigned i = 0; i < m_seal.size(); ++i)
 				_s.appendRaw(m_seal[i]);
 		}
@@ -170,11 +175,7 @@ void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const
 		if (_i != WithoutSeal)
 			_s << (m_signature.v + 27) << (u256)m_signature.r << (u256)m_signature.s;
 
-		//当前版本信息
-		_s << (m_running_ver.v_num);
-
-		//写入hardfork投票信息
-		_s << (m_hardfork_vote.hf_version.v_num) << (m_hardfork_vote.hf_time.sec_since_epoch());
+		
 	}
 	else
 	{
@@ -227,31 +228,35 @@ void BlockHeader::populate(RLP const& _header)
 		m_gasUsed = _header[field = 10].toInt<u256>();
 		m_timestamp = _header[field = 11].toInt<u256>();
 		m_extraData = _header[field = 12].toBytes();
+
+		//读取出块人的客户端版本信息
+		uint32_t run_ver = _header[field = 13].toInt<uint32_t>();
+		//读取hardfork投票
+		uint32_t hf_ver = _header[field = 14].toInt<uint32_t>();
+		uint32_t hf_t = _header[field = 15].toInt<uint32_t>();
+
+		m_running_ver.v_num = run_ver;
+		m_hardfork_vote.hf_version.v_num = hf_ver;
+		m_hardfork_vote.hf_time = fc::time_point_sec(hf_t);
+
 		m_seal.clear();
 
 		if (m_number > m_ETIForkBlock)
 		{
-			uint32_t sealCount = _header.itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields;
-			for (unsigned i = 13; i < 13 + sealCount; ++i)
+			uint32_t sealCount = _header.itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields - BlockHeader::HardforkFields;
+			for (unsigned i = 16; i < 16 + sealCount; ++i)
 				m_seal.push_back(_header[i].data().toBytes());
-			byte v = _header[field = 13 + sealCount].toInt<byte>() - 27;
-			h256 r = _header[field = 14 + sealCount].toInt<u256>();
-			h256 s = _header[field = 15 + sealCount].toInt<u256>();
+
+			byte v = _header[field = 16 + sealCount].toInt<byte>() - 27;
+			h256 r = _header[field = 17 + sealCount].toInt<u256>();
+			h256 s = _header[field = 18 + sealCount].toInt<u256>();
 			m_signature = { r, s, v };
 
-			//读取出块人的客户端版本信息
-			uint32_t run_ver = _header[field = 16 + sealCount].toInt<uint32_t>();
-			//读取hardfork投票
-			uint32_t hf_ver = _header[field = 17 + sealCount].toInt<uint32_t>();
-			uint32_t hf_t = _header[field = 18 + sealCount].toInt<uint32_t>();
-
-			m_running_ver.v_num = run_ver;
-			m_hardfork_vote.hf_version.v_num = hf_ver;
-			m_hardfork_vote.hf_time = fc::time_point_sec(hf_t);
+		
 		}
 		else
 		{
-			for (unsigned i = 13; i < _header.itemCount(); ++i)
+			for (unsigned i = 16; i < _header.itemCount(); ++i)
 				m_seal.push_back(_header[i].data().toBytes());
 		}
 	}
