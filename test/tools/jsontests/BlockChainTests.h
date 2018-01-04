@@ -56,6 +56,7 @@ class TransitionTestsSuite: public TestSuite
 struct ChainBranch
 {
 	ChainBranch(TestBlock const& _genesis);
+	ChainBranch(ChainBranch *_default);
 	void reset();
 	void restoreFromHistory(size_t _importBlockNumber);
 	TestBlockChain blockchain;

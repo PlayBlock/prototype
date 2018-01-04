@@ -188,6 +188,13 @@ ChainBranch::ChainBranch(TestBlock const& _genesis): blockchain(_genesis)
 	blockchain.interfaceUnsafe().setProducer(producer);
 }
 
+ChainBranch::ChainBranch(ChainBranch *_default) : blockchain(_default->importedBlocks.at(0))
+{
+	importedBlocks = _default->importedBlocks;
+	producer = make_shared<class producer_plugin>(blockchain.getInterface());
+	producer->get_chain_controller().setStateDB(blockchain.testGenesis().state().db());
+	blockchain.interfaceUnsafe().setProducer(producer);
+}
 void ChainBranch::reset()
 {
 	blockchain.reset(importedBlocks.at(0));
@@ -313,8 +320,10 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		else
 		{
 			ChainBranch::forceBlockchain(chainnetwork);
-			chainMap[chainname] = new ChainBranch(genesisBlock);
+			//chainMap[chainname] = new ChainBranch(genesisBlock);
+			chainMap[chainname] = new ChainBranch(chainMap["default"]);
 			ChainBranch::resetBlockchain();
+			chainMap[chainname]->restoreFromHistory(importBlockNumber);
 		}
 
 		TestBlock block;
