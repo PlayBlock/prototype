@@ -80,6 +80,7 @@ enum object_type
 	producer_schedule_object_type, ///< Defined by native_contract library
 	proxy_vote_object_type, ///< Defined by native_contract library
 	key64x64x64_value_object_type,
+	process_hardfork_object_type, ///<ÓÃÓÚÓ²·Ö²æ
 	OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
 };
 }

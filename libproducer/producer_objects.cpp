@@ -34,62 +34,70 @@ ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db
 
    int iActive = 0; 
 
-   const auto& allProducersByVotes = db.get_index<ProducerVotesMultiIndex, byVotes>();
-
+   const auto& allProducersByVotes = db.get_index<ProducerVotesMultiIndex, byVotes>(); 
+  
    if (allProducersByVotes.size() == 0 )
    {//需要至少一个Producer
 	   BOOST_THROW_EXCEPTION(dev::NoEnoughProducers()
 		   << dev::errinfo_comment("Active Producers Size = 0 !!!!"));
    }
 
-    
-   //挑选出票数最高的19人
-   for (
-	   auto iProducer = allProducersByVotes.begin();
-	   iProducer != allProducersByVotes.end() && iActive < config::DPOSVotedProducersPerRound ; 
-	   iProducer++ , iActive++ )
-   { 
-	   round.push_back(iProducer->ownerName);
-	   processedProducers.insert(std::make_pair(iProducer->ownerName,iProducer->ownerName));
-   }
-
-   ctrace << "Top Voted Producers Count = " << iActive;
-
-   //挑选出1个虚拟赛跑选手
-   const auto& allProducersByFinishTime = db.get_index<ProducerVotesMultiIndex, byProjectedRaceFinishTime>(); 
-   int runerCount = 0;
-   for (
-	   auto iProducer = allProducersByFinishTime.begin();
-	   iProducer != allProducersByFinishTime.end() && runerCount < config::DPOSRunnerupProducersPerRound;
-	   iProducer++ )
-   {
-	   if(processedProducers.count(iProducer->ownerName))
-		   continue;
-
-	   round.push_back(iProducer->ownerName); 
-	   processedProducers.insert(std::make_pair(iProducer->ownerName, iProducer->ownerName));
-	   runerCount++;
-	   iActive++;
-   }  
-
-   AccountName lastRunnerUpName;
-   if (runerCount > 0)
-   {
-	   lastRunnerUpName = round[iActive - 1];
-   }
-
-   ctrace << "Runerup Producers Count = " << runerCount;
-    
-
-   //选出1个POW见证人  
-   const auto& allProducerObjsByPOW = db.get_index<producer_multi_index, by_pow>();
 
    const auto& gprops = db.get<dynamic_global_property_object>();
+
+   const auto& allProducersByFinishTime = db.get_index<ProducerVotesMultiIndex, byProjectedRaceFinishTime>();
+
+   int runerCount = 0;
+
+   AccountName lastRunnerUpName;
+
+   if ( gprops.num_pow_witnesses == 0 || gprops.head_block_number > config::StartMinerVotingBlock)
+   {//在30天内或还没有POW
+
+	   //挑选出票数最高的19人
+	   for (
+		   auto iProducer = allProducersByVotes.begin();
+		   iProducer != allProducersByVotes.end() && iActive < config::DPOSVotedProducersPerRound;
+		   iProducer++, iActive++)
+	   {
+		   round.push_back(iProducer->ownerName);
+		   processedProducers.insert(std::make_pair(iProducer->ownerName, iProducer->ownerName));
+	   }
+
+	   ctrace << "Top Voted Producers Count = " << iActive;
+
+	   //挑选出1个虚拟赛跑选手 
+	   for (
+		   auto iProducer = allProducersByFinishTime.begin();
+		   iProducer != allProducersByFinishTime.end() && runerCount < config::DPOSRunnerupProducersPerRound;
+		   iProducer++)
+	   {
+		   if (processedProducers.count(iProducer->ownerName))
+			   continue;
+
+		   round.push_back(iProducer->ownerName);
+		   processedProducers.insert(std::make_pair(iProducer->ownerName, iProducer->ownerName));
+		   runerCount++;
+		   iActive++;
+	   }
+
+	   if (runerCount > 0)
+	   {
+		   lastRunnerUpName = round[iActive - 1];
+	   }
+
+	   ctrace << "Runerup Producers Count = " << runerCount; 
+   }
+
+
+   //选出1个POW见证人   
+   const auto& allProducerObjsByPOW = db.get_index<producer_multi_index, by_pow>(); 
 
    int powCount = 0;
    for (
 	   auto iProducer = allProducerObjsByPOW.upper_bound(0);
-	   iProducer != allProducerObjsByPOW.end() && powCount <  config::POWProducersPerRound;
+	   iProducer != allProducerObjsByPOW.end() && 
+	   powCount < ( gprops.head_block_number > config::StartMinerVotingBlock ? config::POWProducersPerRound : (config::TotalProducersPerRound - iActive) );
 	   iProducer++ )
    {
 	   if (processedProducers.count(iProducer->owner))
@@ -116,6 +124,7 @@ ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db
 		   iActive++;
 	   } 
    }
+
 
    //其它空位填空直到21位
    while (iActive < config::TotalProducersPerRound)

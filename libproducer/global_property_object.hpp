@@ -24,6 +24,15 @@ using dev::eth::chain::hardfork_version;
 
 namespace eos { namespace chain {
 
+
+	class process_hardfork_object : public chainbase::object<process_hardfork_object_type, process_hardfork_object>
+	{ 
+		OBJECT_CTOR(process_hardfork_object)
+
+		id_type id;
+		fc::time_point_sec hardfork_timepoint;
+	};
+
    /**
     * @class global_property_object
     * @brief Maintains global state information (committee_member list, current fees)
@@ -41,8 +50,7 @@ namespace eos { namespace chain {
 
 
 	  //==============Hardfork¸üÐÂ=======================
-
-	  std::vector< fc::time_point_sec > processed_hardforks;
+	   
 	  int							last_hardfork = 0;
 	  hardfork_version				current_hardfork_version;
 	  hardfork_version				next_hardfork;
@@ -112,6 +120,15 @@ namespace eos { namespace chain {
 		uint32_t num_pow_witnesses = 0;
    };
 
+   struct by_time;
+   using process_hardfork_multi_index = chainbase::shared_multi_index_container<
+	   process_hardfork_object,
+	   indexed_by<
+		ordered_unique<tag<by_id>, member<process_hardfork_object, process_hardfork_object::id_type, &process_hardfork_object::id>>,
+		ordered_unique<tag<by_time>, member<process_hardfork_object,fc::time_point_sec, &process_hardfork_object::hardfork_timepoint>>
+	   >
+   >;
+
    using global_property_multi_index = chainbase::shared_multi_index_container<
       global_property_object,
       indexed_by<
@@ -132,9 +149,16 @@ namespace eos { namespace chain {
 
 }}
 
+CHAINBASE_SET_INDEX_TYPE(eos::chain::process_hardfork_object, eos::chain::process_hardfork_multi_index)
 CHAINBASE_SET_INDEX_TYPE(eos::chain::global_property_object, eos::chain::global_property_multi_index)
 CHAINBASE_SET_INDEX_TYPE(eos::chain::dynamic_global_property_object,
                          eos::chain::dynamic_global_property_multi_index)
+
+
+
+FC_REFLECT(eos::chain::process_hardfork_object,
+			(hardfork_timepoint)
+		  )
 
 FC_REFLECT(eos::chain::dynamic_global_property_object,
            (head_block_number)
@@ -150,8 +174,7 @@ FC_REFLECT(eos::chain::dynamic_global_property_object,
           )
 
 FC_REFLECT(eos::chain::global_property_object,
-           (active_producers)
-		   (processed_hardforks)
+           (active_producers) 
 		   (last_hardfork)
 		   (current_hardfork_version)
 		   (next_hardfork)

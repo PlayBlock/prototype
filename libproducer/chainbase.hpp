@@ -48,12 +48,12 @@ namespace chainbase {
    using std::vector;
 
    template<typename T>
-   using allocator = bip::allocator<T, bip::managed_mapped_file::segment_manager>;
+   using allocator = bip::allocator<T, bip::managed_mapped_file::segment_manager>; 
 
    typedef bip::basic_string< char, std::char_traits< char >, allocator< char > > shared_string;
 
    template<typename T>
-   using shared_vector = std::vector<T, allocator<T> >;
+   using shared_vector = std::vector<T, allocator<T>>;
 
    struct strcmp_less
    {

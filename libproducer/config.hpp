@@ -20,6 +20,10 @@ namespace config {
 	using types::UInt128;
 
 	const static int BlockIntervalSeconds = 3;
+	 
+	const static int BlocksPerYear = (365 * 24 * 60 * 60 / BlockIntervalSeconds);
+	const static int BlocksPerDay = (24 * 60 * 60 / BlockIntervalSeconds);
+	const static int StartMinerVotingBlock = BlocksPerDay;
 	  
 
 	//Ã¿ÂÖDPOS Worker×ÜÊý

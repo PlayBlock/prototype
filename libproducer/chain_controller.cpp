@@ -53,6 +53,7 @@ void chain_controller::initialize_indexes() {
 	_db.add_index<ProducerVotesMultiIndex>();
 	_db.add_index<ProducerScheduleMultiIndex>();
 	_db.add_index<producer_multi_index>();
+	_db.add_index<process_hardfork_multi_index>();
 
 	//_db.add_index<block_summary_multi_index>();
 	//_db.add_index<transaction_multi_index>();
@@ -61,8 +62,7 @@ void chain_controller::initialize_indexes() {
 
 void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 {
-	//初始化hardforks相关全局变量
-	init_hardforks();
+	
 
 	try {
 		if (!_db.find<global_property_object>()) 
@@ -80,14 +80,18 @@ void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 					{
 						p.active_producers[i] = bc.chainParams().initialProducers[i];
 					} 
-
-					p.processed_hardforks.clear();
+					 
 					p.last_hardfork = 0; 
 					p.current_hardfork_version = (eth::chain::hardfork_version(eth::chain::version(0, 0, 0)));
 					p.next_hardfork = (eth::chain::hardfork_version(eth::chain::version(0, 0, 0)));
 					p.next_hardfork_time = config::ETI_GenesisTime;   
 
 				});
+
+				_db.create<process_hardfork_object>([&](process_hardfork_object& pho) {
+					pho.hardfork_timepoint = config::ETI_GenesisTime;
+				});
+
 				_db.create<dynamic_global_property_object>([&](dynamic_global_property_object& p) {
 					p.time = initial_timestamp;
 					p.recent_slots_filled = uint64_t(-1);
@@ -127,9 +131,18 @@ void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 			});
 		}
 
+
+		//初始化hardforks相关全局变量
+		init_hardforks();
+
+	}
+	catch (UnknownHardfork& e) {//若当前不在主分叉上
+		ctrace << "YOUR CLIENT'S VERSION IS TOO OLD!!!!!!";
+		while(1){}
 	}
 	catch (...) {
 		cdebug << "initialize_chain error";
+		throw;
 	}
 }
 
@@ -457,10 +470,12 @@ void dev::eth::chain::chain_controller::process_hardforks()
 		_hardfork_versions[gpo.last_hardfork] < gpo.next_hardfork && 
 		gpo.next_hardfork_time <= head_block_time())
 	{
-		if (gpo.last_hardfork < config::ETI_HardforkNum)
+		if (gpo.last_hardfork < config::ETI_HardforkNum) {
 			apply_hardfork(gpo.last_hardfork + 1);
-		else
+		}else{
+			ctrace<<"Unknown Hardfork!!!!!";
 			BOOST_THROW_EXCEPTION(UnknownHardfork());
+		}
 	}
 }
 
@@ -468,17 +483,25 @@ void dev::eth::chain::chain_controller::apply_hardfork(uint32_t hardfork)
 {
 	const eos::chain::global_property_object& gpo = get_global_properties();
 
-	_db.modify(gpo, [&](global_property_object& gpo)
+	if (hardfork != gpo.last_hardfork + 1)
 	{
-		if (hardfork != gpo.last_hardfork + 1)
-		{
-			ctrace << "Hardfork being applied out of order" << " hardfork = " << hardfork << " gpo.last_hardfork = " << gpo.last_hardfork;
-			BOOST_THROW_EXCEPTION(HardforkApplyOutOfOrder());
-		}  
-		gpo.processed_hardforks.push_back(_hardfork_times[hardfork]);
+		ctrace << "Hardfork being applied out of order" << " hardfork = " << hardfork << " gpo.last_hardfork = " << gpo.last_hardfork;
+		BOOST_THROW_EXCEPTION(HardforkApplyOutOfOrder());
+	}
+
+	_db.create<eos::chain::process_hardfork_object>([&](eos::chain::process_hardfork_object& pho) {
+		pho.hardfork_timepoint = _hardfork_times[hardfork];
+	});
+	
+
+	_db.modify(gpo, [&](global_property_object& gpo)
+	{ 
 		gpo.last_hardfork = hardfork;
 		gpo.current_hardfork_version = _hardfork_versions[hardfork]; 
 	});
+
+	//切换硬分叉成功！！
+	ctrace << "Switch Hardfork " << _hardfork_versions[hardfork].v_num << " Succeed!!!!! ";
 }
 
 void dev::eth::chain::chain_controller::update_hardfork_votes(const std::array<AccountName, TotalProducersPerRound>& active_producers)
@@ -486,7 +509,8 @@ void dev::eth::chain::chain_controller::update_hardfork_votes(const std::array<A
 	const eos::chain::global_property_object& gpo = get_global_properties();
 	
 	boost::container::flat_map< version, uint32_t, std::greater< version > > producer_versions;
-	boost::container::flat_map< std::tuple< hardfork_version, time_point_sec >, uint32_t > hardfork_version_votes;
+	boost::container::flat_map< std::tuple< hardfork_version, time_point_sec >, uint32_t ,
+		std::greater<std::tuple< hardfork_version, time_point_sec >>> hardfork_version_votes;
 
 	//统计硬分叉投票
 	for (uint32_t i = 0; i < active_producers.size(); i++)
@@ -510,17 +534,30 @@ void dev::eth::chain::chain_controller::update_hardfork_votes(const std::array<A
 		else
 			hardfork_version_votes[version_vote] += 1;
 	}
+
+	{//打印hardfork_version 选票结果
+		auto hf_itr = hardfork_version_votes.begin(); 
+		while (hf_itr != hardfork_version_votes.end())
+		{
+			auto hf_ver = std::get<0>(hf_itr->first);
+			auto hf_time = std::get<1>(hf_itr->first);
+			std::cout << "hardfork " << hf_ver.v_num << ": votes = " << hf_itr->second << " time = "<< hf_time.to_iso_string() <<std::endl;
+			hf_itr++;
+		}
+	}
  
 	auto hf_itr = hardfork_version_votes.begin();
-
+	 
 	while (hf_itr != hardfork_version_votes.end())
 	{
 		if (hf_itr->second >= config::ETI_HardforkRequiredProducers)
 		{
+			auto hf_ver = std::get<0>(hf_itr->first);
+			auto hf_time = std::get<1>(hf_itr->first);
 			_db.modify(gpo, [&](global_property_object& gpo)
 			{
-				gpo.next_hardfork = std::get<0>(hf_itr->first);
-				gpo.next_hardfork_time = std::get<1>(hf_itr->first);
+				gpo.next_hardfork.v_num = hf_ver.v_num;
+				gpo.next_hardfork_time = hf_time;
 			});
 
 			break;
@@ -705,8 +742,22 @@ void dev::eth::chain::chain_controller::init_hardforks()
 {
 	_hardfork_times[0] = fc::time_point_sec(config::ETI_GenesisTime);
 	_hardfork_versions[0] = hardfork_version(0, 0); 
-	/*_hardfork_times[1] = fc::time_point_sec(1);
-	_hardfork_versions[1] = hardfork_version(0, 1);*/
+	//_hardfork_times[1] = fc::time_point_sec(1);
+	//_hardfork_versions[1] = hardfork_version(0, 1);
+
+	const auto& gpo = get_global_properties();
+
+	if (gpo.last_hardfork > config::ETI_HardforkNum)
+	{
+		ctrace << "Chain knows of more hardforks than configuration";
+		BOOST_THROW_EXCEPTION(UnknownHardfork());
+	}
+
+	if (_hardfork_versions[gpo.last_hardfork] > config::ETI_BlockchainVersion)
+	{
+		ctrace << "Blockchain version is older than last applied hardfork";
+		BOOST_THROW_EXCEPTION(UnknownHardfork());
+	}
 }
 
 
