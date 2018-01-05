@@ -121,7 +121,7 @@ void UserStorage::SaveBytes(State& _state, Address const& _storageaddress, Addre
 	{
 		if (i != pageNum - 1)
 		{
-			bytesConstRef tmp(iterator._Ptr, sectionLength);
+			bytesConstRef tmp(&*iterator, sectionLength);
 			h256 value(tmp);
 
 			_state.setStorage(_storageaddress, addressToU256(_keyaddress, i), value);
@@ -129,11 +129,11 @@ void UserStorage::SaveBytes(State& _state, Address const& _storageaddress, Addre
 		}
 		else {
 			int lastsize = _data.end() - iterator;
-			bytesConstRef tmp(iterator._Ptr, _data.end() - iterator);
+			bytesConstRef tmp(&*iterator, _data.end() - iterator);
 			h256 value(tmp, h256::AlignLeft);
 
 			//h256 value;
-			//memcpy(value.data(), iterator._Ptr, _data.end() - iterator);
+			//memcpy(value.data(), &*iterator, _data.end() - iterator);
 			_state.setStorage(_storageaddress, addressToU256(_keyaddress, i), value);
 			//h256 value;
 			//dev::bytes lastPage(iterator, _data.end());
@@ -165,31 +165,31 @@ void VoteInfo::save(State& _state)
 	bytes valueBytes(size, (byte)0);
 	bytes::iterator iterator = valueBytes.begin();
 	
-	memcpy(iterator._Ptr, &voteToNum, sizeof(voteToNum));
+	memcpy(&*iterator, &voteToNum, sizeof(voteToNum));
 	iterator += sizeof(byte);
 
 	byte boolValues = m_isCandidate;
 	*iterator = boolValues;
 	iterator += sizeof(byte);
 
-	memcpy(iterator._Ptr, &m_holdVotes, sizeof(m_holdVotes));
+	memcpy(&*iterator, &m_holdVotes, sizeof(m_holdVotes));
 	iterator += sizeof(m_holdVotes);
 
-	memcpy(iterator._Ptr, &m_receivedVote, sizeof(m_receivedVote));
+	memcpy(&*iterator, &m_receivedVote, sizeof(m_receivedVote));
 	iterator += sizeof(m_receivedVote);
 
-	memcpy(iterator._Ptr, m_name.data(), m_name.length());
+	memcpy(&*iterator, m_name.data(), m_name.length());
 	iterator += NameMaxSize;
 
-	memcpy(iterator._Ptr, m_url.data(), m_url.length());
+	memcpy(&*iterator, m_url.data(), m_url.length());
 	iterator += URLMaxSize;
 
 
 	for(auto const&  p:m_voteRecord)
 	{
-		memcpy(iterator._Ptr, &p.first, sizeof(Address));
+		memcpy(&*iterator, &p.first, sizeof(Address));
 		iterator += sizeof(Address);
-		memcpy(iterator._Ptr, &p.second, sizeof(uint64_t));
+		memcpy(&*iterator, &p.second, sizeof(uint64_t));
 		iterator += sizeof(uint64_t);
 	}
 	assert(iterator == valueBytes.end());
@@ -245,25 +245,25 @@ void VoteInfo::initFromBytes(bytes const &_bytes)
 {
 	bytes::const_iterator iterator = _bytes.begin();
 	byte voteToNum;
-	memcpy(&voteToNum, iterator._Ptr, sizeof(voteToNum));
+	memcpy(&voteToNum, &*iterator, sizeof(voteToNum));
 	iterator += sizeof(byte);
 	
 	byte boolValues = *iterator;
 	m_isCandidate = boolValues;
 	iterator += sizeof(byte);
 
-	memcpy(&m_holdVotes, iterator._Ptr, sizeof(m_holdVotes));
+	memcpy(&m_holdVotes, &*iterator, sizeof(m_holdVotes));
 	iterator += sizeof(m_holdVotes);
 
-	memcpy(&m_receivedVote, iterator._Ptr, sizeof(m_receivedVote));
+	memcpy(&m_receivedVote, &*iterator, sizeof(m_receivedVote));
 	iterator += sizeof(m_receivedVote);
 
-	size_t len = strnlen_s((const char*)iterator._Ptr,NameMaxSize);
-	m_name = std::string((const char*)iterator._Ptr, len);
+	size_t len = strnlen_s((const char*)&*iterator,NameMaxSize);
+	m_name = std::string((const char*)&*iterator, len);
 	iterator += NameMaxSize;
 
-	len = strnlen_s((const char*)iterator._Ptr, URLMaxSize);
-	m_url = std::string((const char*)iterator._Ptr, len);
+	len = strnlen_s((const char*)&*iterator, URLMaxSize);
+	m_url = std::string((const char*)&*iterator, len);
 	iterator += URLMaxSize;
 
 
@@ -272,9 +272,9 @@ void VoteInfo::initFromBytes(bytes const &_bytes)
 		Address to;
 		uint64_t number;
 
-		memcpy(&to,iterator._Ptr,sizeof(Address));
+		memcpy(&to,&*iterator,sizeof(Address));
 		iterator += sizeof(Address);
-		memcpy(&number, iterator._Ptr, sizeof(uint64_t));
+		memcpy(&number, &*iterator, sizeof(uint64_t));
 		iterator += sizeof(uint64_t);
 		m_voteRecord.emplace(to, number);
 	}
