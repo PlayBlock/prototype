@@ -34,11 +34,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-#if defined(_MSC_VER)
-#else
-#define strnlen_s strnlen
-#endif
-
 u256 UserStorage::addressToU256(Address const& _address, int _postffix)
 {
 	u256 _r((u160)_address);
