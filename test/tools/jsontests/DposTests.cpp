@@ -284,7 +284,7 @@ void DposTestClient::make_pow_producer(Account& _from)
 	static Secret priviteKey = Secret(_from.secret);
 	static AccountName workerAccount(_from.address);
 	// 注册回调函数，等待miners找到解后调用
-	Notified<bool> sealed = false;
+	Notified<bool> sealed(false);
 
 	std::map<dev::h256, std::pair<dev::u256, dev::u256>> map;
 	std::unordered_map<dev::u256, dev::u256> mapChange;
