@@ -18,5 +18,5 @@ target_include_directories(producer PRIVATE
 
 	)
 
-target_link_libraries(producer PRIVATE Boost::system fc)
+target_link_libraries(producer PRIVATE Boost::system fc ethereum)
 ADD_DEFINITIONS(-DCHAINBASE_CHECK_LOCKING)

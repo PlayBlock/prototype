@@ -357,7 +357,7 @@ public:
 	static bool getCheat() { return m_cheat; }
 private:
 	void generateSeal(BlockHeader& bh);
-	void Client::newMineWork();
+	void newMineWork();
 	std::shared_ptr<class producer_plugin> m_producer_plugin;
 
 	static bool m_cheat;

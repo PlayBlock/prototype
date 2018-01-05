@@ -15,7 +15,7 @@
 
 #include <iostream>
 #include <map>
-#include "register.h"
+#include "Register.h"
 
 inline Address asAddress(u256 _item)
 {

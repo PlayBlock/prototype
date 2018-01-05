@@ -262,11 +262,11 @@ void VoteInfo::initFromBytes(bytes const &_bytes)
 	memcpy(&m_receivedVote, &*iterator, sizeof(m_receivedVote));
 	iterator += sizeof(m_receivedVote);
 
-	size_t len = strnlen_s((const char*)&*iterator,NameMaxSize);
+	size_t len = strnlen((const char*)&*iterator,NameMaxSize);
 	m_name = std::string((const char*)&*iterator, len);
 	iterator += NameMaxSize;
 
-	len = strnlen_s((const char*)&*iterator, URLMaxSize);
+	len = strnlen((const char*)&*iterator, URLMaxSize);
 	m_url = std::string((const char*)&*iterator, len);
 	iterator += URLMaxSize;
 
