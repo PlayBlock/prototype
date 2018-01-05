@@ -15,7 +15,7 @@
 
 #include <iostream>
 #include <map>
-
+#include "register.h"
 
 inline Address asAddress(u256 _item)
 {
@@ -188,95 +188,95 @@ DEFINE_INTRINSIC_FUNCTION2(env, readMessage, readMessage, i32, i32, destptr, i32
 //	return 1;
 //}
 
-DEFINE_INTRINSIC_FUNCTION3(env, setDelegate, setDelegate, i32, i32, from, i32, to, i32, isDelegate)
-{
-	return 0;
-}
-
-DEFINE_INTRINSIC_FUNCTION1(env, getSender, getSender, none, i32, address)
-{
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	Address& _address = memoryRef<Address>(mem, address);
-
-	dev::Address _caller = _ext->caller;
-	dev::Address _create = _ext->origin;
-
-	if (_caller != _create)
-	{
-		_address = dev::Address(0);
-	}
-
-	_address = _caller;
-}
+//DEFINE_INTRINSIC_FUNCTION3(env, setDelegate, setDelegate, i32, i32, from, i32, to, i32, isDelegate)
+//{
+//	return 0;
+//}
+//
+//DEFINE_INTRINSIC_FUNCTION1(env, getSender, getSender, none, i32, address)
+//{
+//	ExtVMFace* _ext = WASM_CORE::getExt();
+//	auto mem = WASM_CORE::getMemory();
+//	Address& _address = memoryRef<Address>(mem, address);
+//
+//	dev::Address _caller = _ext->caller;
+//	dev::Address _create = _ext->origin;
+//
+//	if (_caller != _create)
+//	{
+//		_address = dev::Address(0);
+//	}
+//
+//	_address = _caller;
+//}
 
 
 
 //our register functions by dz
 DEFINE_INTRINSIC_FUNCTION0(env, gascount1, gascount1, none)
 {
-	//std::cout << "gascount1" << std::endl;
+	std::cout << "gascount1" << std::endl;
 	WASM_VM::AddUsedGas(1);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount2, gascount2, none)
 {
-	//std::cout << "gascount2" << std::endl;
+	std::cout << "gascount2" << std::endl;
 	WASM_VM::AddUsedGas(2);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount3, gascount3, none)
 {
-	//std::cout << "gascount3" << std::endl;
+	std::cout << "gascount3" << std::endl;
 	WASM_VM::AddUsedGas(3);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount4, gascount4, none)
 {
-	//std::cout << "gascount4" << std::endl;
+	std::cout << "gascount4" << std::endl;
 	WASM_VM::AddUsedGas(4);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount5, gascount5, none)
 {
-	//std::cout << "gascount5" << std::endl;
+	std::cout << "gascount5" << std::endl;
 	WASM_VM::AddUsedGas(5);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount6, gascount6, none)
 {
-	//std::cout << "gascount6" << std::endl;
+	std::cout << "gascount6" << std::endl;
 	WASM_VM::AddUsedGas(6);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount7, gascount7, none)
 {
-	//std::cout << "gascount7" << std::endl;
+	std::cout << "gascount7" << std::endl;
 	WASM_VM::AddUsedGas(7);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount8, gascount8, none)
 {
-	//std::cout << "gascount8" << std::endl;
+	std::cout << "gascount8" << std::endl;
 	WASM_VM::AddUsedGas(8);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount9, gascount9, none)
 {
-	//std::cout << "gascount9" << std::endl;
+	std::cout << "gascount9" << std::endl;
 	WASM_VM::AddUsedGas(9);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount10, gascount10, none)
 {
-	//std::cout << "gascount10" << std::endl;
+	std::cout << "gascount10" << std::endl;
 	WASM_VM::AddUsedGas(10);
 }
 
 
 
 DEFINE_INTRINSIC_FUNCTION0(env, checktime, checktime, none) {
-	//std::cout << "check time" << std::endl;
+	std::cout << "check time" << std::endl;
 }
 
 //
@@ -482,55 +482,57 @@ DEFINE_INTRINSIC_FUNCTION0(env, checktime, checktime, none) {
 //		wasm_interface::get().current_validate_context->require_scope(scope);
 //	}
 //
-	DEFINE_INTRINSIC_FUNCTION3(env, memcpy, memcpy, i32, i32, dstp, i32, srcp, i32, len) {
-		//auto& wasm = wasm_interface::get();
-		//auto  mem = wasm.current_memory;
-		//char* dst = memoryArrayPtr<char>(mem, dstp, len);
-		//const char* src = memoryArrayPtr<const char>(mem, srcp, len);
-		//FC_ASSERT(len > 0);
+DEFINE_INTRINSIC_FUNCTION3(env, memcpy, memcpy, i32, i32, dstp, i32, srcp, i32, len) {
 
-		//if (dst > src)
-		//	FC_ASSERT(dst >= (src + len), "overlap of memory range is undefined", ("d", dstp)("s", srcp)("l", len));
-		//else
-		//	FC_ASSERT(src >= (dst + len), "overlap of memory range is undefined", ("d", dstp)("s", srcp)("l", len));
+	WASM_VM::AddUsedGas(2 * len);
+	//auto& wasm = wasm_interface::get();
+	//auto  mem = wasm.current_memory;
+	//char* dst = memoryArrayPtr<char>(mem, dstp, len);
+	//const char* src = memoryArrayPtr<const char>(mem, srcp, len);
+	//FC_ASSERT(len > 0);
 
-		//memcpy(dst, src, uint32_t(len));
-		//return dstp;
+	//if (dst > src)
+	//	FC_ASSERT(dst >= (src + len), "overlap of memory range is undefined", ("d", dstp)("s", srcp)("l", len));
+	//else
+	//	FC_ASSERT(src >= (dst + len), "overlap of memory range is undefined", ("d", dstp)("s", srcp)("l", len));
 
-		auto mem = WASM_CORE::getMemory();
-		char* dst = memoryArrayPtr<char>(mem, dstp, len);
-		const char* src = memoryArrayPtr<const char>(mem, srcp, len);
-		if(len <= 0)
-			BOOST_THROW_EXCEPTION(WASMWrongMemory());
+	//memcpy(dst, src, uint32_t(len));
+	//return dstp;
 
-		if (dst > src)
+	auto mem = WASM_CORE::getMemory();
+	char* dst = memoryArrayPtr<char>(mem, dstp, len);
+	const char* src = memoryArrayPtr<const char>(mem, srcp, len);
+	if (len <= 0)
+		BOOST_THROW_EXCEPTION(WASMWrongMemory());
+
+	if (dst > src)
+	{
+		if (dst < (src + len))
 		{
-			if (dst < (src + len))
-			{
-				BOOST_THROW_EXCEPTION(WASMWrongMemory());
-			}
+			BOOST_THROW_EXCEPTION(WASMWrongMemory());
 		}
-		else {
-			if (src < (dst + len))
-			{
-				BOOST_THROW_EXCEPTION(WASMWrongMemory());
-			}
+	}
+	else {
+		if (src < (dst + len))
+		{
+			BOOST_THROW_EXCEPTION(WASMWrongMemory());
 		}
-
-
-		memcpy(dst, src, uint32_t(len));
-		return dstp;
 	}
 
-	//DEFINE_INTRINSIC_FUNCTION3(env, memset, memset, i32, i32, rel_ptr, i32, value, i32, len) {
-	//	auto& wasm = wasm_interface::get();
-	//	auto  mem = wasm.current_memory;
-	//	char* ptr = memoryArrayPtr<char>(mem, rel_ptr, len);
-	//	FC_ASSERT(len > 0);
 
-	//	memset(ptr, value, len);
-	//	return rel_ptr;
-	//}
+	memcpy(dst, src, uint32_t(len));
+	return dstp;
+}
+
+//DEFINE_INTRINSIC_FUNCTION3(env, memset, memset, i32, i32, rel_ptr, i32, value, i32, len) {
+//	auto& wasm = wasm_interface::get();
+//	auto  mem = wasm.current_memory;
+//	char* ptr = memoryArrayPtr<char>(mem, rel_ptr, len);
+//	FC_ASSERT(len > 0);
+
+//	memset(ptr, value, len);
+//	return rel_ptr;
+//}
 //
 //
 //	/**
@@ -717,6 +719,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, prints, prints, none, i32, charptr) {
 
 DEFINE_INTRINSIC_FUNCTION3(env, sha3, sha3, none, i32, sourcePtr, i32, length, i32, dest)
 {
+	WASM_VM::AddUsedGas(sha3Gas + sha3WordGas*(length + 31) / 32);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	byte* str = memoryArrayPtr<byte>(mem, sourcePtr, length);
@@ -730,6 +733,7 @@ DEFINE_INTRINSIC_FUNCTION3(env, sha3, sha3, none, i32, sourcePtr, i32, length, i
 
 DEFINE_INTRINSIC_FUNCTION1(env, address, address, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = fromAddress(_ext->myAddress);
@@ -739,6 +743,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, address, address, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, caller, caller, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = fromAddress(_ext->caller);
@@ -748,6 +753,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, caller, caller, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION2(env, balance, balance, none, i32, address, i32, dest)
 {
+	WASM_VM::AddUsedGas(balanceGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->balance(asAddress(memoryRef<u256>(mem, address)));
@@ -757,6 +763,7 @@ DEFINE_INTRINSIC_FUNCTION2(env, balance, balance, none, i32, address, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION2(env, blockhash, blockhash, none, i32, number, i32, dest)
 {
+	WASM_VM::AddUsedGas(blockhashGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->blockHash(memoryRef<u256>(mem, number));
@@ -766,6 +773,7 @@ DEFINE_INTRINSIC_FUNCTION2(env, blockhash, blockhash, none, i32, number, i32, de
 
 DEFINE_INTRINSIC_FUNCTION1(env, coinbase, coinbase, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = fromAddress(_ext->envInfo().author());
@@ -776,6 +784,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, coinbase, coinbase, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, timestamp, timestamp, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->envInfo().timestamp();
@@ -785,6 +794,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, timestamp, timestamp, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, number, number, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->envInfo().number();
@@ -794,6 +804,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, number, number, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, difficulty, difficulty, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->envInfo().difficulty();
@@ -803,6 +814,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, difficulty, difficulty, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, gaslimit, gaslimit, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->envInfo().gasLimit();
@@ -812,6 +824,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, gaslimit, gaslimit, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, gasprice, gasprice, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->gasPrice;
@@ -824,12 +837,13 @@ DEFINE_INTRINSIC_FUNCTION1(env, printu256, printu256, none, i32, source)
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256& result = memoryRef<u256>(mem, source);
-	std::cout << "DEC: "<<result.str() << std::endl;
+	std::cout << "DEC: " << result.str() << std::endl;
 	//std::cout << "Hex: "<<toHex(result) << std::endl;
 }
 
 DEFINE_INTRINSIC_FUNCTION2(env, getstore, getstore, none, i32, location, i32, data)
 {
+	WASM_VM::AddUsedGas(sloadGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256& address = memoryRef<u256>(mem, location);
@@ -844,11 +858,47 @@ DEFINE_INTRINSIC_FUNCTION2(env, setstore, setstore, none, i32, location, i32, da
 	auto mem = WASM_CORE::getMemory();
 	u256& address = memoryRef<u256>(mem, location);
 	u256& savedata = memoryRef<u256>(mem, data);
+
+
+	if (!_ext->store(address) && savedata)
+		WASM_VM::AddUsedGas(sstoreSetGas);
+	else if (_ext->store(address) && !savedata)
+	{
+		WASM_VM::AddUsedGas(sstoreResetGas);
+		_ext->sub.refunds += sstoreRefundGas;
+	}
+	else
+		WASM_VM::AddUsedGas(sstoreResetGas);
+
+
 	_ext->setStore(address, savedata);
 }
 
+
+DEFINE_INTRINSIC_FUNCTION2(env, transferbalance, transferbalance, none, i32, address, i32, data)
+{
+	WASM_VM::AddUsedGas(callGas);
+	ExtVMFace* _ext = WASM_CORE::getExt();
+	auto mem = WASM_CORE::getMemory();
+	u256& balance = memoryRef<u256>(mem, data);
+	_ext->transferBalance(asAddress(memoryRef<u256>(mem, address)), balance);
+}
+
+
+DEFINE_INTRINSIC_FUNCTION1(env, callvalue, callvalue, none, i32, dest)
+{
+	WASM_VM::AddUsedGas(basicGas);
+	ExtVMFace* _ext = WASM_CORE::getExt();
+	auto mem = WASM_CORE::getMemory();
+	u256 result = _ext->value;
+	u256& destination = memoryRef<u256>(mem, dest);
+	memcpy(&destination, &result, CT256Size);
+}
+
+
 DEFINE_INTRINSIC_FUNCTION2(env, setu256value, setu256value, none, i32, u256address, i32, charptr)
 {
+	WASM_VM::AddUsedGas(u256op1);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	const char* str = &memoryRef<const char>(mem, charptr);
@@ -860,9 +910,10 @@ DEFINE_INTRINSIC_FUNCTION2(env, setu256value, setu256value, none, i32, u256addre
 }
 
 
-#define U256OperatorDelarationAndImp(name,operator)\
+#define U256OperatorDelarationAndImp(name,operator,usedGas)\
 DEFINE_INTRINSIC_FUNCTION3(env,name, name, none, i32, operand_1, i32, operand_2, i32, result)\
 {\
+	WASM_VM::AddUsedGas(usedGas);\
 	auto mem = WASM_CORE::getMemory();\
 	u256& op1 = memoryRef<u256>(mem, operand_1);\
 	u256& op2 = memoryRef<u256>(mem, operand_2);\
@@ -870,16 +921,17 @@ DEFINE_INTRINSIC_FUNCTION3(env,name, name, none, i32, operand_1, i32, operand_2,
 	v = op1 operator op2;\
 }\
 
-U256OperatorDelarationAndImp(add_u256, +)
-U256OperatorDelarationAndImp(sub_u256, -)
-U256OperatorDelarationAndImp(mul_u256, *)
-U256OperatorDelarationAndImp(div_u256, /)
-U256OperatorDelarationAndImp(mod_u256, %)
+U256OperatorDelarationAndImp(add_u256, +, u256op1)
+U256OperatorDelarationAndImp(sub_u256, -, u256op1)
+U256OperatorDelarationAndImp(mul_u256, *, u256op2)
+U256OperatorDelarationAndImp(div_u256, / , u256op2)
+U256OperatorDelarationAndImp(mod_u256, %, u256op2)
 
 
 #define U256ComparatorDelarationAndImp(name,operator)\
 DEFINE_INTRINSIC_FUNCTION2(env,name, name, i32, i32, operand_1, i32, operand_2)\
 {\
+	WASM_VM::AddUsedGas(u256op1);\
 	auto mem = WASM_CORE::getMemory();\
 	u256& op1 = memoryRef<u256>(mem, operand_1);\
 	u256& op2 = memoryRef<u256>(mem, operand_2);\
@@ -887,13 +939,13 @@ DEFINE_INTRINSIC_FUNCTION2(env,name, name, i32, i32, operand_1, i32, operand_2)\
 }\
 
 U256ComparatorDelarationAndImp(lt_u256, <)
-U256ComparatorDelarationAndImp(gt_u256, > )
-U256ComparatorDelarationAndImp(eq_u256, == )
+	U256ComparatorDelarationAndImp(gt_u256, >)
+	U256ComparatorDelarationAndImp(eq_u256, == )
 
 
 
 
-DEFINE_INTRINSIC_FUNCTION2(env, WAVMAssert, WAVMAssert, none, i32, test, i32, msg) {
+	DEFINE_INTRINSIC_FUNCTION2(env, WAVMAssert, WAVMAssert, none, i32, test, i32, msg) {
 	if (test == 0)
 	{
 		auto mem = WASM_CORE::getMemory();
@@ -904,7 +956,7 @@ DEFINE_INTRINSIC_FUNCTION2(env, WAVMAssert, WAVMAssert, none, i32, test, i32, ms
 }
 
 DEFINE_INTRINSIC_FUNCTION1(env, test1, test1, none, i32, a) {
-	std::cout << "test1 " << "a: " << a  << std::endl;
+	std::cout << "test1 " << "a: " << a << std::endl;
 }
 
 DEFINE_INTRINSIC_FUNCTION2(env, test2, test2, none, i32, a, i32, b) {

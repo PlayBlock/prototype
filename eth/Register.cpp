@@ -874,6 +874,28 @@ DEFINE_INTRINSIC_FUNCTION2(env, setstore, setstore, none, i32, location, i32, da
 	_ext->setStore(address, savedata);
 }
 
+
+DEFINE_INTRINSIC_FUNCTION2(env, transferbalance, transferbalance, none, i32, address, i32, data)
+{
+	WASM_VM::AddUsedGas(callGas);
+	ExtVMFace* _ext = WASM_CORE::getExt();
+	auto mem = WASM_CORE::getMemory();
+	u256& balance = memoryRef<u256>(mem, data);
+	_ext->transferBalance(asAddress(memoryRef<u256>(mem, address)), balance);
+}
+
+
+DEFINE_INTRINSIC_FUNCTION1(env, callvalue, callvalue, none, i32, dest)
+{
+	WASM_VM::AddUsedGas(basicGas);
+	ExtVMFace* _ext = WASM_CORE::getExt();
+	auto mem = WASM_CORE::getMemory();
+	u256 result = _ext->value;
+	u256& destination = memoryRef<u256>(mem, dest);
+	memcpy(&destination, &result, CT256Size);
+}
+
+
 DEFINE_INTRINSIC_FUNCTION2(env, setu256value, setu256value, none, i32, u256address, i32, charptr)
 {
 	WASM_VM::AddUsedGas(u256op1);

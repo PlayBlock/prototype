@@ -44,7 +44,7 @@ public:
 	static bytes LoadFixedSizeBtyes(State const& _state, Address const& _storageaddress, Address const& _keyaddress, int _size);
 	//static bytes LoadFixedSizeBtyes(State const& _state, map<h256, pair<u256, u256>> const& _storageMap, int _size);
 
-	static void SaveBytes(State& const _state, Address const& _storageaddress, Address const& _keyaddress, bytes const& _data);
+	static void SaveBytes(State& _state, Address const& _storageaddress, Address const& _keyaddress, bytes const& _data);
 
 	//static bytes LoadDPOSVoteBytes(State const& _state, Address const& _storageaddress, Address const& _keyaddress);
 	//static void SaveDPOSVoteBytes(State& const _state, Address const& _storageaddress, Address const& _keyaddress, bytes const& _data);

@@ -225,6 +225,9 @@ public:
 	/// Return the EVM gas-price schedule for this execution context.
 	virtual EVMSchedule const& evmSchedule() const { return DefaultSchedule; }
 
+	//transfer for wavm
+	virtual void transferBalance(Address, u256) {};
+
 private:
 	EnvInfo const& m_envInfo;
 

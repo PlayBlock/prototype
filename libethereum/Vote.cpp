@@ -111,7 +111,7 @@ bytes UserStorage::LoadFixedSizeBtyes(State const& _state, Address const& _stora
 //	return resMap;
 //}
 
-void UserStorage::SaveBytes(State& const _state, Address const& _storageaddress, Address const& _keyaddress, bytes const& _data)
+void UserStorage::SaveBytes(State& _state, Address const& _storageaddress, Address const& _keyaddress, bytes const& _data)
 {
 	int pageNum = (_data.size() + 31) / 32;
 	bytes::const_iterator iterator = _data.begin();

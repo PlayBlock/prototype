@@ -94,6 +94,13 @@ public:
 	/// Hash of a block if within the last 256 blocks, or h256() otherwise.
 	h256 blockHash(u256 _number) override;
 
+	//transfer for wavm
+	virtual void transferBalance(Address _address, u256 _value)
+	{
+		m_s.transferBalance(myAddress, _address, value);
+	};
+
+
 private:
 	State& m_s;  ///< A reference to the base state.
 	SealEngineFace const& m_sealEngine;
