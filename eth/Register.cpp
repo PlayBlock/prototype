@@ -15,7 +15,7 @@
 
 #include <iostream>
 #include <map>
-
+#include "register.h"
 
 inline Address asAddress(u256 _item)
 {
@@ -188,27 +188,27 @@ DEFINE_INTRINSIC_FUNCTION2(env, readMessage, readMessage, i32, i32, destptr, i32
 //	return 1;
 //}
 
-DEFINE_INTRINSIC_FUNCTION3(env, setDelegate, setDelegate, i32, i32, from, i32, to, i32, isDelegate)
-{
-	return 0;
-}
-
-DEFINE_INTRINSIC_FUNCTION1(env, getSender, getSender, none, i32, address)
-{
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	Address& _address = memoryRef<Address>(mem, address);
-
-	dev::Address _caller = _ext->caller;
-	dev::Address _create = _ext->origin;
-
-	if (_caller != _create)
-	{
-		_address = dev::Address(0);
-	}
-
-	_address = _caller;
-}
+//DEFINE_INTRINSIC_FUNCTION3(env, setDelegate, setDelegate, i32, i32, from, i32, to, i32, isDelegate)
+//{
+//	return 0;
+//}
+//
+//DEFINE_INTRINSIC_FUNCTION1(env, getSender, getSender, none, i32, address)
+//{
+//	ExtVMFace* _ext = WASM_CORE::getExt();
+//	auto mem = WASM_CORE::getMemory();
+//	Address& _address = memoryRef<Address>(mem, address);
+//
+//	dev::Address _caller = _ext->caller;
+//	dev::Address _create = _ext->origin;
+//
+//	if (_caller != _create)
+//	{
+//		_address = dev::Address(0);
+//	}
+//
+//	_address = _caller;
+//}
 
 
 
@@ -483,6 +483,8 @@ DEFINE_INTRINSIC_FUNCTION0(env, checktime, checktime, none) {
 //	}
 //
 	DEFINE_INTRINSIC_FUNCTION3(env, memcpy, memcpy, i32, i32, dstp, i32, srcp, i32, len) {
+		
+		WASM_VM::AddUsedGas(2 * len);
 		//auto& wasm = wasm_interface::get();
 		//auto  mem = wasm.current_memory;
 		//char* dst = memoryArrayPtr<char>(mem, dstp, len);
@@ -717,6 +719,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, prints, prints, none, i32, charptr) {
 
 DEFINE_INTRINSIC_FUNCTION3(env, sha3, sha3, none, i32, sourcePtr, i32, length, i32, dest)
 {
+	WASM_VM::AddUsedGas(sha3Gas + sha3WordGas*(length + 31) / 32);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	byte* str = memoryArrayPtr<byte>(mem, sourcePtr, length);
@@ -730,6 +733,7 @@ DEFINE_INTRINSIC_FUNCTION3(env, sha3, sha3, none, i32, sourcePtr, i32, length, i
 
 DEFINE_INTRINSIC_FUNCTION1(env, address, address, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = fromAddress(_ext->myAddress);
@@ -739,6 +743,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, address, address, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, caller, caller, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = fromAddress(_ext->caller);
@@ -748,6 +753,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, caller, caller, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION2(env, balance, balance, none, i32, address, i32, dest)
 {
+	WASM_VM::AddUsedGas(balanceGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->balance(asAddress(memoryRef<u256>(mem, address)));
@@ -757,6 +763,7 @@ DEFINE_INTRINSIC_FUNCTION2(env, balance, balance, none, i32, address, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION2(env, blockhash, blockhash, none, i32, number, i32, dest)
 {
+	WASM_VM::AddUsedGas(blockhashGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->blockHash(memoryRef<u256>(mem, number));
@@ -766,6 +773,7 @@ DEFINE_INTRINSIC_FUNCTION2(env, blockhash, blockhash, none, i32, number, i32, de
 
 DEFINE_INTRINSIC_FUNCTION1(env, coinbase, coinbase, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = fromAddress(_ext->envInfo().author());
@@ -776,6 +784,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, coinbase, coinbase, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, timestamp, timestamp, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->envInfo().timestamp();
@@ -785,6 +794,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, timestamp, timestamp, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, number, number, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->envInfo().number();
@@ -794,6 +804,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, number, number, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, difficulty, difficulty, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->envInfo().difficulty();
@@ -803,6 +814,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, difficulty, difficulty, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, gaslimit, gaslimit, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->envInfo().gasLimit();
@@ -812,6 +824,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, gaslimit, gaslimit, none, i32, dest)
 
 DEFINE_INTRINSIC_FUNCTION1(env, gasprice, gasprice, none, i32, dest)
 {
+	WASM_VM::AddUsedGas(basicGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256 result = _ext->gasPrice;
@@ -830,6 +843,7 @@ DEFINE_INTRINSIC_FUNCTION1(env, printu256, printu256, none, i32, source)
 
 DEFINE_INTRINSIC_FUNCTION2(env, getstore, getstore, none, i32, location, i32, data)
 {
+	WASM_VM::AddUsedGas(sloadGas);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256& address = memoryRef<u256>(mem, location);
@@ -844,11 +858,25 @@ DEFINE_INTRINSIC_FUNCTION2(env, setstore, setstore, none, i32, location, i32, da
 	auto mem = WASM_CORE::getMemory();
 	u256& address = memoryRef<u256>(mem, location);
 	u256& savedata = memoryRef<u256>(mem, data);
+	
+	
+	if (!_ext->store(address) && savedata)
+		WASM_VM::AddUsedGas(sstoreSetGas);
+	else if (_ext->store(address) && !savedata)
+	{
+		WASM_VM::AddUsedGas(sstoreResetGas);
+		_ext->sub.refunds += sstoreRefundGas;
+	}
+	else
+		WASM_VM::AddUsedGas(sstoreResetGas);
+	
+	
 	_ext->setStore(address, savedata);
 }
 
 DEFINE_INTRINSIC_FUNCTION2(env, setu256value, setu256value, none, i32, u256address, i32, charptr)
 {
+	WASM_VM::AddUsedGas(u256op1);
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	const char* str = &memoryRef<const char>(mem, charptr);
@@ -860,9 +888,10 @@ DEFINE_INTRINSIC_FUNCTION2(env, setu256value, setu256value, none, i32, u256addre
 }
 
 
-#define U256OperatorDelarationAndImp(name,operator)\
+#define U256OperatorDelarationAndImp(name,operator,usedGas)\
 DEFINE_INTRINSIC_FUNCTION3(env,name, name, none, i32, operand_1, i32, operand_2, i32, result)\
 {\
+	WASM_VM::AddUsedGas(usedGas);\
 	auto mem = WASM_CORE::getMemory();\
 	u256& op1 = memoryRef<u256>(mem, operand_1);\
 	u256& op2 = memoryRef<u256>(mem, operand_2);\
@@ -870,16 +899,17 @@ DEFINE_INTRINSIC_FUNCTION3(env,name, name, none, i32, operand_1, i32, operand_2,
 	v = op1 operator op2;\
 }\
 
-U256OperatorDelarationAndImp(add_u256, +)
-U256OperatorDelarationAndImp(sub_u256, -)
-U256OperatorDelarationAndImp(mul_u256, *)
-U256OperatorDelarationAndImp(div_u256, /)
-U256OperatorDelarationAndImp(mod_u256, %)
+U256OperatorDelarationAndImp(add_u256, +, u256op1)
+U256OperatorDelarationAndImp(sub_u256, -, u256op1)
+U256OperatorDelarationAndImp(mul_u256, *, u256op2)
+U256OperatorDelarationAndImp(div_u256, /, u256op2)
+U256OperatorDelarationAndImp(mod_u256, %, u256op2)
 
 
 #define U256ComparatorDelarationAndImp(name,operator)\
 DEFINE_INTRINSIC_FUNCTION2(env,name, name, i32, i32, operand_1, i32, operand_2)\
 {\
+	WASM_VM::AddUsedGas(u256op1);\
 	auto mem = WASM_CORE::getMemory();\
 	u256& op1 = memoryRef<u256>(mem, operand_1);\
 	u256& op2 = memoryRef<u256>(mem, operand_2);\

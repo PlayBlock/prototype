@@ -44,6 +44,7 @@ public:
 	//by dz end
 
 private:
+	EVMSchedule const* m_schedule = nullptr;
 	bytesConstRef m_bytes = bytesConstRef();
 	//bytes m_return_r;
 	static WASM_CORE* m_core;

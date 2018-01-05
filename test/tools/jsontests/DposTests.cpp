@@ -213,7 +213,8 @@ void DposTestClient::make_producer(Account& _from)
 	string to = "0000000000000000000000000000000000000024";
 	string value = "0x0";
 	string nonce = boost::lexical_cast<string>(_from.nonce);
-	string data = "";
+	string data = "0x617C62";
+
 	string secretKey = _from.secret;
 
 	json_spirit::mObject obj;
@@ -337,14 +338,14 @@ void DposTestClient::send(Account& _from, const Account& on, uint64_t voteCount)
 	_from.nonce++;
 }
 
-void DposTestClient::approve_producer(Account& voter, const Account& on)
+void DposTestClient::approve_producer(Account& voter, const Account& on, uint64_t voteCount)
 {
 	string gasLimit = "0xc350";
 	string gasPrice = "0x04a817c800";
 	string to = "0000000000000000000000000000000000000026";
 	string value = "0x0";
 	string nonce = boost::lexical_cast<string>(voter.nonce);
-	string data = on.address;
+	string data = on.address + toHex(boost::lexical_cast<string>(voteCount));
 	string secretKey = voter.secret;
 
 	json_spirit::mObject obj;
@@ -361,14 +362,14 @@ void DposTestClient::approve_producer(Account& voter, const Account& on)
 	voter.nonce++;
 }
 
-void DposTestClient::unapprove_producer(Account& voter)
+void DposTestClient::unapprove_producer(Account& voter, const Account& on, uint64_t voteCount)
 {
 	string gasLimit = "0xc350";
 	string gasPrice = "0x04a817c800";
 	string to = "0000000000000000000000000000000000000027";
 	string value = "0x0";
 	string nonce = boost::lexical_cast<string>(voter.nonce);
-	string data = "0x";
+	string data = on.address + toHex(boost::lexical_cast<string>(voteCount));
 	string secretKey = voter.secret;
 
 	json_spirit::mObject obj;
@@ -424,18 +425,18 @@ Accounts& DposTestClient::get_accounts()
 	return m_accounts;
 }
 
-const std::map<Address, VoteBace> DposTestClient::get_votes()
+const std::map<Address, VoteInfo> DposTestClient::get_votes()
 {
 	return _producer_plugin->get_chain_controller().get_votes();
 }
 
 const std::map<Address, uint64_t> DposTestClient::get_all_producers()
 {
-	std::map<Address, VoteBace> voteInfo = _producer_plugin->get_chain_controller().get_votes();
+	std::map<Address, VoteInfo> voteInfo = _producer_plugin->get_chain_controller().get_votes();
 	std::map<Address, uint64_t> ret;
 	for (auto i : voteInfo)
 	{
-		ret[i.first] = i.second.m_votedNumber;
+		ret[i.first] = i.second.getReceivedVotedNumber();
 	}
 	return ret;
 }
@@ -560,7 +561,7 @@ BOOST_AUTO_TEST_CASE(dtMortgage)
 	BOOST_REQUIRE(balance < u256(500000000000000000));// Account 0's balnce should reduce according to mortgage.
 	BOOST_REQUIRE(balance >= u256(500000000000000000) - u256(1000000000000000));
 	auto all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 50); // Mortage eth to have 50 votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getHoldVoteNumber(), 50); // Mortage eth to have 50 votes.
 
 	client.redeem_eth(account[0], 5);// Redeem 5 votes with 0.05 eth.
 	client.produce_blocks();
@@ -568,7 +569,7 @@ BOOST_AUTO_TEST_CASE(dtMortgage)
 	BOOST_REQUIRE(balance < u256(550000000000000000));// Account 0's balnce should increase according to mortgage.
 	BOOST_REQUIRE(balance >= u256(550000000000000000) - u256(1000000000000000) * 2);
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 45); // Redeem eth reduce to 45 votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getHoldVoteNumber(), 45); // Redeem eth reduce to 45 votes.
 
 	client.redeem_eth(account[0], 50);// Redeem 50 votes with 0.5 eth.
 	client.produce_blocks();
@@ -576,7 +577,7 @@ BOOST_AUTO_TEST_CASE(dtMortgage)
 	BOOST_REQUIRE(balance < u256(550000000000000000));// Account 0's balnce shouldn't increase without enough votes.
 	BOOST_REQUIRE(balance >= u256(550000000000000000) - u256(1000000000000000) * 3);
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 45); // Redeem eth reduce to 45 votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getHoldVoteNumber(), 45); // Redeem eth reduce to 45 votes.
 
 	client.redeem_eth(account[1], 5);// Redeem 5 votes with 0.05 eth.
 	client.produce_blocks();
@@ -589,9 +590,9 @@ BOOST_AUTO_TEST_CASE(dtMortgage)
 	client.mortgage_eth(account[4], 159000000000000000);// Account 3 mortage 0.159 eth with 15 votes.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[2].address)].m_unAssignNumber, 0); // Mortage false, have no votes.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[3].address)].m_unAssignNumber, 0); // Mortage false, have no votes.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[4].address)].m_unAssignNumber, 15); // Mortage false, have no votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[2].address)].getHoldVoteNumber(), 0); // Mortage false, have no votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[3].address)].getHoldVoteNumber(), 0); // Mortage false, have no votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[4].address)].getHoldVoteNumber(), 15); // Mortage false, have no votes.
 	balance = client.balance(Address(account[2].address));
 	BOOST_REQUIRE(balance < u256(1000000000000000000));// Account 0's balnce should't change.
 	BOOST_REQUIRE(balance >= u256(1000000000000000000) - u256(1000000000000000) * 1);
@@ -617,7 +618,7 @@ BOOST_AUTO_TEST_CASE(dtMortgage)
 	BOOST_REQUIRE(balance < u256(100000000000000000));// Account 0's balnce should reduce according to mortgage.
 	BOOST_REQUIRE(balance >= u256(100000000000000000) - u256(1000000000000000) * 9);
 }
-
+/*
 BOOST_AUTO_TEST_CASE(dtAssign)
 {
 	//g_logVerbosity = 13;
@@ -631,28 +632,28 @@ BOOST_AUTO_TEST_CASE(dtAssign)
 	client.assign(account[0], 40); // Account 0 assign 40 votes.
 	client.produce_blocks();
 	auto all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 10); // 10 unassign votes.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_assignNumber, 40); // 40 assign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getUnAssignNumber(), 10); // 10 unassign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getAssignNumber(), 40); // 40 assign votes.
 
 	client.deAssign(account[0], 5); // Account 0 deassign 5 votes.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 15); // 15 unassign votes.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_assignNumber, 35); // 35 assign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getUnAssignNumber(), 15); // 15 unassign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getAssignNumber(), 35); // 35 assign votes.
 
 	client.assign(account[0], 50); // Account 0 assign 50 votes. Error happened.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 15); // 15 unassign votes.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_assignNumber, 35); // 35 assign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getUnAssignNumber(), 15); // 15 unassign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getAssignNumber(), 35); // 35 assign votes.
 
 	client.deAssign(account[0], 50); // Account 0 assign 50 votes. Error happened.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 15); // 15 unassign votes.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_assignNumber, 35); // 35 assign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getUnAssignNumber(), 15); // 15 unassign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getAssignNumber(), 35); // 35 assign votes.
 }
-
+*/
 BOOST_AUTO_TEST_CASE(dtApproveProducer)
 {
 	//g_logVerbosity = 13;
@@ -670,6 +671,7 @@ BOOST_AUTO_TEST_CASE(dtApproveProducer)
 	// get all producers that have registered	
 	client.produce_blocks();
 	auto all_producers = client.get_all_producers();
+
 
 	// check this producer's vote is 0
 	BOOST_REQUIRE_EQUAL(all_producers.size(), 1);
@@ -693,16 +695,16 @@ BOOST_AUTO_TEST_CASE(dtApproveProducer)
 	BOOST_REQUIRE(balance < u256(550000000000000000));// Account 0's balnce should increase according to mortgage.
 	BOOST_REQUIRE(balance >= u256(550000000000000000) - u256(1000000000000000) * 3);
 
-	// Assign 10 votes for vote.
-	client.assign(account[0], 10);//nonce = 3
-	client.produce_blocks();
+	//// Assign 10 votes for vote.
+	//client.assign(account[0], 10);//nonce = 3
+	//client.produce_blocks();
 
-	// DeAssign 2 votes. Account 0 have 8 votes now.
-	client.deAssign(account[0], 2);//nonce = 4
-	client.produce_blocks();
+	//// DeAssign 2 votes. Account 0 have 8 votes now.
+	//client.deAssign(account[0], 2);//nonce = 4
+	//client.produce_blocks();
 
 	// approve
-	client.approve_producer(account[0], account[0]);//nonce = 5
+	client.approve_producer(account[0], account[0], 8);//nonce = 5
 
 	// check this producer's vote is 1
 	client.produce_blocks();
@@ -711,71 +713,71 @@ BOOST_AUTO_TEST_CASE(dtApproveProducer)
 	BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 8);// Account 0 should have 8 votes from himself.
 
 	// unapprove
-	client.unapprove_producer(account[0]);//nonce = 6
+	client.unapprove_producer(account[0], account[0], 8);//nonce = 6
 	client.produce_blocks();
 	all_producers = client.get_all_producers();
 	BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 0);
 
-	// Account 1 mortage 0.4 eth with 40 votes.
-	client.mortgage_eth(account[1], 400000000000000000);//nonce = 1
-	client.produce_blocks();
-	balance = client.balance(Address(account[1].address));
-	BOOST_REQUIRE(balance < u256(600000000000000000));
-	BOOST_REQUIRE(balance >= u256(600000000000000000) - u256(1000000000000000) * 2);
+	//// Account 1 mortage 0.4 eth with 40 votes.
+	//client.mortgage_eth(account[1], 400000000000000000);//nonce = 1
+	//client.produce_blocks();
+	//balance = client.balance(Address(account[1].address));
+	//BOOST_REQUIRE(balance < u256(600000000000000000));
+	//BOOST_REQUIRE(balance >= u256(600000000000000000) - u256(1000000000000000) * 2);
 
-	client.unmake_producer(account[0]);// Account 0 unmake productor.
-	client.produce_blocks();
-	client.assign(account[1], 10);// Account 1 assign 10 votes.
-	client.produce_blocks();
-	client.approve_producer(account[1], account[0]);// Account 1 vote to account 0 who isn't productor.
-	client.produce_blocks();
-	all_producers = client.get_all_producers();
-	BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 0);// Account 0 should have zero votes.
+	//client.unmake_producer(account[0]);// Account 0 unmake productor.
+	//client.produce_blocks();
+	//client.assign(account[1], 10);// Account 1 assign 10 votes.
+	//client.produce_blocks();
+	//client.approve_producer(account[1], account[0]);// Account 1 vote to account 0 who isn't productor.
+	//client.produce_blocks();
+	//all_producers = client.get_all_producers();
+	//BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 0);// Account 0 should have zero votes.
 
-	client.make_producer(account[0]);// Account 0 make productor.
-	client.produce_blocks();
-	client.approve_producer(account[1], account[0]);// Account 1 vote to account 0 who isn productor this time.
-	client.produce_blocks();
-	all_producers = client.get_all_producers();
-	BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 10);// Account 0 should have 10 votes from account 1;.
+	//client.make_producer(account[0]);// Account 0 make productor.
+	//client.produce_blocks();
+	//client.approve_producer(account[1], account[0]);// Account 1 vote to account 0 who isn productor this time.
+	//client.produce_blocks();
+	//all_producers = client.get_all_producers();
+	//BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 10);// Account 0 should have 10 votes from account 1;.
 
-	client.assign(account[1], 20);// Account 1 assign 20 votes.
-	client.produce_blocks();
-	all_producers = client.get_all_producers();
-	BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 30);// Account 0 should have 30 votes(20 votes increase).
+	//client.assign(account[1], 20);// Account 1 assign 20 votes.
+	//client.produce_blocks();
+	//all_producers = client.get_all_producers();
+	//BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 30);// Account 0 should have 30 votes(20 votes increase).
 
-	client.deAssign(account[1], 5);// Account 1 deassign 5 votes.
-	client.produce_blocks();
-	all_producers = client.get_all_producers();
-	BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 25);// Account 0 should have 25 votes(5 votes reduce).
+	//client.deAssign(account[1], 5);// Account 1 deassign 5 votes.
+	//client.produce_blocks();
+	//all_producers = client.get_all_producers();
+	//BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 25);// Account 0 should have 25 votes(5 votes reduce).
 
-	client.approve_producer(account[0], account[0]);// Account 0 vote himself.
-	client.produce_blocks();
-	all_producers = client.get_all_producers();
-	BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 33);// Account 0 should have 33 votes(8 votes increase).
+	//client.approve_producer(account[0], account[0]);// Account 0 vote himself.
+	//client.produce_blocks();
+	//all_producers = client.get_all_producers();
+	//BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 33);// Account 0 should have 33 votes(8 votes increase).
 
-	client.send(account[1], account[0], 2);// Account 1 send 2 unassign votes to account 0 as assign votes. Voted number increased immediately.
-	client.produce_blocks();
-	all_producers = client.get_all_producers();
-	BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 35);// Account 0 should have 35 votes(2 votes increase).
+	//client.send(account[1], account[0], 2);// Account 1 send 2 unassign votes to account 0 as assign votes. Voted number increased immediately.
+	//client.produce_blocks();
+	//all_producers = client.get_all_producers();
+	//BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account[0].address)], 35);// Account 0 should have 35 votes(2 votes increase).
 
-	client.redeem_eth(account[0], 50 - 5 - 10 + 2 + 2); //Account 0 try to redeem 39 votes.
-	client.produce_blocks();
-	auto all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 37); // Redeem false. Can't redeen send votes.
-	balance = client.balance(Address(account[0].address));
-	BOOST_REQUIRE(balance < u256(550000000000000000));// Account 0's balnce should unchange.
-	BOOST_REQUIRE(balance >= u256(550000000000000000) - u256(1000000000000000) * 11);
+	//client.redeem_eth(account[0], 50 - 5 - 10 + 2 + 2); //Account 0 try to redeem 39 votes.
+	//client.produce_blocks();
+	//auto all_votes = client.get_votes();
+	//BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getUnAssignNumber(), 37); // Redeem false. Can't redeen send votes.
+	//balance = client.balance(Address(account[0].address));
+	//BOOST_REQUIRE(balance < u256(550000000000000000));// Account 0's balnce should unchange.
+	//BOOST_REQUIRE(balance >= u256(550000000000000000) - u256(1000000000000000) * 11);
 
-	client.redeem_eth(account[0], 50 - 5 - 10 + 2); //Account 0 try to redeem 37 votes.
-	client.produce_blocks();
-	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 0); // Redeem success.
-	balance = client.balance(Address(account[0].address));
-	BOOST_REQUIRE(balance < u256(920000000000000000));// Account 0's balnce should increase according to redeem.
-	BOOST_REQUIRE(balance >= u256(920000000000000000) - u256(1000000000000000) * 12);
+	//client.redeem_eth(account[0], 50 - 5 - 10 + 2); //Account 0 try to redeem 37 votes.
+	//client.produce_blocks();
+	//all_votes = client.get_votes();
+	//BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getUnAssignNumber(), 0); // Redeem success.
+	//balance = client.balance(Address(account[0].address));
+	//BOOST_REQUIRE(balance < u256(920000000000000000));// Account 0's balnce should increase according to redeem.
+	//BOOST_REQUIRE(balance >= u256(920000000000000000) - u256(1000000000000000) * 12);
 }
-
+/*
 BOOST_AUTO_TEST_CASE(dtApproveProducer2)
 {
 	//g_logVerbosity = 13;
@@ -789,75 +791,75 @@ BOOST_AUTO_TEST_CASE(dtApproveProducer2)
 	client.assign(account[0], 40); // Account 0 assign 40 votes.
 	client.produce_blocks();
 	auto all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 10); // 10 unassign votes.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_assignNumber, 40); // 40 assign votes.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_votedNumber, 0); // 0 votes number.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getUnAssignNumber(), 10); // 10 unassign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getAssignNumber(), 40); // 40 assign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getReceivedVotedNumber(), 0); // 0 votes number.
 
 	client.approve_producer(account[0], account[1]); // Account 0 votes to account 1. Error happened.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_votedNumber, 0); // 0 votes number.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getReceivedVotedNumber(), 0); // 0 votes number.
 
 	client.make_producer(account[1]);
 	client.approve_producer(account[0], account[1]); // Account 0 votes to account 1.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_votedNumber, 40); // 40 votes number.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getReceivedVotedNumber(), 40); // 40 votes number.
 
 	client.assign(account[0], 5); // Account 0 deassign 5 votes.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_votedNumber, 45); // 45 votes number.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getReceivedVotedNumber(), 45); // 45 votes number.
 
 	client.deAssign(account[0], 20); // Account 0 deassign 20 votes.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_votedNumber, 25); // 25 votes number.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getReceivedVotedNumber(), 25); // 25 votes number.
 
 	client.mortgage_eth(account[2], 500000000000000000);
 	client.send(account[2], account[0], 11); // Account 2 send 1 votes to account 0.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_votedNumber, 36); // 36 votes number.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_receivedVoteNumber, 11);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getReceivedVotedNumber(), 36); // 36 votes number.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getReceivedAssignedNumber(), 11);
 
 	client.mortgage_eth(account[1], 500000000000000000);
 	client.assign(account[1], 50);
 	client.approve_producer(account[1], account[1]);
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_votedNumber, 86);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_voteTo, Address(account[1].address));
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getReceivedVotedNumber(), 86);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getVoteTo(), Address(account[1].address));
 
 	client.unmake_producer(account[1]); // Account 1 unmake producer. Reset everyone's votes vote to him.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_isCandidate, false);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_votedNumber, 0);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_isVoted, false);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_voteTo, Address());
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_receivedVoteNumber, 11);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_assignNumber, 36);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_isVoted, false);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_voteTo, Address()); // Vote to address has been reseted.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getIsCandidate(), false);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getReceivedVotedNumber(), 0);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getIsVoted(), false);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getVoteTo(), Address());
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getReceivedAssignedNumber(), 11);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getAssignNumber(), 36);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getIsVoted(), false);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getVoteTo(), Address()); // Vote to address has been reseted.
 
 	client.deAssign(account[0], 36); // Account 0 deassign 36 votes.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_assignNumber, 36); // Received votes from others can't be deassign.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_receivedVoteNumber, 11);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getAssignNumber(), 36); // Received votes from others can't be deassign.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getReceivedAssignedNumber(), 11);
 
 	client.deAssign(account[0], 25); // Account 0 deassign 25 votes.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_assignNumber, 11); // Only assign votes by himself can be deassign.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_receivedVoteNumber, 11);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getAssignNumber(), 11); // Only assign votes by himself can be deassign.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getReceivedAssignedNumber(), 11);
 
 	client.send(account[0], account[0], 10); // Account 0 send 10 votes to himself. Errror happened.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_assignNumber, 11); // Nothing happened.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_receivedVoteNumber, 11);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getAssignNumber(), 11); // Nothing happened.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getReceivedAssignedNumber(), 11);
 
 	client.make_producer(account[0]);
 	client.make_producer(account[2]);
@@ -865,20 +867,20 @@ BOOST_AUTO_TEST_CASE(dtApproveProducer2)
 	client.approve_producer(account[0], account[2]); //Account 0 vote to account 2. Both of them are producers.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_isCandidate, true);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_isVoted, true);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_voteTo, Address(account[2].address));
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[2].address)].m_isCandidate, true);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[2].address)].m_votedNumber, 11);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getIsCandidate(), true);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getIsVoted(), true);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getVoteTo(), Address(account[2].address));
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[2].address)].getIsCandidate(), true);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[2].address)].getReceivedVotedNumber(), 11);
 
 	client.unmake_producer(account[0]); // Account 0 unmake producer. Who he votes to is also valid.
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_isCandidate, false);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_isVoted, true); // Valid.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_voteTo, Address(account[2].address)); // Valid.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[2].address)].m_isCandidate, true);
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[2].address)].m_votedNumber, 11);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getIsCandidate(), false);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getIsVoted(), true); // Valid.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getVoteTo(), Address(account[2].address)); // Valid.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[2].address)].getIsCandidate(), true);
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[2].address)].getReceivedVotedNumber(), 11);
 }
 
 BOOST_AUTO_TEST_CASE(dtApproveProducer3)
@@ -897,20 +899,20 @@ BOOST_AUTO_TEST_CASE(dtApproveProducer3)
 	client.approve_producer(account[0], account[0]);
 	client.produce_blocks();
 	auto all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_unAssignNumber, 10); // 10 unassign votes.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_assignNumber, 40); // 40 assign votes.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_isCandidate, true); // Is candidate.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_votedNumber, 40); // 40 votes number.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_isCandidate, true); // Is candidate.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_votedNumber, 0); // 0 votes number.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getUnAssignNumber(), 10); // 10 unassign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getAssignNumber(), 40); // 40 assign votes.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getIsCandidate(), true); // Is candidate.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getReceivedVotedNumber(), 40); // 40 votes number.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getIsCandidate(), true); // Is candidate.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getReceivedVotedNumber(), 0); // 0 votes number.
 
 	client.approve_producer(account[0], account[1]);
 	client.produce_blocks();
 	all_votes = client.get_votes();
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_isCandidate, true); // Is candidate.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].m_votedNumber, 0); // 0 votes number.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_isCandidate, true); // Is candidate.
-	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].m_votedNumber, 40); // 40 votes number.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getIsCandidate(), true); // Is candidate.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getReceivedVotedNumber(), 0); // 0 votes number.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getIsCandidate(), true); // Is candidate.
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[1].address)].getReceivedVotedNumber(), 40); // 40 votes number.
 }
 
 BOOST_AUTO_TEST_CASE(dtNewActiveProducer)
@@ -1057,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(dtVeryFewVotes)
 	}
 
 }
-
+*/
 
 BOOST_AUTO_TEST_CASE(dtMakePowProducer) {
 	g_logVerbosity = 14;

@@ -26,7 +26,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libethereum/GenesisInfo.h>
 #include <libethashseal/EthashCPUMiner.h>
 #include <libproducer/chain_controller.hpp>
-#include <libevm/Vote.h>
+#include <libethereum/Vote.h>
 #include <test/tools/libtestutils/Common.h>
 #include <libproducer/producer_plugin.hpp>
 #include <test/tools/libtesteth/BlockChainHelper.h>
@@ -77,9 +77,9 @@ namespace dev {
 
 			void send(Account& _from, const Account& on, uint64_t voteCount);
 
-			void approve_producer(Account& voter, const Account& on);
+			void approve_producer(Account& voter, const Account& on, uint64_t voteCount);
 
-			void unapprove_producer(Account& voter);
+			void unapprove_producer(Account& voter, const Account& on, uint64_t voteCount);
 
 			void transfer_eth(Account& _from, const Account& _to, const u256& _value);
 
@@ -87,7 +87,7 @@ namespace dev {
 
 			Accounts& get_accounts();
 
-			const std::map<Address, VoteBace> get_votes();
+			const std::map<Address, VoteInfo> get_votes();
 
 			const std::map<Address, uint64_t> get_all_producers();
 
