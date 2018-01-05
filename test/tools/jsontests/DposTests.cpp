@@ -478,6 +478,14 @@ void DposTestClient::sendTransaction(const string & gasLimit, const string & gas
 	_from.nonce++;
 }
 
+void DposTestClient::sendTransaction(TransactionSkeleton const & _ts, Secret const & _s)
+{
+	Transaction t(_ts, _s);
+
+	TestTransaction tx(t);
+	m_working.addTransaction(tx);
+}
+
 void DposTestClient::setGasLimit(u256 const & _v)
 {
 	cout << "_v.str(): " << _v.str() << endl;

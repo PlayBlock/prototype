@@ -65,7 +65,7 @@ owning_bytes_ref WASM_VM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 		}
 		//by hjx 20171213 end
 
-		WASM_VM::m_core->destory();
+		//WASM_VM::m_core->destory();
 
 		if (!data.count())
 		{ 

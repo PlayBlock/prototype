@@ -97,6 +97,8 @@ namespace dev {
 
 		    void sendTransaction(const string& gasLimit, const string& gasPrice, const string& to, const string& value, const string& data, Account& _from);
 
+			void sendTransaction(TransactionSkeleton const& _ts, Secret const& _s = Secret());
+
 			SealEngineFace* sealEngine() const  { return m_bc.getInterface().sealEngine(); };
 
 		private:
