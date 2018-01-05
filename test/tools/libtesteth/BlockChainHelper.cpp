@@ -409,11 +409,11 @@ dev::bytes TestBlock::createBlockRLPFromFields(mObject const& _tObj, h256 const&
 	if (_tObj.count("genesisTime"))
 		rlpStream << uint32_t(toInt(_tObj.at("genesisTime").get_str()));
 
-	if (_tObj.count("mixHash"))
-		rlpStream << importByteArray(_tObj.at("mixHash").get_str());
+	//if (_tObj.count("mixHash"))
+	//	rlpStream << importByteArray(_tObj.at("mixHash").get_str());
 
-	if (_tObj.count("nonce"))
-		rlpStream << importByteArray(_tObj.at("nonce").get_str());
+	//if (_tObj.count("nonce"))
+	//	rlpStream << importByteArray(_tObj.at("nonce").get_str());
 
 	if (_tObj.count("v"))
 		rlpStream << bigint(_tObj.at("v").get_str());
@@ -712,8 +712,6 @@ TestBlock TestBlockChain::defaultDposGenesisBlock(u256 const& _gasLimit)
 	blockObj["extraData"] = "0x42";
 	blockObj["gasLimit"] = toString(_gasLimit);
 	blockObj["gasUsed"] = "0";
-	blockObj["mixHash"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-	blockObj["nonce"] = "0x0102030405060708";
 	blockObj["number"] = "0";
 	blockObj["parentHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
 	blockObj["receiptTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";

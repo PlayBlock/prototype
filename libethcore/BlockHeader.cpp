@@ -160,11 +160,11 @@ void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const
 {
 	if (_i != OnlySeal)
 	{
-		_s.appendList(BlockHeader::BasicFields+ m_seal.size() + (_i == WithoutSeal ? 0 : BlockHeader::SignatureFields));
+		_s.appendList(BlockHeader::BasicFields + (_i == WithoutSeal ? 0 : BlockHeader::SignatureFields));
 		BlockHeader::streamRLPFields(_s);
 
-		for (unsigned i = 0; i < m_seal.size(); ++i)
-			_s.appendRaw(m_seal[i]);
+		//for (unsigned i = 0; i < m_seal.size(); ++i)
+		//	_s.appendRaw(m_seal[i]);
 	}
 
 	if (_i != WithoutSeal)
@@ -222,10 +222,11 @@ void BlockHeader::populate(RLP const& _header)
 		m_hardfork_vote.hf_time = fc::time_point_sec(hf_t);
 
 		m_seal.clear();
+		uint32_t sealCount = 0;
 
-		uint32_t sealCount = _header.itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields;
-		for (unsigned i = 16; i < 16 + sealCount; ++i)
-			m_seal.push_back(_header[i].data().toBytes());
+		//uint32_t sealCount = _header.itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields;
+		//for (unsigned i = 16; i < 16 + sealCount; ++i)
+		//	m_seal.push_back(_header[i].data().toBytes());
 
 		byte v = _header[field = 16 + sealCount].toInt<byte>() - 27;
 		h256 r = _header[field = 17 + sealCount].toInt<u256>();

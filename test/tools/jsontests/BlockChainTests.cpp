@@ -918,6 +918,9 @@ mObject writeBlockHeaderToJson(BlockHeader const& _bi)
 	o["timestamp"] = toCompactHexPrefixed(_bi.timestamp(), 1);
 	o["extraData"] = (_bi.extraData().size()) ? toHexPrefixed(_bi.extraData()) : "";
 	o["hash"] = toString(_bi.hash());
+	o["runningVersion"] = toString(_bi.runningVersion().v_num);
+	o["hardforkVersion"] = toString(_bi.hardforkVote().hf_version.v_num);
+	o["genesisTime"] = toString(_bi.hardforkVote().hf_time.sec_since_epoch());
 	o["r"] = toCompactHexPrefixed(_bi.signature().r, 1);
 	o["s"] = toCompactHexPrefixed(_bi.signature().s, 1);
 	o["v"] = toCompactHexPrefixed(_bi.signature().v +27, 1);
