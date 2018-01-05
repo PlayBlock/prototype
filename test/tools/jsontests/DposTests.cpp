@@ -213,7 +213,7 @@ void DposTestClient::make_producer(Account& _from)
 	string to = "0000000000000000000000000000000000000024";
 	string value = "0x0";
 	string nonce = boost::lexical_cast<string>(_from.nonce);
-	string data = "0x617C62";
+	string data = "0x610062";
 
 	string secretKey = _from.secret;
 

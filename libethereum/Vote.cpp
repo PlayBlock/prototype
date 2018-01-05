@@ -525,7 +525,7 @@ ETH_REGISTER_PRECOMPILED(candidateRegister)(bytesConstRef _in, Address const& _a
 		return make_pair(true, bytes());
 	}
 	string str = _in.toString();
-	size_t pos = str.find_first_of('|');
+	size_t pos = str.find_first_of('\0');
 	if (pos == string::npos)
 	{
 		return make_pair(true, bytes());

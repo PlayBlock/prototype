@@ -65,6 +65,9 @@ public:
 	void removeZeroVote();
 	uint64_t getReceivedVotedNumber() const{ return m_receivedVote; } 
 	uint64_t getHoldVoteNumber() const { return m_holdVotes; }
+	std::string getName() { return m_name; }
+	std::string getURL() { return m_url; }
+	
 	//Address getVoteTo() const { return ZeroAddress; };
 
 	static const int NameMaxSize = 40;
