@@ -593,13 +593,13 @@ void Client::startSealing()
 
 void Client::newMineWork()
 {
-	BlockHeader bh = bc().info();
-
 	static AccountName workerAccount = bc().chainParams().powWorker;
-	static Secret priviteKey = m_producer_plugin->get_private_key(workerAccount);
+    if (workerAccount == AccountName())
+        return;
 
-	if (workerAccount == AccountName() || priviteKey == Secret())
-		return;
+	static Secret priviteKey = m_producer_plugin->get_private_key(workerAccount);
+    if (priviteKey == Secret())
+        return;
 
 	// 注册回调函数，等待miners找到解后调用
 	sealEngine()->onETISealGenerated([=](const ETIProofOfWork::Solution& _sol) {
@@ -626,7 +626,7 @@ void Client::newMineWork()
 	uint64_t nonce = start;// +thread_num;
 	auto target = m_producer_plugin->get_chain_controller().get_pow_target();
 
-	ETIProofOfWork::WorkPackage newWork{ bh.hash(), priviteKey, workerAccount, nonce, target };
+	ETIProofOfWork::WorkPackage newWork{ bc().info().hash(), priviteKey, workerAccount, nonce, target };
 
 	// 给miners发送新的任务
 	//sealEngine()->generateSeal();
