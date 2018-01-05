@@ -100,9 +100,9 @@ class BlockHeader
 {
 	friend class BlockChain;
 public:
-	static const unsigned BasicFields = 13;
-	static const unsigned SignatureFields = 3;
 	static const unsigned HardforkFields = 3;
+	static const unsigned BasicFields = 13 + HardforkFields;
+	static const unsigned SignatureFields = 3;
 
 	BlockHeader();
 	explicit BlockHeader(bytesConstRef _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256());
@@ -225,12 +225,10 @@ public:
 	types::AccountName const& producer() const;
 	const SignatureStruct& signature() const { return m_signature; }
 
-	static void setETIForkBlock(const u256& num) { m_ETIForkBlock = num; }
 private:
 	
 	SignatureStruct m_signature;
 	mutable types::AccountName m_producer;
-	static u256 m_ETIForkBlock;
 
 public:
 	//hardforkÕ∂∆±œ‡πÿ

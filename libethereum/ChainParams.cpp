@@ -89,7 +89,6 @@ string const c_registrar = "registrar";
 string const c_enableStaleProduction = "enableStaleProduction";
 string const c_powWorker = "powWorker";
 string const c_producerAccounts = "producerAccounts";
-string const c_ETIForkBlock = "ETIForkBlock";
 
 set<string> const c_knownParamNames = {
 	c_minGasLimit, c_maxGasLimit, c_gasLimitBoundDivisor, c_homesteadForkBlock,
@@ -97,7 +96,7 @@ set<string> const c_knownParamNames = {
 	c_tieBreakingGas, c_blockReward, c_byzantiumForkBlock, c_constantinopleForkBlock,
 	c_daoHardforkBlock, c_minimumDifficulty, c_difficultyBoundDivisor, c_durationLimit,
 	c_chainID, c_networkID, c_allowFutureBlocks, c_registrar, c_enableStaleProduction, 
-	c_producerAccounts, c_ETIForkBlock, c_powWorker
+	c_producerAccounts, c_powWorker
 };
 } // anonymous namespace
 
@@ -143,10 +142,6 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	if (params.count(c_networkID))
 		cp.networkID = int(u256(fromBigEndian<u256>(fromHex(params.at(c_networkID).get_str()))));
 	cp.allowFutureBlocks = params.count(c_allowFutureBlocks);
-
-
-	// for ETI Fork
-	setOptionalU256Parameter(cp.ETIForkBlock, c_ETIForkBlock);
 
 	/// for dpos
 	cp.enableStaleProduction = params.count(c_enableStaleProduction);
@@ -276,9 +271,9 @@ void ChainParams::populateFromGenesis(bytes const& _genesisRLP, AccountMap const
 	extraData = bi.extraData();
 	genesisState = _state;
 	RLP r(_genesisRLP);
-	sealFields = r[0].itemCount() - BlockHeader::BasicFields;
+	sealFields = r[0].itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields;
 	sealRLP.clear();
-	for (unsigned i = BlockHeader::BasicFields; i < r[0].itemCount(); ++i)
+	for (unsigned i = BlockHeader::BasicFields; i < BlockHeader::BasicFields + sealFields; ++i)
 		sealRLP += r[0][i].data();
 
 	calculateStateRoot(true);
@@ -315,7 +310,7 @@ bytes ChainParams::genesisBlock() const
 
 	calculateStateRoot();
 
-	block.appendList(BlockHeader::BasicFields + BlockHeader::HardforkFields + sealFields)
+	block.appendList(BlockHeader::BasicFields + sealFields + BlockHeader::SignatureFields)
 		<< parentHash
 		<< EmptyListSHA3	// sha3(uncles)
 		<< author
@@ -334,7 +329,7 @@ bytes ChainParams::genesisBlock() const
 		<< uint32_t(0)		//genesis time
 		;
 	block.appendRaw(sealRLP, sealFields);
-	//block << byte(27) << u256() << u256();// signature
+	block << byte(27) << u256() << u256();// signature
 
 	block.appendRaw(RLPEmptyList);
 	block.appendRaw(RLPEmptyList);

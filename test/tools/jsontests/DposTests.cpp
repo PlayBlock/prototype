@@ -512,7 +512,7 @@ public:
 BOOST_FIXTURE_TEST_SUITE(DposTestsSuite, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(dtMakeProducer)
 {
-	//g_logVerbosity = 13;
+	g_logVerbosity = 13;
 
 	// make blockchain
 	DposTestClient client;

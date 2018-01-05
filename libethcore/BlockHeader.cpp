@@ -32,7 +32,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-u256 BlockHeader::m_ETIForkBlock = 0;
 
 BlockHeader::BlockHeader()
 {
@@ -150,44 +149,27 @@ h256 BlockHeader::hash(IncludeSeal _i) const
 void BlockHeader::streamRLPFields(RLPStream& _s) const
 {
 	_s	<< m_parentHash << m_sha3Uncles << m_author << m_stateRoot << m_transactionsRoot << m_receiptsRoot << m_logBloom
-		<< m_difficulty << m_number << m_gasLimit << m_gasUsed << m_timestamp << m_extraData;
+		<< m_difficulty << m_number << m_gasLimit << m_gasUsed << m_timestamp << m_extraData
+	//当前版本信息
+	<< (m_running_ver.v_num)
+	//写入hardfork投票信息
+	<< (m_hardfork_vote.hf_version.v_num) << (m_hardfork_vote.hf_time.sec_since_epoch());
 }
 
 void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const
 {
-	if (m_number > m_ETIForkBlock)
+	if (_i != OnlySeal)
 	{
-		// ETI fork 后, WithoutSeal用来表示是否添加signature
-		if (_i != OnlySeal)
-		{
-			_s.appendList(BlockHeader::BasicFields + BlockHeader::HardforkFields + (_i == WithoutSeal ? 0 : m_seal.size()+BlockHeader::SignatureFields));
-			BlockHeader::streamRLPFields(_s);
+		_s.appendList(BlockHeader::BasicFields+ m_seal.size() + (_i == WithoutSeal ? 0 : BlockHeader::SignatureFields));
+		BlockHeader::streamRLPFields(_s);
 
-			//当前版本信息
-			_s << (m_running_ver.v_num); 
-			//写入hardfork投票信息
-			_s << (m_hardfork_vote.hf_version.v_num) << (m_hardfork_vote.hf_time.sec_since_epoch());
-
-			for (unsigned i = 0; i < m_seal.size(); ++i)
-				_s.appendRaw(m_seal[i]);
-		}
-
-		if (_i != WithoutSeal)
-			_s << (m_signature.v + 27) << (u256)m_signature.r << (u256)m_signature.s;
-
-		
+		for (unsigned i = 0; i < m_seal.size(); ++i)
+			_s.appendRaw(m_seal[i]);
 	}
-	else
-	{
-		if (_i != OnlySeal)
-		{
-			_s.appendList(BlockHeader::BasicFields + (_i == WithoutSeal ? 0 : m_seal.size()));
-			BlockHeader::streamRLPFields(_s);
-		}
-		if (_i != WithoutSeal)
-			for (unsigned i = 0; i < m_seal.size(); ++i)
-				_s.appendRaw(m_seal[i]);
-	}
+
+	if (_i != WithoutSeal)
+		_s << (m_signature.v + 27) << (u256)m_signature.r << (u256)m_signature.s;
+
 }
 
 h256 BlockHeader::headerHashFromBlock(bytesConstRef _block)
@@ -241,24 +223,17 @@ void BlockHeader::populate(RLP const& _header)
 
 		m_seal.clear();
 
-		if (m_number > m_ETIForkBlock)
-		{
-			uint32_t sealCount = _header.itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields - BlockHeader::HardforkFields;
-			for (unsigned i = 16; i < 16 + sealCount; ++i)
-				m_seal.push_back(_header[i].data().toBytes());
+		uint32_t sealCount = _header.itemCount() - BlockHeader::BasicFields - BlockHeader::SignatureFields;
+		for (unsigned i = 16; i < 16 + sealCount; ++i)
+			m_seal.push_back(_header[i].data().toBytes());
 
-			byte v = _header[field = 16 + sealCount].toInt<byte>() - 27;
-			h256 r = _header[field = 17 + sealCount].toInt<u256>();
-			h256 s = _header[field = 18 + sealCount].toInt<u256>();
-			m_signature = { r, s, v };
+		byte v = _header[field = 16 + sealCount].toInt<byte>() - 27;
+		h256 r = _header[field = 17 + sealCount].toInt<u256>();
+		h256 s = _header[field = 18 + sealCount].toInt<u256>();
+		m_signature = { r, s, v };
 
 		
-		}
-		else
-		{
-			for (unsigned i = 16; i < _header.itemCount(); ++i)
-				m_seal.push_back(_header[i].data().toBytes());
-		}
+
 	}
 	catch (Exception const& _e)
 	{

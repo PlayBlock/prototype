@@ -339,7 +339,6 @@ private:
 	void close();
 
 	ImportRoute insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger);
-	ImportRoute insertBlockAndExtras4ETI(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger);
 	void checkBlockIsNew(VerifiedBlockRef const& _block) const;
 	void checkBlockTimestamp(BlockHeader const& _header) const;
 

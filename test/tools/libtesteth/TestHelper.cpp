@@ -184,12 +184,12 @@ std::vector<eth::Network> const& getNetworks()
 {
 	//Networks for the test case execution when filling the tests
 	static std::vector<eth::Network> const networks {{
-		eth::Network::FrontierTest,
-		eth::Network::HomesteadTest,
-		eth::Network::EIP150Test,
-		eth::Network::EIP158Test,
-		eth::Network::ByzantiumTest,
-		eth::Network::ConstantinopleTest
+		eth::Network::FrontierTest
+		//eth::Network::HomesteadTest,
+		//eth::Network::EIP150Test,
+		//eth::Network::EIP158Test,
+		//eth::Network::ByzantiumTest,
+		//eth::Network::ConstantinopleTest
 	}};
 	return networks;
 }

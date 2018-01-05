@@ -105,7 +105,6 @@ public:
 	/// for dpos
 	bool enableStaleProduction = false;
 	types::AccountNames accountNames;
-	u256 ETIForkBlock;
 	types::AccountName powWorker;
 
 	/// private keys for producer

@@ -134,9 +134,6 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 	m_producer_plugin->setClient(*this);
 	m_bc.setProducer(m_producer_plugin);
 
-	// for ETIFork
-	BlockHeader::setETIForkBlock(chainParams().ETIForkBlock);
-
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	doWork(false);

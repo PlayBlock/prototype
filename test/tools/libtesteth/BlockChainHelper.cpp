@@ -400,6 +400,15 @@ dev::bytes TestBlock::createBlockRLPFromFields(mObject const& _tObj, h256 const&
 	if (_tObj.count("extraData"))
 		rlpStream << fromHex(_tObj.at("extraData").get_str());
 
+	if (_tObj.count("runningVersion"))
+		rlpStream << uint32_t(toInt(_tObj.at("runningVersion").get_str()));
+
+	if (_tObj.count("hardforkVersion"))
+		rlpStream << uint32_t(toInt(_tObj.at("hardforkVersion").get_str()));
+
+	if (_tObj.count("genesisTime"))
+		rlpStream << uint32_t(toInt(_tObj.at("genesisTime").get_str()));
+
 	if (_tObj.count("mixHash"))
 		rlpStream << importByteArray(_tObj.at("mixHash").get_str());
 
@@ -712,9 +721,12 @@ TestBlock TestBlockChain::defaultDposGenesisBlock(u256 const& _gasLimit)
 	blockObj["timestamp"] = "0x54c98c81";
 	blockObj["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 	blockObj["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
-	//blockObj["r"] = "0x00";
-	//blockObj["s"] = "0x00";
-	//blockObj["v"] = "0x1c";
+	blockObj["runningVersion"] = "0x00";
+	blockObj["hardforkVersion"] = "0x00";
+	blockObj["genesisTime"] = "0x00";
+	blockObj["r"] = "0x00";
+	blockObj["s"] = "0x00";
+	blockObj["v"] = "0x1b";
 
 	json_spirit::mObject accountVote;
 	accountVote["balance"] = "1000000000000000000"; // =1 eth
