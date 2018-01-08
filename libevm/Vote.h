@@ -118,7 +118,6 @@ public:
 		std::map<dev::h256, std::pair<dev::u256, dev::u256>>& map,
 		std::unordered_map<dev::u256, dev::u256>& mapChange,
 		const dev::Address& address);
-	POW_Operation& operator=(const POW_Operation& _op);
 	~POW_Operation();
 
 	virtual void _loadImpl(const dev::bytes& loadedBytes);
