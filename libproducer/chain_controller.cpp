@@ -467,7 +467,8 @@ void dev::eth::chain::chain_controller::process_hardforks()
 		_hardfork_versions[gpo.last_hardfork] < gpo.next_hardfork && 
 		gpo.next_hardfork_time <= head_block_time())
 	{
-		if (gpo.last_hardfork < config::ETI_HardforkNum) {
+		if (gpo.last_hardfork < config::ETI_HardforkNum) 
+		{
 			apply_hardfork(gpo.last_hardfork + 1);
 		}else{
 			ctrace<<"Unknown Hardfork!!!!!";
@@ -486,7 +487,8 @@ void dev::eth::chain::chain_controller::apply_hardfork(uint32_t hardfork)
 		BOOST_THROW_EXCEPTION(HardforkApplyOutOfOrder());
 	}
 
-	_db.create<eos::chain::process_hardfork_object>([&](eos::chain::process_hardfork_object& pho) {
+	_db.create<eos::chain::process_hardfork_object>([&](eos::chain::process_hardfork_object& pho) 
+	{
 		pho.hardfork_timepoint = _hardfork_times[hardfork];
 	});
 	
@@ -753,8 +755,8 @@ void dev::eth::chain::chain_controller::init_hardforks()
 {
 	_hardfork_times[0] = fc::time_point_sec(config::ETI_GenesisTime);
 	_hardfork_versions[0] = hardfork_version(0, 0); 
-	//_hardfork_times[1] = fc::time_point_sec(1);
-	//_hardfork_versions[1] = hardfork_version(0, 1);
+	_hardfork_times[1] = fc::time_point_sec(1);
+	_hardfork_versions[1] = hardfork_version(0, 1);
 
 	const auto& gpo = get_global_properties();
 
@@ -790,7 +792,7 @@ void chain_controller::apply_block(const BlockHeader& b)
 
 	process_hardforks();
 
-	std::cout <<"currentHash: "<< _bc.currentHash().hex() << std::endl;
+	//std::cout <<"currentHash: "<< _bc.currentHash().hex() << std::endl;
 }
 
 const producer_object& chain_controller::validate_block_header(const BlockHeader& bh)const

@@ -873,7 +873,7 @@ int main(int argc, char** argv)
 	}
 
 	//强制测试模式
-	testingMode = true;
+	//testingMode = true;
 
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("eth"),
