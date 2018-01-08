@@ -17,7 +17,6 @@ DposTestClient::DposTestClient() :
 {
 
 	_producer_plugin->get_chain_controller().setStateDB(m_bc.testGenesis().state().db());
-	//_producer_plugin->get_chain_controller().init_global_property();
 	m_bc.interfaceUnsafe().setProducer(_producer_plugin);
 
 	init_accounts();
@@ -292,7 +291,14 @@ void DposTestClient::make_pow_producer(Account& _from)
 	ETIProofOfWork::Solution sol = { op };
 
 	sealEngine()->onETISealGenerated([&](const ETIProofOfWork::Solution& _sol) {
-		//sol.op = _sol.op;
+		//sol.op. = _sol.op;
+		sol.op.worker_pubkey = _sol.op.worker_pubkey;
+		sol.op.block_id = _sol.op.block_id;
+		sol.op.nonce = _sol.op.nonce;
+		sol.op.input = _sol.op.input;
+		sol.op.work = _sol.op.work;
+		sol.op.signature = _sol.op.signature;
+
 		sealed = true;
 	});
 	
@@ -664,7 +670,7 @@ BOOST_AUTO_TEST_CASE(dtAssign)
 */
 BOOST_AUTO_TEST_CASE(dtApproveProducer)
 {
-	//g_logVerbosity = 13;
+	//g_logVerbosity = 14;
 
 	// make blockchain
 	DposTestClient client;
@@ -1098,9 +1104,6 @@ BOOST_AUTO_TEST_CASE(dtMakePowProducer) {
 	}
 	BOOST_REQUIRE(num == 1);
 }
-
-
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

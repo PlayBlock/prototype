@@ -84,5 +84,6 @@ bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input);
 void testBCTest(json_spirit::mObject const& _o);
 void spellCheckNetworkNamesInExpectField(json_spirit::mArray const& _expects);
+ETIProofOfWork::Solution make_pow_producer(ChainBranch& _chainName);
 
 } } // Namespace Close

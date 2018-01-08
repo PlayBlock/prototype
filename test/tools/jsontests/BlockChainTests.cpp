@@ -244,6 +244,51 @@ void spellCheckNetworkNamesInExpectField(json_spirit::mArray const& _expects)
 	}
 }
 
+ETIProofOfWork::Solution make_pow_producer(ChainBranch* _chainName)
+{
+	TestBlockChain &_bc = _chainName->blockchain;
+	BlockHeader bh = _bc.getInterface().info();
+
+	static Secret priviteKey = Secret("fabac3ed98f7c3d753e70ebbab53dadf12a2f2ed3db31b1301140fededb61757");
+	static AccountName workerAccount("0x6eaa7ec4508b82fc300b131707485a93fe85bff8");
+	// 注册回调函数，等待miners找到解后调用
+	Notified<bool> sealed(false);
+
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> map;
+	std::unordered_map<dev::u256, dev::u256> mapChange;
+	POW_Operation op(map, mapChange, Address());
+	ETIProofOfWork::Solution sol = { op };
+
+	_bc.getInterface().sealEngine()->onETISealGenerated([&](const ETIProofOfWork::Solution& _sol) {
+		//sol.op = _sol.op;
+		sol.op.worker_pubkey = _sol.op.worker_pubkey;
+		sol.op.block_id = _sol.op.block_id;
+		sol.op.nonce = _sol.op.nonce;
+		sol.op.input = _sol.op.input;
+		sol.op.work = _sol.op.work;
+		sol.op.signature = _sol.op.signature;
+
+		sealed = true;
+	});
+
+	auto tid = std::this_thread::get_id();
+	static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
+
+	uint64_t tryNonce = s_eng();
+	uint64_t start = tryNonce;
+	uint64_t nonce = start;// +thread_num;
+	auto target = _chainName->producer->get_chain_controller().get_pow_target();
+
+	ETIProofOfWork::WorkPackage newWork{ bh.hash(), priviteKey, workerAccount, nonce, target };
+
+	// 给miners发送新的任务
+	_bc.getInterface().sealEngine()->newETIWork(newWork);
+	sealed.waitNot(false);
+	_bc.getInterface().sealEngine()->onETISealGenerated([](const ETIProofOfWork::Solution&) {});
+
+	return sol;
+
+}
 
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 {
@@ -335,10 +380,22 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		if (blObjInput.count("transactions"))
 		{
 			BOOST_REQUIRE(blObjInput.count("transactions"));
-			for (auto const& txObj : blObjInput.at("transactions").get_array())
+			for (auto& txObj : blObjInput.at("transactions").get_array())
 			{
-				TestTransaction transaction(txObj.get_obj());
-				block.addTransaction(transaction);
+				//signed to get pow
+				if (txObj.get_obj().at("to").get_str() == "000000000000000000000000000000000000002c")
+				{
+					mObject blObj = txObj.get_obj();
+					ETIProofOfWork::Solution _sol = make_pow_producer(chainMap[chainname]);
+					blObj["data"] = toString(_sol.op._saveImpl());
+					TestTransaction transaction(blObj);
+					block.addTransaction(transaction);
+				}
+				else
+				{
+					TestTransaction transaction(txObj.get_obj());
+					block.addTransaction(transaction);
+				}				
 			}
 			
 		}
