@@ -62,8 +62,6 @@ void chain_controller::initialize_indexes() {
 
 void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 {
-	
-
 	try {
 		if (!_db.find<global_property_object>()) 
 		{
@@ -130,7 +128,6 @@ void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 				//});
 			});
 		}
-
 
 		//初始化hardforks相关全局变量
 		init_hardforks();
@@ -736,6 +733,20 @@ void chain_controller::push_block(const BlockHeader& b)
 		throw;
 	}
 
+}
+
+void chain_controller::init_allvotes(const BlockHeader& bh)
+{
+	_all_votes.clear();
+
+	if (bh.number() <= 0)
+		return;
+
+	std::map<Address, VoteInfo> AllProducers = get_votes(bh.parentHash());
+	for (const auto& p : AllProducers)
+	{
+		_all_votes.insert(std::make_pair(p.first, p.second.getReceivedVotedNumber()));
+	}
 }
 
 void dev::eth::chain::chain_controller::init_hardforks()

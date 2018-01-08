@@ -131,6 +131,7 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 
 	// for dpos
 	m_producer_plugin->get_chain_controller().setStateDB(m_stateDB);
+	m_producer_plugin->get_chain_controller().init_allvotes(bc().info());
 	m_producer_plugin->setClient(*this);
 	m_bc.setProducer(m_producer_plugin);
 

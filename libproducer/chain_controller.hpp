@@ -24,6 +24,7 @@ public:
 	void initialize_indexes();
 	void initialize_chain(const dev::eth::BlockChain& bc);
 	void init_hardforks();
+	void init_allvotes(const BlockHeader& bh);
 
 
 	fc::time_point_sec get_slot_time(const uint32_t slot_num) const;
