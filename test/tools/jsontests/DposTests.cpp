@@ -292,7 +292,7 @@ void DposTestClient::make_pow_producer(Account& _from)
 	ETIProofOfWork::Solution sol = { op };
 
 	sealEngine()->onETISealGenerated([&](const ETIProofOfWork::Solution& _sol) {
-		sol.op = _sol.op;
+		//sol.op = _sol.op;
 		sealed = true;
 	});
 	

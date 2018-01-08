@@ -239,6 +239,9 @@ public:
 	const dev::eth::chain::hardfork_version_vote& hardforkVote() const { return m_hardfork_vote; }
 	void hardforkVote(const dev::eth::chain::hardfork_version_vote& vote) { m_hardfork_vote = vote; }
 
+	void runningVersion(const dev::eth::chain::version& v) { m_running_ver = v; }
+	void hardforkVote(const dev::eth::chain::hardfork_version_vote& vote) { m_hardfork_vote = vote; }
+
 	dev::eth::chain::version m_running_ver;
 	dev::eth::chain::hardfork_version_vote m_hardfork_vote;
 };
