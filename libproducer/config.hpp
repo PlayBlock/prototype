@@ -42,13 +42,13 @@ namespace config {
 	const static fc::time_point_sec ETI_GenesisTime = (fc::time_point_sec(0));
 
 	//ETI当前版本
-	const static eth::chain::version ETI_BlockchainVersion = (eth::chain::version(0, 0, 0));
+	const static eth::chain::version ETI_BlockchainVersion = (eth::chain::version(0, 1, 0));
 
 	//ETI当前硬分叉版本
 	const static eth::chain::hardfork_version ETI_BlockchainHardforkVersion = (eth::chain::hardfork_version(ETI_BlockchainVersion));
 
 	//ETI目前硬分叉数
-	const static int ETI_HardforkNum = 0;
+	const static int ETI_HardforkNum = 1;
 	
 	//硬分叉投票最小人数
 	const static int ETI_HardforkRequiredProducers = 1;

@@ -233,11 +233,8 @@ private:
 public:
 	//hardforkÕ∂∆±œ‡πÿ
 	
-	const dev::eth::chain::version& runningVersion() const { return m_running_ver; }
-	void runningVersion(const dev::eth::chain::version& v) { m_running_ver = v; }
-
-	const dev::eth::chain::hardfork_version_vote& hardforkVote() const { return m_hardfork_vote; }
-	void hardforkVote(const dev::eth::chain::hardfork_version_vote& vote) { m_hardfork_vote = vote; }
+	const dev::eth::chain::version& runningVersion() const { return m_running_ver; }  
+	const dev::eth::chain::hardfork_version_vote& hardforkVote() const { return m_hardfork_vote; } 
 
 	void runningVersion(const dev::eth::chain::version& v) { m_running_ver = v; }
 	void hardforkVote(const dev::eth::chain::hardfork_version_vote& vote) { m_hardfork_vote = vote; }
