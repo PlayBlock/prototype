@@ -821,7 +821,7 @@ void Client::noteChanged(h256Hash const& _filters)
 
 void Client::doWork(bool _doWait)
 {
-	cout << "Client::doWork()" << endl;
+	//cout << "Client::doWork()" << endl;
 	bool t = true;
 
 	//若m_syncBlockQueue置位则同步BlockQueue

@@ -1,5 +1,5 @@
-#include <libethcore\Precompiled.h>
-#include <libethereum\State.h>
+#include <libethcore/Precompiled.h>
+#include <libethereum/State.h>
 
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
