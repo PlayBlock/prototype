@@ -72,6 +72,7 @@ public:
 
 	void onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
 	{
+        //cout<<"receive transaction."<<endl;
 		unsigned itemCount = _r.itemCount();
 		clog(EthereumHostTrace) << "Transactions (" << dec << itemCount << "entries)";
 		m_tq.enqueue(_r, _peer->id());
