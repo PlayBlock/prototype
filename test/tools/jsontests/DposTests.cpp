@@ -276,7 +276,7 @@ void DposTestClient::make_pow_transaction(Account& _from, ETIProofOfWork::Soluti
 
 	_from.nonce++;
 }
-void DposTestClient::make_pow_producer(Account& _from)
+void DposTestClient::make_pow_producer(Account& _from, enum class setPowTest tests)
 {
 	BlockHeader bh = m_bc.getInterface().info();
 
@@ -316,6 +316,29 @@ void DposTestClient::make_pow_producer(Account& _from)
 	sealEngine()->newETIWork(newWork);
 	sealed.waitNot(false);
 	sealEngine()->onETISealGenerated([](const ETIProofOfWork::Solution&) {});
+
+	if (setPowTest::errorSignature == tests)
+	{
+		sol.op.signature = SignatureStruct();
+	}
+	else if (setPowTest::errorTarget == tests)
+	{
+		for (; ; tryNonce++)
+		{
+			op.nonce = tryNonce;
+			op.create(priviteKey, op.work_input());
+			// 计算结果小于等于target的时候退出，报告找到的这个解
+			if (op.work > target)
+				break;
+
+		}
+		sol.op.work = op.work;
+	}
+	else if(setPowTest::errorBlockid == tests)
+	{
+		produce_blocks(1);
+
+	}
 	make_pow_transaction(_from,sol);
 
 }
@@ -1075,7 +1098,11 @@ BOOST_AUTO_TEST_CASE(dtVeryFewVotes)
 }
 */
 
-BOOST_AUTO_TEST_CASE(dtMakePowProducer) {
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(PowTestsSuite, TestOutputHelperFixture)
+BOOST_AUTO_TEST_CASE(dtMakePowProducer) 
+{
 	g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -1092,8 +1119,8 @@ BOOST_AUTO_TEST_CASE(dtMakePowProducer) {
 			num++;
 	}
 	BOOST_REQUIRE(num == 0);
-	
-	client.make_pow_producer(account);
+
+	client.make_pow_producer(account, setPowTest::none);
 	client.produce_blocks(config::TotalProducersPerRound);
 	//下轮次pow矿工成功加入生产块的轮次
 	currentProducers = client.get_active_producers();
@@ -1105,8 +1132,123 @@ BOOST_AUTO_TEST_CASE(dtMakePowProducer) {
 	BOOST_REQUIRE(num == 1);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_CASE(dtMakePowProducers) 
+{
+	g_logVerbosity = 14;
+	//创建生产者
+	DposTestClient client;
+	int num = 0;
+	// pick an account
+	BOOST_REQUIRE(client.get_accounts().size() >= 1);
+	auto& accounts = client.get_accounts();
 
+	//当前轮次没有pow，即：当前有一个accountname为空
+	//auto currentProducers = client.get_active_producers();
+	BOOST_REQUIRE(client.get_dpo_witnesses()  == 0);
+
+	for (auto i : accounts)
+	{
+		client.make_pow_producer(i, setPowTest::none);
+	}
+	
+	client.produce_blocks(2);
+
+	BOOST_REQUIRE(client.get_dpo_witnesses() == accounts.size());
+	//下轮次pow矿工成功加入生产块的轮次
+}
+
+BOOST_AUTO_TEST_CASE(dtGetErrorSignature)
+{
+	g_logVerbosity = 14;
+	//创建生产者
+	DposTestClient client;
+	int num = 0;
+	// pick an account
+	BOOST_REQUIRE(client.get_accounts().size() >= 1);
+	auto& account = client.get_accounts()[0];
+
+	//当前轮次没有pow，即：当前有一个accountname为空
+	auto currentProducers = client.get_active_producers();
+	for (auto pro : currentProducers)
+	{
+		if (types::AccountName(account.address) == types::AccountName(pro))
+			num++;
+	}
+	BOOST_REQUIRE(num == 0);
+
+	client.make_pow_producer(account, setPowTest::errorSignature);
+	client.produce_blocks(config::TotalProducersPerRound);
+	//下轮次pow矿工成功加入生产块的轮次
+	currentProducers = client.get_active_producers();
+	for (auto pro : currentProducers)
+	{
+		if (types::AccountName(account.address) == types::AccountName(pro))
+			num++;
+	}
+	BOOST_REQUIRE(num == 0);
+}
+BOOST_AUTO_TEST_CASE(dtGetErrorTarget)
+{
+	g_logVerbosity = 14;
+	//创建生产者
+	DposTestClient client;
+	int num = 0;
+	// pick an account
+	BOOST_REQUIRE(client.get_accounts().size() >= 1);
+	auto& account = client.get_accounts()[0];
+
+	//当前轮次没有pow，即：当前有一个accountname为空
+	auto currentProducers = client.get_active_producers();
+	for (auto pro : currentProducers)
+	{
+		if (types::AccountName(account.address) == types::AccountName(pro))
+			num++;
+	}
+	BOOST_REQUIRE(num == 0);
+
+	client.make_pow_producer(account, setPowTest::errorTarget);
+	client.produce_blocks(config::TotalProducersPerRound);
+	//下轮次pow矿工成功加入生产块的轮次
+	currentProducers = client.get_active_producers();
+	for (auto pro : currentProducers)
+	{
+		if (types::AccountName(account.address) == types::AccountName(pro))
+			num++;
+	}
+	BOOST_REQUIRE(num == 0);
+}
+
+BOOST_AUTO_TEST_CASE(dtGetErrorBlockid)
+{
+	g_logVerbosity = 14;
+	//创建生产者
+	DposTestClient client;
+	int num = 0;
+	// pick an account
+	BOOST_REQUIRE(client.get_accounts().size() >= 1);
+	auto& account = client.get_accounts()[0];
+
+	//当前轮次没有pow，即：当前有一个accountname为空
+	auto currentProducers = client.get_active_producers();
+	for (auto pro : currentProducers)
+	{
+		if (types::AccountName(account.address) == types::AccountName(pro))
+			num++;
+	}
+	BOOST_REQUIRE(num == 0);
+
+	client.make_pow_producer(account, setPowTest::errorBlockid);
+	client.produce_blocks(config::TotalProducersPerRound);
+	//下轮次pow矿工成功加入生产块的轮次
+	currentProducers = client.get_active_producers();
+	for (auto pro : currentProducers)
+	{
+		if (types::AccountName(account.address) == types::AccountName(pro))
+			num++;
+	}
+	BOOST_REQUIRE(num == 0);
+}
+BOOST_AUTO_TEST_SUITE_END()
 
 //对链进行测试
 BOOST_FIXTURE_TEST_SUITE(DposBlockTests, DpTestFixture)
