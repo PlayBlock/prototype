@@ -99,7 +99,7 @@ public:
 	explicit operator bool() const { return m_type != NullTransaction; }
 
 	/// @returns true if transaction is contract-creation.
-	bool isCreation() const { return m_type == ContractCreation || m_type == WASMContractCreation; }
+	bool isCreation() const { return m_type == ContractCreation; }
 
 	/// Serialises this transaction to an RLPStream.
 	/// @throws TransactionIsUnsigned if including signature was requested but it was not initialized
@@ -159,8 +159,6 @@ public:
 	/// Get the fee associated for a transaction with the given data.
 	static int64_t baseGasRequired(bool _contractCreation, bytesConstRef _data, EVMSchedule const& _es);
 
-	TransactionType getType() { return (TransactionType)m_type; };//by dz
-
 protected:
 	/// Type of transaction.
 	enum Type
@@ -168,7 +166,6 @@ protected:
 		NullTransaction,				///< Null transaction.
 		ContractCreation,				///< Transaction to create contracts - receiveAddress() is ignored.
 		MessageCall,						///< Transaction to invoke a message call - receiveAddress() is used.
-		WASMContractCreation			//by dz
 	};
 
 	static bool isZeroSignature(u256 const& _r, u256 const& _s) { return !_r && !_s; }

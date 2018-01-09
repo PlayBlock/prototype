@@ -44,9 +44,6 @@ extern Address const MaxAddress;
 /// The SYSTEM address.
 extern Address const SystemAddress;
 
-/// The WAVM flag address
-extern Address const WAVMAddress;
-
 /// The Vote info address
 extern Address const VoteInfoAddress;
 

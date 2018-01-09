@@ -120,8 +120,6 @@ public:
 	virtual Json::Value eth_getVote() override;
 	void setTransactionDefaults(eth::TransactionSkeleton& _t);
 	virtual std::string eth_makeKeys(std::string const& _a);
-	virtual std::string eth_testSend1(std::string const& _a);
-	virtual std::string eth_testSend2(std::string const& _a);
 	virtual std::string eth_testSendBlock(std::string const& _a);
 	virtual std::string eth_sign(std::string const& _a, std::string const& _b);
 protected:

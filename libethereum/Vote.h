@@ -41,9 +41,8 @@ class UserStorage
 {
 public:
 	static u256 addressToU256(Address const& _address, int _postffix);
-	static bytes LoadFixedSizeBtyes(State const& _state, Address const& _storageaddress, Address const& _keyaddress, int _size);
-	//static bytes LoadFixedSizeBtyes(State const& _state, map<h256, pair<u256, u256>> const& _storageMap, int _size);
-
+	static void LoadFixedSizeBtyes(bytes& _data, State const& _state, Address const& _storageaddress, Address const& _keyaddress, int _size, int _startPage = 0);
+	static void LoadFixedSizeBtyes(bytes& _data, std::map<h256, std::pair<u256, u256>> const& _storageMap, Address const& _storageaddress, Address const& _keyaddress, int _size, int _startPage = 0);
 	static void SaveBytes(State& _state, Address const& _storageaddress, Address const& _keyaddress, bytes const& _data);
 
 	//static bytes LoadDPOSVoteBytes(State const& _state, Address const& _storageaddress, Address const& _keyaddress);
@@ -60,7 +59,7 @@ public:
 	void load(State& _state);
 	void save(State& _state);
 	static std::map<Address, VoteInfo> getVoteInfoMap(State const& _state);
-
+	static std::map<Address, uint64_t> VoteInfo::getProducerMap(State const& _state);
 	bool getIsCandidate() const{ return m_isCandidate; }
 	void removeZeroVote();
 	uint64_t getReceivedVotedNumber() const{ return m_receivedVote; } 
@@ -68,21 +67,18 @@ public:
 	std::string getName() { return m_name; }
 	std::string getURL() { return m_url; }
 	
-	//Address getVoteTo() const { return ZeroAddress; };
-
 	static const int NameMaxSize = 40;
-	static const int URLMaxSize = 40;
-	//voteToCount:byte  m_isCandidate:byte 
-	//m_receivedVote m_holdVotes :u64
+	static const int URLMaxSize = 120;
+	static const int NameMinSize = 1;
+	static const int URLMinSize = 5;
+
 	static const int BasicSize = 2 * sizeof(byte) + 2 * sizeof(uint64_t) + NameMaxSize + URLMaxSize;
 
 protected:
 	void initFromBytes(bytes const &_bytes);
 	void recordVoteTo(Address const&, uint64_t num);
-	Address m_address;                                     ///地址信息
-
-	//byte m_voteToCount;   //投给了几个人票
-	bool m_isCandidate;   //是否是生产者
+	Address m_address;          
+	bool m_isCandidate;   //是否是生产者候选人
 
 	uint64_t m_receivedVote;//生产者得票数 已经收到的票数
 	std::string m_name;	  //昵称

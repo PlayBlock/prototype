@@ -292,6 +292,18 @@ void chain_controller::update_global_properties(const BlockHeader& b) {
 //	return returnMap;
 //}
 
+std::map<Address, uint64_t> chain_controller::get_producers(h256 const& _hash) const
+{
+	if (_stateDB == nullptr)
+		return std::map<Address, uint64_t>();
+
+	Block block(_bc, *_stateDB);
+	block.populateFromChain(_bc, _hash == h256() ? _bc.currentHash() : _hash);
+
+	return VoteInfo::getProducerMap(block.state());
+}
+
+
 using native::eos::ProducerScheduleObject;
 using native::eos::ProducerVotesObject;
 

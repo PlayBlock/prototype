@@ -29,7 +29,6 @@ owning_bytes_ref WASM_VM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 {
 	Log::setCategoryEnabled(Log::Category::debug, false);
 	m_io_gas = &io_gas;
-	m_schedule = &_ext.evmSchedule();
 	auto data = _ext.data;
 	//std::cout << "data:" << (data.count() ? (const char*)(data.data()) : "") << std::endl;
 

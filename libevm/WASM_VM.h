@@ -26,7 +26,7 @@ ETH_SIMPLE_EXCEPTION_VM(WASMWrongMemory);
 ETH_SIMPLE_EXCEPTION_VM(WASMParameterLengthTooSmall);
 ETH_SIMPLE_EXCEPTION_VM(WASMAssertFailed);
 
-
+const U32 CT256Size = 40;
 //by dz end
 class WASM_VM : public VMFace
 {
@@ -44,7 +44,6 @@ public:
 	//by dz end
 
 private:
-	EVMSchedule const* m_schedule = nullptr;
 	bytesConstRef m_bytes = bytesConstRef();
 	//bytes m_return_r;
 	static WASM_CORE* m_core;

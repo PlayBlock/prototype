@@ -607,7 +607,8 @@ void Client::newMineWork()
 
 		ETIProofOfWork::Solution sol = _sol;
 		TransactionSkeleton ts;
-		ts.type = TransactionType::MessageCall;
+		//ts.type = TransactionType::MessageCall;
+		ts.creation = false;
 		//ts.from = Address(as[0].address);
 		ts.to = Address("0x000000000000000000000000000000000000002c");
 		//ts.value = u256(1000000000000000);
