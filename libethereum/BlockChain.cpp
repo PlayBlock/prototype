@@ -811,7 +811,6 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 	h256 last = currentHash();
 
 	// by maml, 整个导入过程捕获异常，可能出现的异常有：
-	bool expection = false;
 	try {
 		// 如果当前块高度小于最后一个块的父块的高度，并且收到的块的父块与新块不是相同的块，做分叉处理
 		if (number() < _block.info.number())
@@ -998,19 +997,13 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 	catch (dev::eth::ExceedIrreversibleBlock)
 	{
 		cwarn << "Exceed Irreversible Block";
-		expection = true;
+		throw;
 	}
 	catch (...)
 	{
 		cwarn << "Unknown exception when import block";
-		expection = true;
+		throw;
 	}
-
-	if (expection)
-	{
-		return ImportRoute{ h256s(), h256s(), _block.transactions };
-	}
-
 
 	ldb::Status o = m_blocksDB->Write(m_writeOptions, &blocksBatch);
 	if (!o.ok())
