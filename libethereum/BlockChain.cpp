@@ -833,14 +833,8 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 				{
 					m_producer_plugin->get_chain_controller().databaseReversion(number(common));
 					
-					auto curBlock = route[number(common)];
-
-					BlockHeader tbi;
-					if (curBlock == _block.info.hash())
-						tbi = _block.info;
-					else
-						tbi = BlockHeader(block(curBlock));
-					m_producer_plugin->get_chain_controller().init_allvotes(tbi);
+					BlockHeader commonHeader = BlockHeader(block(common));
+					m_producer_plugin->get_chain_controller().init_allvotes(commonHeader);
 				}
 				else
 				{
