@@ -927,6 +927,9 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 				if (m_producer_plugin)
 				{
 					m_producer_plugin->get_chain_controller().databaseReversion(number(common));
+					
+					BlockHeader tbi = BlockHeader(block(common));
+					m_producer_plugin->get_chain_controller().init_allvotes(tbi);
 				}
 				else
 				{
@@ -934,7 +937,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 				}
 
 				///依次导入之前分叉上的块
-				for (int i = realCommonIndex-1; i >= 0; i++)
+				for (int i = realCommonIndex-1; i >= 0; i--)
 				{
 					auto curBlock = route[i];
 
@@ -973,25 +976,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 							m_blocksBlooms[alteredBlooms.back()].blooms[o] |= blockBloom;
 						}
 					}
-					// Collate transaction hashes and remember who they were.
-					//h256s newTransactionAddresses;
-					{
-						bytes blockBytes;
-						RLP blockRLP(curBlock == _block.info.hash() ? _block.block : &(blockBytes = block(curBlock)));
-						TransactionAddress ta;
-						ta.blockHash = tbi.hash();
-						RLP transactionsRLP = blockRLP[1];
-						for (ta.index = 0; ta.index < transactionsRLP.itemCount(); ++ta.index)
-							extrasBatch.Put(toSlice(sha3(transactionsRLP[ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
-					}
-
-					// Update database with them.
-					ReadGuard l1(x_blocksBlooms);
-					for (auto const& h : alteredBlooms)
-						extrasBatch.Put(toSlice(h, ExtraBlocksBlooms), (ldb::Slice)dev::ref(m_blocksBlooms[h].rlp()));
-					extrasBatch.Put(toSlice(h256(tbi.number()), ExtraBlockHash), (ldb::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
 				}
-
 
 				throw;
 			}
