@@ -155,62 +155,62 @@ namespace dev {
 			_from.nonce++;
 		}
 
-		void DposTestClient::assign(Account& _from, uint64_t voteCount)
-		{
-			string gasLimit = "0xc350";
-			string gasPrice = "0x04a817c800";
-			string to = "0000000000000000000000000000000000000028";
-			string value = "0x0";
-			string nonce = boost::lexical_cast<string>(_from.nonce);
-			string data = toHex(boost::lexical_cast<string>(voteCount));
-			string secretKey = _from.secret;
+		//void DposTestClient::assign(Account& _from, uint64_t voteCount)
+		//{
+		//	string gasLimit = "0xc350";
+		//	string gasPrice = "0x04a817c800";
+		//	string to = "0000000000000000000000000000000000000028";
+		//	string value = "0x0";
+		//	string nonce = boost::lexical_cast<string>(_from.nonce);
+		//	string data = toHex(boost::lexical_cast<string>(voteCount));
+		//	string secretKey = _from.secret;
+		//
+		//	json_spirit::mObject obj;
+		//	obj.emplace(make_pair("gasLimit", gasLimit));
+		//	obj.emplace(make_pair("gasPrice", gasPrice));
+		//	obj.emplace(make_pair("to", to));
+		//	obj.emplace(make_pair("value", value));
+		//	obj.emplace(make_pair("nonce", nonce));
+		//	obj.emplace(make_pair("data", data));
+		//	obj.emplace(make_pair("secretKey", secretKey));
+		//	TestTransaction tx(obj);
+		//	m_working.addTransaction(tx);
+		//
+		//	_from.nonce++;
+		//}
+		//
+		//void DposTestClient::deAssign(Account& _from, uint64_t voteCount)
+		//{
+		//	string gasLimit = "0xc350";
+		//	string gasPrice = "0x04a817c800";
+		//	string to = "0000000000000000000000000000000000000029";
+		//	string value = "0x0";
+		//	string nonce = boost::lexical_cast<string>(_from.nonce);
+		//	string data = toHex(boost::lexical_cast<string>(voteCount));
+		//	string secretKey = _from.secret;
+		//
+		//	json_spirit::mObject obj;
+		//	obj.emplace(make_pair("gasLimit", gasLimit));
+		//	obj.emplace(make_pair("gasPrice", gasPrice));
+		//	obj.emplace(make_pair("to", to));
+		//	obj.emplace(make_pair("value", value));
+		//	obj.emplace(make_pair("nonce", nonce));
+		//	obj.emplace(make_pair("data", data));
+		//	obj.emplace(make_pair("secretKey", secretKey));
+		//	TestTransaction tx(obj);
+		//	m_working.addTransaction(tx);
+		//
+		//	_from.nonce++;
+		//}
 
-			json_spirit::mObject obj;
-			obj.emplace(make_pair("gasLimit", gasLimit));
-			obj.emplace(make_pair("gasPrice", gasPrice));
-			obj.emplace(make_pair("to", to));
-			obj.emplace(make_pair("value", value));
-			obj.emplace(make_pair("nonce", nonce));
-			obj.emplace(make_pair("data", data));
-			obj.emplace(make_pair("secretKey", secretKey));
-			TestTransaction tx(obj);
-			m_working.addTransaction(tx);
-
-			_from.nonce++;
-		}
-
-		void DposTestClient::deAssign(Account& _from, uint64_t voteCount)
-		{
-			string gasLimit = "0xc350";
-			string gasPrice = "0x04a817c800";
-			string to = "0000000000000000000000000000000000000029";
-			string value = "0x0";
-			string nonce = boost::lexical_cast<string>(_from.nonce);
-			string data = toHex(boost::lexical_cast<string>(voteCount));
-			string secretKey = _from.secret;
-
-			json_spirit::mObject obj;
-			obj.emplace(make_pair("gasLimit", gasLimit));
-			obj.emplace(make_pair("gasPrice", gasPrice));
-			obj.emplace(make_pair("to", to));
-			obj.emplace(make_pair("value", value));
-			obj.emplace(make_pair("nonce", nonce));
-			obj.emplace(make_pair("data", data));
-			obj.emplace(make_pair("secretKey", secretKey));
-			TestTransaction tx(obj);
-			m_working.addTransaction(tx);
-
-			_from.nonce++;
-		}
-
-		void DposTestClient::make_producer(Account& _from)
+		void DposTestClient::make_producer(Account& _from, const string& name, const string& url)
 		{
 			string gasLimit = "0xc350";
 			string gasPrice = "0x04a817c800";
 			string to = "0000000000000000000000000000000000000024";
 			string value = "0x0";
 			string nonce = boost::lexical_cast<string>(_from.nonce);
-			string data = "0x610062";
+			string data = "0x" + toHex(name) + "00" + toHex(url);
 
 			string secretKey = _from.secret;
 

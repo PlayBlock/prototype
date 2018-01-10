@@ -72,11 +72,11 @@ namespace dev {
 
 			void redeem_eth(Account& _from, uint64_t voteCount);
 
-			void assign(Account& _from, uint64_t voteCount);
+			//void assign(Account& _from, uint64_t voteCount);
 
-			void deAssign(Account& _from, uint64_t voteCount);
+			//void deAssign(Account& _from, uint64_t voteCount);
 
-			void make_producer(Account& _from);
+			void make_producer(Account& _from, const string& name = "a", const string& url = "bcdef");
 
 			void unmake_producer(Account& _from);
 
