@@ -666,11 +666,6 @@ void testBCTest(json_spirit::mObject const& _o)
 			cerr << testName + "Error importing block from fields to blockchain: " << diagnostic_information(_e);
 			break;
 		}
-		catch (dev::eth::ExceedIrreversibleBlock)
-		{
-			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
-			break;
-		}
 
 		//Check that imported block to the chain is equal to declared block from test
 		bytes importedblock = testChain.getInterface().block(blockFromFields.blockHeader().hash(WithSeal));
