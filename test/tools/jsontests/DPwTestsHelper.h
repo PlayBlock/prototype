@@ -81,6 +81,10 @@ namespace dev {
 			void unmake_producer(Account& _from);
 
 			void make_pow_producer(Account& _from, enum class setPowTest);
+
+			void add_new_Work(Account& _from);
+			void sendNewWork(Account& _from, ETIProofOfWork::Solution& sol, Notified<bool>& _sealed);
+
 			void make_pow_transaction(Account& _from, ETIProofOfWork::Solution& _sol);
 
 			void send(Account& _from, const Account& on, uint64_t voteCount);
@@ -114,7 +118,8 @@ namespace dev {
 			void setGasLimit(u256 const& _v);
 
 			uint32_t get_dpo_witnesses() { return _producer_plugin->get_chain_controller().get_dynamic_global_properties().num_pow_witnesses; }
-
+			dev::h256 get_ownpow_target();
+			dev::h256 get_pow_target() { return _producer_plugin->get_chain_controller().get_pow_target(); };
 		private:
 
 			TestBlockChain m_bc;

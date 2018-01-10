@@ -333,12 +333,83 @@ namespace dev {
 				sol.op.work = op.work;
 			}
 			else if (setPowTest::errorBlockid == tests)
-			{
-				produce_blocks(1);
+			{    
+				//延迟报告
+				//produce_blocks(1);
 
+				//一个未知的block_id
+				sol.op.block_id = dev::h256("0xca35f4998735926f7ce09bd86e259ca02ea4ef0ab15dbdfdc560b0fad5e1c1b4");
 			}
 			make_pow_transaction(_from, sol);
 
+		}
+
+		void DposTestClient::sendNewWork(Account& _from, ETIProofOfWork::Solution& _sol, Notified<bool> &_sealed)
+		{
+			BlockHeader bh = m_bc.getInterface().info();
+
+			static Secret priviteKey = Secret(_from.secret);
+			static AccountName workerAccount(_from.address);
+
+			sealEngine()->onETISealGenerated([&](const ETIProofOfWork::Solution& m_sol) {
+				//sol.op. = _sol.op;
+				_sol.op.worker_pubkey = m_sol.op.worker_pubkey;
+				_sol.op.block_id = m_sol.op.block_id;
+				_sol.op.nonce = m_sol.op.nonce;
+				_sol.op.input = m_sol.op.input;
+				_sol.op.work = m_sol.op.work;
+				_sol.op.signature = m_sol.op.signature;
+
+				_sealed = true;
+			});
+
+			auto tid = std::this_thread::get_id();
+			static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
+
+			uint64_t tryNonce = s_eng();
+			uint64_t start = tryNonce;
+			uint64_t nonce = start;// +thread_num;
+			auto target = _producer_plugin->get_chain_controller().get_pow_target();
+
+			ETIProofOfWork::WorkPackage newWork{ bh.hash(), priviteKey, workerAccount, nonce, target };
+
+			// 给miners发送新的任务
+			sealEngine()->newETIWork(newWork);
+		
+		}
+		
+		void DposTestClient::add_new_Work(Account& _from)
+		{
+			
+			// 注册回调函数，等待miners找到解后调用
+			Notified<bool> sealed(false);
+			Notified<bool> sealed2(false);
+			std::map<dev::h256, std::pair<dev::u256, dev::u256>> map;
+			std::unordered_map<dev::u256, dev::u256> mapChange;
+			POW_Operation op(map, mapChange, Address());
+			ETIProofOfWork::Solution sol = { op };
+
+			sendNewWork(_from,sol, sealed2);//不需要wait
+
+            produce_blocks(1);
+
+			sendNewWork(_from, sol, sealed);
+			sealed.waitNot(false);
+			
+			sealEngine()->onETISealGenerated([](const ETIProofOfWork::Solution&) {});
+
+			make_pow_transaction(_from, sol);
+
+		}
+
+
+		dev::h256 DposTestClient::get_ownpow_target()
+		{
+			const auto& dgp = _producer_plugin->get_chain_controller().get_dynamic_global_properties();
+			dev::u256 target;
+			target = -1;
+			target >>= ((dgp.num_pow_witnesses / 4) + 4);
+			return dev::h256(target);
 		}
 
 		void DposTestClient::send(Account& _from, const Account& on, uint64_t voteCount)
