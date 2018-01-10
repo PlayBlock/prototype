@@ -533,6 +533,537 @@ fs::path DposBlockTestSuite::suiteFillerFolder() const
 	return "DposBlockTestsFiller";
 }
 
+json_spirit::mObject fillFakeTest(json_spirit::mObject const& _input)
+{
+	g_logVerbosity = 14;
+	json_spirit::mObject output;
+	string const& testName = TestOutputHelper::get().testName();
+	TestBlock genesisBlock(_input.at("genesisBlockHeader").get_obj(), _input.at("pre").get_obj());
+	genesisBlock.setBlockHeader(genesisBlock.blockHeader());
+
+	TestBlockChain testChain(genesisBlock);
+	assert(testChain.getInterface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
+
+	//创建生产者
+	std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(testChain.getInterface());
+	p->get_chain_controller().setStateDB(testChain.testGenesis().state().db());
+	testChain.interfaceUnsafe().setProducer(p);
+
+	output["genesisBlockHeader"] = writeBlockHeaderToJson(genesisBlock.blockHeader());
+	output["genesisRLP"] = toHexPrefixed(genesisBlock.bytes());
+	BOOST_REQUIRE(_input.count("blocks"));
+
+	mArray blArray;
+	size_t importBlockNumber = 0;
+	string chainname = "default";
+	string chainnetwork = "default";
+	std::map<string, ChainBranch*> chainMap = { { chainname , new ChainBranch(genesisBlock) } };
+
+	if (_input.count("network") > 0)
+		output["network"] = _input.at("network");
+	unsigned int  signe_num = 0;
+	unsigned int  irr_num = 0;
+	//判断是否是作假签名
+	if (_input.count("fake"))
+	{
+		mObject fakeObj = _input.at("fake").get_obj();
+		if (fakeObj.count("signature"))
+			signe_num = (int)toInt(fakeObj.at("signature").get_obj().at("B"));
+	}
+
+	for (auto const& bl : _input.at("blocks").get_array())
+	{
+		mObject const& blObjInput = bl.get_obj();
+		mObject blObj;
+		if (blObjInput.count("blocknumber") > 0)
+		{
+			importBlockNumber = max((int)toInt(blObjInput.at("blocknumber")), 1);
+			blObj["blocknumber"] = blObjInput.at("blocknumber");
+		}
+		else
+			importBlockNumber++;
+
+		if (blObjInput.count("chainname") > 0)
+		{
+			chainname = blObjInput.at("chainname").get_str();
+			blObj["chainname"] = blObjInput.at("chainname");
+		}
+		else
+			chainname = "default";
+
+		if (blObjInput.count("chainnetwork") > 0)
+		{
+			chainnetwork = blObjInput.at("chainnetwork").get_str();
+			blObj["chainnetwork"] = blObjInput.at("chainnetwork");
+		}
+		else
+			chainnetwork = "default";
+
+		// Copy expectException* fields
+		for (auto const& field : blObjInput)
+			if (field.first.substr(0, 15) == "expectException")
+				blObj[field.first] = field.second;
+
+		if (chainMap.count(chainname) > 0)
+		{
+			if (_input.count("noBlockChainHistory") == 0)
+			{
+				ChainBranch::forceBlockchain(chainnetwork);
+				chainMap[chainname]->reset();
+				ChainBranch::resetBlockchain();
+				chainMap[chainname]->restoreFromHistory(importBlockNumber);
+			}
+		}
+		else
+		{
+			ChainBranch::forceBlockchain(chainnetwork);
+			//chainMap[chainname] = new ChainBranch(genesisBlock);
+			chainMap[chainname] = new ChainBranch(chainMap["default"]);
+			ChainBranch::resetBlockchain();
+			chainMap[chainname]->restoreFromHistory(importBlockNumber);
+		}
+
+		TestBlock block;
+		TestBlockChain& blockchain = chainMap[chainname]->blockchain;
+		vector<TestBlock>& importedBlocks = chainMap[chainname]->importedBlocks;
+		chain::chain_controller & _chain(chainMap[chainname]->producer->get_chain_controller());
+
+
+		BOOST_REQUIRE(blObjInput.count("transactions"));
+		for (auto& txObj : blObjInput.at("transactions").get_array())
+		{
+			TestTransaction transaction(txObj.get_obj());
+			block.addTransaction(transaction);
+		}
+
+		//Import Uncles
+		for (auto const& uHObj : blObjInput.at("uncleHeaders").get_array())
+		{
+			cnote << "Generating uncle block at test " << testName;
+			TestBlock uncle;
+			mObject uncleHeaderObj = uHObj.get_obj();
+			string uncleChainName = chainname;
+			if (uncleHeaderObj.count("chainname") > 0)
+				uncleChainName = uncleHeaderObj["chainname"].get_str();
+
+			overwriteUncleHeaderForTest(uncleHeaderObj, uncle, block.uncles(), *chainMap[uncleChainName]);
+			block.addUncle(uncle);
+		}
+
+		vector<TestBlock> validUncles = blockchain.syncUncles(block.uncles());
+		block.setUncles(validUncles);
+
+		if (blObjInput.count("blockHeaderPremine"))
+			overwriteBlockHeaderForTest(blObjInput.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname]);
+
+		cnote << "Mining block" << importBlockNumber << "for chain" << chainname << "at test " << testName;
+		//block.mine(blockchain);
+		//生产块
+		auto slot = 1;
+		auto accountName = _chain.get_scheduled_producer(slot);
+		while (accountName == AccountName())
+			accountName = _chain.get_scheduled_producer(++slot);
+		auto pro = _chain.get_producer(accountName);
+		auto private_key = chainMap[chainname]->producer->get_private_key(pro.owner);
+		block.dposMine(blockchain, _chain.get_slot_time(slot), pro.owner, private_key);
+		cnote << "Block mined with...";
+		cnote << "Transactions: " << block.transactionQueue().topTransactions(100).size();
+		cnote << "Uncles: " << block.uncles().size();
+
+		TestBlock alterBlock(block);
+		checkBlocks(block, alterBlock, testName);
+
+		if (blObjInput.count("blockHeader"))
+			overwriteBlockHeaderForTest(blObjInput.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname]);
+
+		blObj["rlp"] = toHexPrefixed(alterBlock.bytes());
+		blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.blockHeader());
+
+		//判断是否需要作假签名
+		if (signe_num != 0 && chainname == "B" && importBlockNumber == signe_num)
+		{
+			auto slot = 1;
+			AccountName accountName("0x06f7740ac1bf8323c61423e1e98df6db737dac5c");
+			fc::ecc::private_key private_key("0ff6814a57898936fe085835a3070aeaf3877b4f9d1aec7e4fdb81eab2120de8");
+
+			TestBlock InvalidBlock(block);
+			checkBlocks(block, InvalidBlock, testName);
+
+			InvalidBlock.dposMine(blockchain, _chain.get_slot_time(slot), accountName, private_key);
+			if (blObjInput.count("blockHeader"))
+				overwriteBlockHeaderForTest(blObjInput.at("blockHeader").get_obj(), InvalidBlock, *chainMap[chainname]);
+
+			blObj["rlp"] = toHexPrefixed(InvalidBlock.bytes());
+			blObj["blockHeader"] = writeBlockHeaderToJson(InvalidBlock.blockHeader());
+		}
+
+		mArray aUncleList;
+		for (auto const& uncle : alterBlock.uncles())
+		{
+			mObject uncleHeaderObj = writeBlockHeaderToJson(uncle.blockHeader());
+			aUncleList.push_back(uncleHeaderObj);
+		}
+		blObj["uncleHeaders"] = aUncleList;
+		blObj["transactions"] = writeTransactionsToJson(alterBlock.transactionQueue());
+
+		compareBlocks(block, alterBlock);
+		try
+		{
+			if (blObjInput.count("expectException"))
+				BOOST_ERROR("Deprecated expectException field! " + testName);
+
+			blockchain.addBlock(alterBlock);
+			if (testChain.addBlock(alterBlock))
+				cnote << "The most recent best Block now is " << importBlockNumber << "in chain" << chainname << "at test " << testName;
+
+
+			bool isException = (blObjInput.count("expectException" + test::netIdToString(test::TestBlockChain::s_sealEngineNetwork))
+				|| blObjInput.count("expectExceptionALL"));
+			BOOST_REQUIRE_MESSAGE(!isException, "block import expected exception, but no exception was thrown!");
+
+			if (_input.count("noBlockChainHistory") == 0)
+			{
+				importedBlocks.push_back(alterBlock);
+				importedBlocks.back().clearState(); //close the state as it wont be needed. too many open states would lead to exception.
+			}
+		}
+		catch (dev::eth::ExceedIrreversibleBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
+		}
+		catch (dev::eth::ExceedRollbackImportBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "Rollback block chain!";
+		}
+		catch (Exception const& _e)
+		{
+			cnote << testName + "block import throw an exception: " << diagnostic_information(_e);
+			checkExpectedException(blObj, _e);
+			eraseJsonSectionForInvalidBlock(blObj);
+		}
+		catch (std::exception const& _e)
+		{
+			cnote << testName + "block import throw an exception: " << _e.what();
+			cout << testName + "block import thrown std exeption\n";
+			eraseJsonSectionForInvalidBlock(blObj);
+		}
+		catch (...)
+		{
+			cout << testName + "block import thrown unknown exeption\n";
+			eraseJsonSectionForInvalidBlock(blObj);
+		}
+
+		blArray.push_back(blObj);  //json data
+	}//each blocks
+
+	 //如果是作假的链，就改变filler中的值
+	if (signe_num != 0 && chainname == "B" && importBlockNumber == signe_num)
+	{
+		if (_input.count("expect") > 0)
+		{
+			AccountMaskMap expectStateMap;
+			State stateExpect(State::Null);
+			ImportTest::importState(_input.at("expect").get_obj(), stateExpect, expectStateMap);
+			if (ImportTest::compareStates(stateExpect, chainMap["A"]->blockchain.topBlock().state(), expectStateMap, WhenError::Throw))
+				cerr << testName << "\n";
+		}
+
+		output["blocks"] = blArray;
+		output["postState"] = fillJsonWithState(chainMap["A"]->blockchain.topBlock().state());
+		output["lastblockhash"] = toHexPrefixed(chainMap["A"]->blockchain.topBlock().blockHeader().hash(WithSeal));
+	}
+	else
+	{//没有作假时正常的流程
+		if (_input.count("expect") > 0)
+		{
+			AccountMaskMap expectStateMap;
+			State stateExpect(State::Null);
+			ImportTest::importState(_input.at("expect").get_obj(), stateExpect, expectStateMap);
+			if (ImportTest::compareStates(stateExpect, testChain.topBlock().state(), expectStateMap, WhenError::Throw))
+				cerr << testName << "\n";
+		}
+
+		output["blocks"] = blArray;
+		output["postState"] = fillJsonWithState(testChain.topBlock().state());
+		output["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
+	}
+
+	//make all values hex in pre section
+	State prestate(State::Null);
+	ImportTest::importState(_input.at("pre").get_obj(), prestate);
+	output["pre"] = fillJsonWithState(prestate);
+
+	for (auto iterator = chainMap.begin(); iterator != chainMap.end(); iterator++)
+		delete iterator->second;
+
+	return output;
+}
+void testFakeBCTest(json_spirit::mObject const& _o)
+{
+	string testName = TestOutputHelper::get().testName();
+	TestBlock genesisBlock(_o.at("genesisBlockHeader").get_obj(), _o.at("pre").get_obj());
+	TestBlockChain blockchain(genesisBlock);
+
+
+	std::shared_ptr<class producer_plugin> producer = make_shared<class producer_plugin>(blockchain.getInterface());
+	producer->get_chain_controller().setStateDB(blockchain.testGenesis().state().db());
+	blockchain.interfaceUnsafe().setProducer(producer);
+
+	TestBlockChain testChain(genesisBlock);
+	assert(testChain.getInterface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
+	std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(testChain.getInterface());
+	p->get_chain_controller().setStateDB(testChain.testGenesis().state().db());
+	testChain.interfaceUnsafe().setProducer(p);
+
+	if (_o.count("genesisRLP") > 0)
+	{
+		TestBlock genesisFromRLP(_o.at("genesisRLP").get_str());
+		checkBlocks(genesisBlock, genesisFromRLP, testName);
+	}
+
+
+	for (auto const& bl : _o.at("blocks").get_array())
+	{
+		mObject blObj = bl.get_obj();
+		TestBlock blockFromRlp;
+		State const preState = testChain.topBlock().state();
+		h256 const preHash = testChain.topBlock().blockHeader().hash();
+		try
+		{
+			TestBlock blRlp(blObj["rlp"].get_str());
+			blockFromRlp = blRlp;
+			if (blObj.count("blockHeader") == 0)
+				blockFromRlp.noteDirty();			//disable blockHeader check in TestBlock
+			testChain.addBlock(blockFromRlp);
+		}
+		// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
+		catch (dev::eth::ExceedIrreversibleBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
+		}
+		catch (dev::eth::ExceedRollbackImportBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "Rollback block chain!";
+		}
+		catch (Exception const& _e)
+		{
+			cnote << testName + "state sync or block import did throw an exception: " << diagnostic_information(_e);
+			checkJsonSectionForInvalidBlock(blObj);
+			continue;
+		}
+		catch (std::exception const& _e)
+		{
+			cnote << testName + "state sync or block import did throw an exception: " << _e.what();
+			checkJsonSectionForInvalidBlock(blObj);
+			continue;
+		}
+		catch (...)
+		{
+			cnote << testName + "state sync or block import did throw an exception\n";
+			checkJsonSectionForInvalidBlock(blObj);
+			continue;
+		}
+
+		//block from RLP successfully imported. now compare this rlp to test sections
+		BOOST_REQUIRE_MESSAGE(blObj.count("blockHeader"),
+			"blockHeader field is not found. "
+			"filename: " + TestOutputHelper::get().testFileName() +
+			" testname: " + TestOutputHelper::get().testName()
+		);
+
+		//Check Provided Header against block in RLP
+		TestBlock blockFromFields(blObj["blockHeader"].get_obj());
+
+		//ImportTransactions
+		BOOST_REQUIRE_MESSAGE(blObj.count("transactions"),
+			"transactions field is not found. "
+			"filename: " + TestOutputHelper::get().testFileName() +
+			" testname: " + TestOutputHelper::get().testName()
+		);
+		for (auto const& txObj : blObj["transactions"].get_array())
+		{
+			TestTransaction transaction(txObj.get_obj());
+			blockFromFields.addTransaction(transaction);
+		}
+
+		// ImportUncles
+		vector<u256> uncleNumbers;
+		if (blObj["uncleHeaders"].type() != json_spirit::null_type)
+		{
+			BOOST_REQUIRE_MESSAGE(blObj["uncleHeaders"].get_array().size() <= 2, "Too many uncle headers in block! " + TestOutputHelper::get().testName());
+			for (auto const& uBlHeaderObj : blObj["uncleHeaders"].get_array())
+			{
+				mObject uBlH = uBlHeaderObj.get_obj();
+				BOOST_REQUIRE((uBlH.size() == 16));
+
+				TestBlock uncle(uBlH);
+				blockFromFields.addUncle(uncle);
+				uncleNumbers.push_back(uncle.blockHeader().number());
+			}
+		}
+
+		checkBlocks(blockFromFields, blockFromRlp, testName);
+
+		try
+		{
+			blockchain.addBlock(blockFromFields);
+		}
+		catch (dev::eth::ExceedIrreversibleBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
+			break;
+		}
+		catch (dev::eth::ExceedRollbackImportBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "Rollback block chain!";
+			break;
+		}
+		catch (Exception const& _e)
+		{
+			cerr << testName + "Error importing block from fields to blockchain: " << diagnostic_information(_e);
+			break;
+		}
+
+		//Check that imported block to the chain is equal to declared block from test
+		bytes importedblock = testChain.getInterface().block(blockFromFields.blockHeader().hash(WithSeal));
+		TestBlock inchainBlock(toHex(importedblock));
+		checkBlocks(inchainBlock, blockFromFields, testName);
+
+		string blockNumber = toString(testChain.getInterface().number());
+		string blockChainName = "default";
+		if (blObj.count("chainname") > 0)
+			blockChainName = blObj["chainname"].get_str();
+		if (blObj.count("blocknumber") > 0)
+			blockNumber = blObj["blocknumber"].get_str();
+
+		//check the balance before and after the block according to mining rules
+		if (blockFromFields.blockHeader().parentHash() == preHash)
+		{
+			State const postState = testChain.topBlock().state();
+			assert(testChain.getInterface().sealEngine());
+			bigint reward = calculateMiningReward(testChain.topBlock().blockHeader().number(), uncleNumbers.size() >= 1 ? uncleNumbers[0] : 0, uncleNumbers.size() >= 2 ? uncleNumbers[1] : 0, *testChain.getInterface().sealEngine());
+			ImportTest::checkBalance(preState, postState, reward);
+		}
+		else
+		{
+			cnote << "Block Number " << testChain.topBlock().blockHeader().number();
+			cnote << "Skipping the balance validation of potential correct block: " << TestOutputHelper::get().testName();
+		}
+
+		cnote << "Tested topblock number" << blockNumber << "for chain " << blockChainName << testName;
+
+	}//allBlocks
+
+	 //Check lastblock hash
+	BOOST_REQUIRE((_o.count("lastblockhash") > 0));
+	string lastTrueBlockHash = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
+	BOOST_CHECK_MESSAGE(lastTrueBlockHash == _o.at("lastblockhash").get_str(),
+		testName + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + _o.at("lastblockhash").get_str());
+
+	//Check final state (just to be sure)
+	BOOST_CHECK_MESSAGE(toString(testChain.topBlock().state().rootHash()) ==
+		toString(blockchain.topBlock().state().rootHash()),
+		testName + "State root in chain from RLP blocks != State root in chain from Field blocks!");
+
+	State postState(State::Null); //Compare post states
+	BOOST_REQUIRE((_o.count("postState") > 0));
+	ImportTest::importState(_o.at("postState").get_obj(), postState);
+	ImportTest::compareStates(postState, testChain.topBlock().state());
+	ImportTest::compareStates(postState, blockchain.topBlock().state());
+}
+json_spirit::mValue FakeBlockTestSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
+{
+	json_spirit::mObject tests;
+	for (auto const& i : _input.get_obj())
+	{
+		string const& testname = i.first;
+		json_spirit::mObject const& inputTest = i.second.get_obj();
+
+		//Select test by name if --singletest is set and not filling state tests as blockchain
+		if (!Options::get().fillchain && !TestOutputHelper::get().checkTest(testname))
+			continue;
+
+		BOOST_REQUIRE_MESSAGE(inputTest.count("genesisBlockHeader"),
+			"\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::get().testFileName() +
+			" testname: " + TestOutputHelper::get().testName()
+		);
+		BOOST_REQUIRE_MESSAGE(inputTest.count("pre"),
+			"\"pre\" field is not found. filename: " + TestOutputHelper::get().testFileName() +
+			" testname: " + TestOutputHelper::get().testName()
+		);
+
+		if (inputTest.count("expect"))
+		{
+			BOOST_REQUIRE_MESSAGE(_fillin, "a filled test should not contain any expect fields.");
+			spellCheckNetworkNamesInExpectField(inputTest.at("expect").get_array());
+		}
+
+		if (_fillin)
+		{
+			//create a blockchain test for each network
+			for (auto& network : test::getNetworks())
+			{
+				if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != test::netIdToString(network))
+					continue;
+
+				dev::test::TestBlockChain::s_sealEngineNetwork = network;
+				string newtestname = testname + "_" + test::netIdToString(network);
+
+				json_spirit::mObject jObjOutput = inputTest;
+				if (inputTest.count("expect"))
+				{
+					//prepare the corresponding expect section for the test
+					json_spirit::mArray const& expects = inputTest.at("expect").get_array();
+					bool found = false;
+
+					for (auto& expect : expects)
+					{
+						vector<string> netlist;
+						json_spirit::mObject const& expectObj = expect.get_obj();
+						ImportTest::parseJsonStrValueIntoVector(expectObj.at("network"), netlist);
+
+						if (std::find(netlist.begin(), netlist.end(), test::netIdToString(network)) != netlist.end() ||
+							std::find(netlist.begin(), netlist.end(), "ALL") != netlist.end())
+						{
+							jObjOutput["expect"] = expectObj.at("result");
+							found = true;
+							break;
+						}
+					}
+					if (!found)
+						jObjOutput.erase(jObjOutput.find("expect"));
+				}
+				TestOutputHelper::get().setCurrentTestName(newtestname);
+				jObjOutput = fillFakeTest(jObjOutput);
+				jObjOutput["network"] = test::netIdToString(network);
+				if (inputTest.count("_info"))
+					jObjOutput["_info"] = inputTest.at("_info");
+				tests[newtestname] = jObjOutput;
+			}
+		}
+		else
+		{
+			BOOST_REQUIRE_MESSAGE(inputTest.count("network"),
+				"\"network\" field is not found. filename: " + TestOutputHelper::get().testFileName() +
+				" testname: " + TestOutputHelper::get().testName()
+			);
+			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(inputTest.at("network").get_str());
+			if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
+				continue;
+			testFakeBCTest(inputTest);
+		}
+	}
+
+	return tests;
+}
+fs::path FakeBlockTestSuite::suiteFolder() const
+{
+	return "FakeBlockTests";
+}
+fs::path FakeBlockTestSuite::suiteFillerFolder() const
+{
+	return "FakeBlockTestsFiller";
+}
 class DpTestFixture {
 public:
 	DpTestFixture()
@@ -544,6 +1075,16 @@ public:
 	}
 };
 
+class FokeFixture {
+public:
+	FokeFixture()
+	{
+		FakeBlockTestSuite suite;
+		string const& casename = boost::unit_test::framework::current_test_case().p_name;
+
+		suite.runAllTestsInFolder(casename);
+	}
+};
 
 
 BOOST_FIXTURE_TEST_SUITE(DposTestsSuite, TestOutputHelperFixture)
@@ -1258,6 +1799,11 @@ BOOST_AUTO_TEST_CASE(bcForkChainTest) {}
 BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
 BOOST_AUTO_TEST_CASE(bcTransactionLimitTest) {}
 
+BOOST_AUTO_TEST_SUITE_END()
+
+//链中有造假的块，进行异常测试
+BOOST_FIXTURE_TEST_SUITE(FakeBlockTests, FokeFixture)
+BOOST_AUTO_TEST_CASE(bcFakeBlockTest) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 

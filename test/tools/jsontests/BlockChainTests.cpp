@@ -318,14 +318,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 
 	if (_input.count("network") > 0)
 		output["network"] = _input.at("network");
-	unsigned int  signe_num = 0;
-	//判断是否是作假签名
-	if (_input.count("signature"))
-	{
-		signe_num = (int)toInt(_input.at("signature").get_obj().at("B"));
-
-	}
-
+	
 	for (auto const& bl: _input.at("blocks").get_array())
 	{
 		mObject const& blObjInput = bl.get_obj();
@@ -477,24 +470,6 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		blObj["rlp"] = toHexPrefixed(alterBlock.bytes());
 		blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.blockHeader());
 
-		//判断是否需要作假签名
-		if (signe_num != 0 && chainname == "B" && importBlockNumber == signe_num)
-		{
-			auto slot = 1;
-			AccountName accountName("0x06f7740ac1bf8323c61423e1e98df6db737dac5c");
-			fc::ecc::private_key private_key("0ff6814a57898936fe085835a3070aeaf3877b4f9d1aec7e4fdb81eab2120de8");
-
-			TestBlock InvalidBlock(block);
-			checkBlocks(block, InvalidBlock, testName);
-
-			InvalidBlock.dposMine(blockchain, _chain.get_slot_time(slot), accountName, private_key);
-			if (blObjInput.count("blockHeader"))
-				overwriteBlockHeaderForTest(blObjInput.at("blockHeader").get_obj(), InvalidBlock, *chainMap[chainname]);
-
-			blObj["rlp"] = toHexPrefixed(InvalidBlock.bytes());
-			blObj["blockHeader"] = writeBlockHeaderToJson(InvalidBlock.blockHeader());
-		}
-
 		mArray aUncleList;
 		for (auto const& uncle : alterBlock.uncles())
 		{
@@ -525,6 +500,10 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 				importedBlocks.back().clearState(); //close the state as it wont be needed. too many open states would lead to exception.
 			}
 		}
+		catch (dev::eth::ExceedIrreversibleBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
+		}
 		catch (Exception const& _e)
 		{
 			cnote << testName + "block import throw an exception: " << diagnostic_information(_e);
@@ -546,37 +525,19 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		blArray.push_back(blObj);  //json data
 	}//each blocks
 
-	//如果是作假的链，就改变filler中的值
-	if (signe_num != 0 && chainname == "B" && importBlockNumber == signe_num)
+	if (_input.count("expect") > 0)
 	{
-		if (_input.count("expect") > 0)
-		{
-			AccountMaskMap expectStateMap;
-			State stateExpect(State::Null);
-			ImportTest::importState(_input.at("expect").get_obj(), stateExpect, expectStateMap);
-			if (ImportTest::compareStates(stateExpect, chainMap["A"]->blockchain.topBlock().state(), expectStateMap, WhenError::Throw))
-				cerr << testName << "\n";
-		}
-
-		output["blocks"] = blArray;
-		output["postState"] = fillJsonWithState(chainMap["A"]->blockchain.topBlock().state());
-		output["lastblockhash"] = toHexPrefixed(chainMap["A"]->blockchain.topBlock().blockHeader().hash(WithSeal));
+		AccountMaskMap expectStateMap;
+		State stateExpect(State::Null);
+		ImportTest::importState(_input.at("expect").get_obj(), stateExpect, expectStateMap);
+		if (ImportTest::compareStates(stateExpect, testChain.topBlock().state(), expectStateMap, WhenError::Throw))
+			cerr << testName << "\n";
 	}
-	else
-	{//没有作假时正常的流程
-		if (_input.count("expect") > 0)
-		{
-			AccountMaskMap expectStateMap;
-			State stateExpect(State::Null);
-			ImportTest::importState(_input.at("expect").get_obj(), stateExpect, expectStateMap);
-			if (ImportTest::compareStates(stateExpect, testChain.topBlock().state(), expectStateMap, WhenError::Throw))
-				cerr << testName << "\n";
-		}
 
-		output["blocks"] = blArray;
-		output["postState"] = fillJsonWithState(testChain.topBlock().state());
-		output["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
-	}
+	output["blocks"] = blArray;
+	output["postState"] = fillJsonWithState(testChain.topBlock().state());
+	output["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
+	
 
 	//make all values hex in pre section
 	State prestate(State::Null);
@@ -628,6 +589,10 @@ void testBCTest(json_spirit::mObject const& _o)
 			testChain.addBlock(blockFromRlp);
 		}
 		// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
+		catch (dev::eth::ExceedIrreversibleBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
+		}
 		catch (Exception const& _e)
 		{
 			cnote << testName + "state sync or block import did throw an exception: " << diagnostic_information(_e);
@@ -689,15 +654,21 @@ void testBCTest(json_spirit::mObject const& _o)
 
 		try
 		{
-			bool result = blockchain.addBlock(blockFromFields);
-			if (result == false)
-			{
-				break;
-			}
+			blockchain.addBlock(blockFromFields);
+		}
+		catch (dev::eth::ExceedIrreversibleBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
+			break;
 		}
 		catch (Exception const& _e)
 		{
 			cerr << testName + "Error importing block from fields to blockchain: " << diagnostic_information(_e);
+			break;
+		}
+		catch (dev::eth::ExceedIrreversibleBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
 			break;
 		}
 
