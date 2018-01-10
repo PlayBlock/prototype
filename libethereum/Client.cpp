@@ -391,7 +391,9 @@ void Client::syncBlockQueue()
 {
 //	cdebug << "syncBlockQueue()";
 #ifdef BenchMarkFlag
-	BenchMark::Restart("syncTransactionBlocks");
+	static BenchMark mark1("syncTransactionBlocks");
+	mark1.makeCurrent();
+	mark1.restartCount();
 #endif
 	ImportRoute ir;
 	unsigned count; //导入的块数
@@ -399,7 +401,9 @@ void Client::syncBlockQueue()
 	tie(ir, m_syncBlockQueue, count) = bc().sync(m_bq, m_stateDB, m_syncAmount);
 
 #ifdef BenchMarkFlag
-	BenchMark::ShowSummary();
+	static Timer timer1;
+	mark1.showSummary(timer1.elapsed());
+	timer1.restart();
 #endif
 
 	//导入用时
@@ -437,12 +441,16 @@ void Client::syncTransactionQueue()
 
 
 #ifdef BenchMarkFlag
-		BenchMark::Restart("syncTransactionQueue");
+		static BenchMark mark2("syncTransactionQueue");
+		mark2.makeCurrent();
+		mark2.restartCount();
 #endif
 		tie(newPendingReceipts, m_syncTransactionQueue) = m_working.sync(bc(), m_tq, *m_gp);
 
 #ifdef BenchMarkFlag
-		BenchMark::ShowSummary();
+		static Timer timer2;
+		mark2.showSummary(timer2.elapsed());
+		timer2.restart();
 #endif
 
 	}

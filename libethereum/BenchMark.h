@@ -30,19 +30,23 @@ namespace eth
 class BenchMark
 {
 public:	
-	static void ShowSummary();
+	BenchMark(std::string _name);
+	void makeCurrent();
+	void showSummary(double _time);
 	static void IncreaseInvalidDeal();
 	static void IncreaseTransfer();
 	static void IncreaseContractCall();
 	static void IncreaseContractCreate();
+	
+	static BenchMark* _current;
 
-	static void Restart(std::string _name);
-	static std::string Name;
-	static int WrongDeal;
-	static int Transfer;
-	static int ContractCall;
-	static int ContractCreate;
-	static Timer timer;
+	void restartCount();
+	std::string Name;
+	int WrongDeal;
+	int Transfer;
+	int ContractCall;
+	int ContractCreate;
+	Timer timer;
 
 };
 

@@ -26,53 +26,51 @@
 using namespace dev;
 using namespace dev::eth;
 
-std::string BenchMark::Name = "";
-int BenchMark::WrongDeal = 0;
-int BenchMark::Transfer = 0;
-int BenchMark::ContractCall = 0;
-int BenchMark::ContractCreate = 0;
-Timer BenchMark::timer = Timer();
+BenchMark* BenchMark::_current = nullptr;
 
-void BenchMark::ShowSummary()
+BenchMark::BenchMark(std::string _name)
 {
-	std::cout << "=========Benchmark Total=========" << std::endl;
-	std::cout << "name:"<<Name << std::endl;
-	double passTime = timer.elapsed();
-	std::cout << "TimePassed    : " << passTime / 1000.0 <<"seconds"<<std::endl;
-	std::cout << "Transfer      : " << Transfer << std::endl;
-	std::cout << "WrongDeal     : " << WrongDeal << std::endl;
-	std::cout << "ContractCall  : " << ContractCall << std::endl;
-	std::cout << "ContractCreate: " << ContractCreate << std::endl;
-	std::cout << "=========Benchmark Speed(k/s)=====" << std::endl;
-	std::cout << "Transfer      : " << Transfer/ passTime << std::endl;
-	std::cout << "WrongDeal     : " << WrongDeal/ passTime << std::endl;
-	std::cout << "ContractCall  : " << ContractCall/ passTime << std::endl;
-	std::cout << "ContractCreate: " << ContractCreate/ passTime << std::endl;
-	std::cout << "=================================" << std::endl;
+	Name = _name;
+}
+void BenchMark::makeCurrent()
+{
+	_current = this;
+}
+
+void BenchMark::showSummary(double passTime)
+{
+	std::cout << "Count: "<< _current->Name;
+	std::cout << " Transfer      : " << _current->Transfer;
+	std::cout << " WrongDeal     : " << _current->WrongDeal;
+	std::cout << " ContractCall  : " << _current->ContractCall;
+	std::cout << " ContractCreate: " << _current->ContractCreate;
+	std::cout << " Speed: ";
+	std::cout << " Transfer      : " << _current->Transfer/ passTime;
+	std::cout << " WrongDeal     : " << _current->WrongDeal/ passTime;
+	std::cout << " ContractCall  : " << _current->ContractCall/ passTime;
+	std::cout << " ContractCreate: " << _current->ContractCreate/ passTime<<std::endl;
 }
 void BenchMark::IncreaseInvalidDeal()
 {
-	WrongDeal++;
+	_current->WrongDeal++;
 }
 void BenchMark::IncreaseTransfer()
 {
-	Transfer++;
+	_current->Transfer++;
 }
 void BenchMark::IncreaseContractCall()
 {
-	ContractCall++;
+	_current->ContractCall++;
 }
 void BenchMark::IncreaseContractCreate()
 {
-	ContractCreate++;
+	_current->ContractCreate++;
 }
 
-void BenchMark::Restart(std::string _name)
+void BenchMark::restartCount()
 {
-	Name = _name;
 	WrongDeal = 0;
 	Transfer = 0;
 	ContractCall = 0;
 	ContractCreate = 0;
-	timer.restart();
 }
