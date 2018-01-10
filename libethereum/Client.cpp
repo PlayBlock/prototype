@@ -32,6 +32,7 @@
 #include "Block.h"
 #include "TransactionQueue.h"
 #include <libethashseal/ETIProofOfWork.h>
+#include "BenchMark.h"
 
 using namespace std;
 using namespace dev;
@@ -389,11 +390,17 @@ double static const c_targetDuration = 1;
 void Client::syncBlockQueue()
 {
 //	cdebug << "syncBlockQueue()";
-
+#ifdef BenchMarkFlag
+	BenchMark::Restart("syncTransactionBlocks");
+#endif
 	ImportRoute ir;
 	unsigned count; //导入的块数
 	Timer t; //用来计算导入用时
 	tie(ir, m_syncBlockQueue, count) = bc().sync(m_bq, m_stateDB, m_syncAmount);
+
+#ifdef BenchMarkFlag
+	BenchMark::ShowSummary();
+#endif
 
 	//导入用时
 	double elapsed = t.elapsed(); 
@@ -428,7 +435,16 @@ void Client::syncTransactionQueue()
 			return;
 		}
 
+
+#ifdef BenchMarkFlag
+		BenchMark::Restart("syncTransactionQueue");
+#endif
 		tie(newPendingReceipts, m_syncTransactionQueue) = m_working.sync(bc(), m_tq, *m_gp);
+
+#ifdef BenchMarkFlag
+		BenchMark::ShowSummary();
+#endif
+
 	}
 
 	if (newPendingReceipts.empty())

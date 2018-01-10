@@ -29,6 +29,9 @@
 #include "ExtVM.h"
 #include "BlockChain.h"
 #include "Block.h"
+#include "BenchMark.h"
+
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -187,6 +190,9 @@ void Executive::initialize(Transaction const& _transaction)
 	}
 	catch (Exception const& ex)
 	{
+#ifdef BenchMarkFlag
+		BenchMark::IncreaseInvalidDeal();
+#endif // BenchMarkFlag
 		m_excepted = toTransactionException(ex);
 		throw;
 	}
@@ -201,12 +207,18 @@ void Executive::initialize(Transaction const& _transaction)
 		}
 		catch (InvalidSignature const&)
 		{
+#ifdef BenchMarkFlag
+			BenchMark::IncreaseInvalidDeal();
+#endif // BenchMarkFlag			
 			clog(ExecutiveWarnChannel) << "Invalid Signature";
 			m_excepted = TransactionException::InvalidSignature;
 			throw;
 		}
 		if (m_t.nonce() != nonceReq)
 		{
+#ifdef BenchMarkFlag
+			BenchMark::IncreaseInvalidDeal();
+#endif // BenchMarkFlag				
 			clog(ExecutiveWarnChannel) << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
 			m_excepted = TransactionException::InvalidNonce;
 			BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
@@ -217,6 +229,9 @@ void Executive::initialize(Transaction const& _transaction)
 		bigint totalCost = m_t.value() + gasCost;
 		if (m_s.balance(m_t.sender()) < totalCost)
 		{
+#ifdef BenchMarkFlag
+			BenchMark::IncreaseInvalidDeal();
+#endif // BenchMarkFlag				
 			clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas() << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
 			m_excepted = TransactionException::NotEnoughCash;
 			BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().hex()));
@@ -265,6 +280,9 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		bigint g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
 		if (_p.gas < g)
 		{
+#ifdef BenchMarkFlag
+			BenchMark::IncreaseInvalidDeal();
+#endif // BenchMarkFlag					
 			m_excepted = TransactionException::OutOfGasBase;
 			// Bail from exception.
 			
@@ -279,6 +297,9 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		}
 		else
 		{
+#ifdef BenchMarkFlag
+			BenchMark::IncreaseContractCall();
+#endif // BenchMarkFlag		
 			m_gas = (u256)(_p.gas - g);
 			bytes output;
 			bool success;
@@ -298,10 +319,20 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		m_gas = _p.gas;
 		if (m_s.addressHasCode(_p.codeAddress))
 		{
+#ifdef BenchMarkFlag
+			BenchMark::IncreaseContractCall();
+#endif // BenchMarkFlag				
+			
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
 			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth, _p.staticCall);
 		}
+#ifdef BenchMarkFlag
+		else
+		{
+			BenchMark::IncreaseTransfer();
+		}
+#endif // BenchMarkFlag	
 	}
 
 	// Transfer ether.
@@ -344,6 +375,9 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
 	bool accountAlreadyExist = (m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) > 0);
 	if (accountAlreadyExist)
 	{
+#ifdef BenchMarkFlag
+		BenchMark::IncreaseInvalidDeal();
+#endif // BenchMarkFlag				
 		clog(StateSafeExceptions) << "Address already used: " << m_newAddress;
 		m_gas = 0;
 		m_excepted = TransactionException::AddressAlreadyUsed;
