@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libdevcore/Common.h>
-#define BenchMarkFlag 0
+#define BenchMarkFlag 1
 namespace dev
 {
 namespace eth
@@ -31,7 +31,7 @@ class BenchMark
 {
 public:	
 	BenchMark(std::string _name);
-	void makeCurrent();
+	static void makeCurrent(BenchMark*);
 	void showSummary(double _time);
 	static void IncreaseInvalidDeal();
 	static void IncreaseTransfer();

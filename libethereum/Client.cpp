@@ -392,7 +392,7 @@ void Client::syncBlockQueue()
 //	cdebug << "syncBlockQueue()";
 #ifdef BenchMarkFlag
 	static BenchMark mark1("syncTransactionBlocks");
-	mark1.makeCurrent();
+	BenchMark::makeCurrent(&mark1);
 	mark1.restartCount();
 #endif
 	ImportRoute ir;
@@ -442,7 +442,7 @@ void Client::syncTransactionQueue()
 
 #ifdef BenchMarkFlag
 		static BenchMark mark2("syncTransactionQueue");
-		mark2.makeCurrent();
+		BenchMark::makeCurrent(&mark2);
 		mark2.restartCount();
 #endif
 		tie(newPendingReceipts, m_syncTransactionQueue) = m_working.sync(bc(), m_tq, *m_gp);
@@ -451,6 +451,7 @@ void Client::syncTransactionQueue()
 		static Timer timer2;
 		mark2.showSummary(timer2.elapsed());
 		timer2.restart();
+		BenchMark::makeCurrent(nullptr);
 #endif
 
 	}

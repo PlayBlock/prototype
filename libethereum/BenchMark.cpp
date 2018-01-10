@@ -32,9 +32,9 @@ BenchMark::BenchMark(std::string _name)
 {
 	Name = _name;
 }
-void BenchMark::makeCurrent()
+void BenchMark::makeCurrent(BenchMark* current)
 {
-	_current = this;
+	_current = current;
 }
 
 void BenchMark::showSummary(double passTime)
@@ -52,19 +52,32 @@ void BenchMark::showSummary(double passTime)
 }
 void BenchMark::IncreaseInvalidDeal()
 {
-	_current->WrongDeal++;
+	if (_current)
+	{
+		_current->WrongDeal++;
+	}
+
 }
 void BenchMark::IncreaseTransfer()
 {
-	_current->Transfer++;
+	if (_current)
+	{
+		_current->Transfer++;
+	}
 }
 void BenchMark::IncreaseContractCall()
 {
-	_current->ContractCall++;
+	if (_current)
+	{
+		_current->ContractCall++;
+	}
 }
 void BenchMark::IncreaseContractCreate()
 {
-	_current->ContractCreate++;
+	if (_current)
+	{
+		_current->ContractCreate++;
+	}
 }
 
 void BenchMark::restartCount()
