@@ -130,6 +130,12 @@ public:
 	/// Abort the sync operation.
 	void abortSync();
 
+	bool isLlegal() const {
+		return m_isllegal;
+	}
+
+	void setLlegal(bool _isLlegal) { m_isllegal = _isLlegal; }
+
 private:
 	using p2p::Capability::sealAndSend;
 
@@ -194,6 +200,8 @@ private:
 
 	std::weak_ptr<EthereumPeerObserverFace> m_observer;
 	std::weak_ptr<EthereumHostDataFace> m_hostData;
+
+	bool m_isllegal = true;	//Peer是否为合法
 };
 
 }

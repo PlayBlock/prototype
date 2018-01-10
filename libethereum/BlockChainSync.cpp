@@ -209,6 +209,10 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 	std::shared_ptr<SessionFace> session = _peer->session();
 	if (!session)
 		return; // Expired
+	 
+
+	_peer->setLlegal(false);
+
 	if (_peer->m_genesisHash != host().chain().genesisHash())
 		_peer->disable("Invalid genesis hash");
 	else if (_peer->m_protocolVersion != host().protocolVersion() && _peer->m_protocolVersion != EthereumHost::c_oldProtocolVersion)
@@ -222,12 +226,16 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 	else if (_peer->m_asking != Asking::State && _peer->m_asking != Asking::Nothing)
 		_peer->disable("Peer banned for unexpected status message.");
 	else
-	{
+	{ 
+		_peer->setLlegal(true);
+
 		// Before starting to exchange the data with the node, let's verify that it's on our chain
 		if (!requestDaoForkBlockHeader(_peer))
 			// DAO challenge not needed
 			syncPeer(_peer, true); 
 	}
+
+	
 }
 
 bool BlockChainSync::requestDaoForkBlockHeader(std::shared_ptr<EthereumPeer> _peer)
@@ -251,6 +259,10 @@ void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
 	}
 
 	if (m_state == SyncState::Waiting)
+		return;
+
+	//拒绝已被判定为非法的Peer
+	if (!_peer->isLlegal())
 		return;
 
 	u256 td = host().chain().details().totalDifficulty;
