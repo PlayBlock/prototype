@@ -215,68 +215,68 @@ DEFINE_INTRINSIC_FUNCTION2(env, readMessage, readMessage, i32, i32, destptr, i32
 //our register functions by dz
 DEFINE_INTRINSIC_FUNCTION0(env, gascount1, gascount1, none)
 {
-	std::cout << "gascount1" << std::endl;
+	//std::cout << "gascount1" << std::endl;
 	WASM_VM::AddUsedGas(1);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount2, gascount2, none)
 {
-	std::cout << "gascount2" << std::endl;
+	//std::cout << "gascount2" << std::endl;
 	WASM_VM::AddUsedGas(2);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount3, gascount3, none)
 {
-	std::cout << "gascount3" << std::endl;
+	//std::cout << "gascount3" << std::endl;
 	WASM_VM::AddUsedGas(3);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount4, gascount4, none)
 {
-	std::cout << "gascount4" << std::endl;
+	//std::cout << "gascount4" << std::endl;
 	WASM_VM::AddUsedGas(4);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount5, gascount5, none)
 {
-	std::cout << "gascount5" << std::endl;
+	//std::cout << "gascount5" << std::endl;
 	WASM_VM::AddUsedGas(5);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount6, gascount6, none)
 {
-	std::cout << "gascount6" << std::endl;
+	//std::cout << "gascount6" << std::endl;
 	WASM_VM::AddUsedGas(6);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount7, gascount7, none)
 {
-	std::cout << "gascount7" << std::endl;
+	//std::cout << "gascount7" << std::endl;
 	WASM_VM::AddUsedGas(7);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount8, gascount8, none)
 {
-	std::cout << "gascount8" << std::endl;
+	//std::cout << "gascount8" << std::endl;
 	WASM_VM::AddUsedGas(8);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount9, gascount9, none)
 {
-	std::cout << "gascount9" << std::endl;
+	//std::cout << "gascount9" << std::endl;
 	WASM_VM::AddUsedGas(9);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount10, gascount10, none)
 {
-	std::cout << "gascount10" << std::endl;
+	//std::cout << "gascount10" << std::endl;
 	WASM_VM::AddUsedGas(10);
 }
 
 
 
 DEFINE_INTRINSIC_FUNCTION0(env, checktime, checktime, none) {
-	std::cout << "check time" << std::endl;
+	//std::cout << "check time" << std::endl;
 }
 
 //
@@ -881,6 +881,8 @@ DEFINE_INTRINSIC_FUNCTION2(env, transferbalance, transferbalance, none, i32, add
 	ExtVMFace* _ext = WASM_CORE::getExt();
 	auto mem = WASM_CORE::getMemory();
 	u256& balance = memoryRef<u256>(mem, data);
+	std::cout << "address: " << asAddress(memoryRef<u256>(mem, address)).hex() << std::endl;
+	std::cout << "balance: " << balance.str() << std::endl;
 	_ext->transferBalance(asAddress(memoryRef<u256>(mem, address)), balance);
 }
 
@@ -917,6 +919,8 @@ DEFINE_INTRINSIC_FUNCTION3(env,name, name, none, i32, operand_1, i32, operand_2,
 	auto mem = WASM_CORE::getMemory();\
 	u256& op1 = memoryRef<u256>(mem, operand_1);\
 	u256& op2 = memoryRef<u256>(mem, operand_2);\
+	if(std::string(#name).compare(std::string("div_u256")) == 0 && op2 == u256(0))\
+		BOOST_THROW_EXCEPTION(BadInstruction());\
 	u256& v = memoryRef<u256>(mem, result);\
 	v = op1 operator op2;\
 }\
@@ -961,4 +965,24 @@ DEFINE_INTRINSIC_FUNCTION1(env, test1, test1, none, i32, a) {
 
 DEFINE_INTRINSIC_FUNCTION2(env, test2, test2, none, i32, a, i32, b) {
 	std::cout << "test2 " << "a: " << a << " b:" << b << std::endl;
+}
+
+DEFINE_INTRINSIC_FUNCTION1(env, malloc, malloc, i32, i32, size) {
+	if (size < 0)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	auto mem = WASM_CORE::getMemory();
+	int32_t& end = memoryRef<int32_t>(mem, 0);
+	int32_t old_end = end;
+	end += 8 * ((size + 7) / 8);
+	if (end <= old_end)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	return old_end;
+}
+
+DEFINE_INTRINSIC_FUNCTION1(env, free, free, none, i32, ptr) {
+	std::cout << "####free#####" << std::endl;
 }

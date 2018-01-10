@@ -917,6 +917,8 @@ DEFINE_INTRINSIC_FUNCTION3(env,name, name, none, i32, operand_1, i32, operand_2,
 	auto mem = WASM_CORE::getMemory();\
 	u256& op1 = memoryRef<u256>(mem, operand_1);\
 	u256& op2 = memoryRef<u256>(mem, operand_2);\
+	if(std::string(#name).compare(std::string("div_u256")) == 0 && op2 == u256(0))\
+		BOOST_THROW_EXCEPTION(BadInstruction());\
 	u256& v = memoryRef<u256>(mem, result);\
 	v = op1 operator op2;\
 }\
@@ -961,4 +963,24 @@ DEFINE_INTRINSIC_FUNCTION1(env, test1, test1, none, i32, a) {
 
 DEFINE_INTRINSIC_FUNCTION2(env, test2, test2, none, i32, a, i32, b) {
 	std::cout << "test2 " << "a: " << a << " b:" << b << std::endl;
+}
+
+DEFINE_INTRINSIC_FUNCTION1(env, malloc, malloc, i32, i32, size) {
+	if (size < 0)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	auto mem = WASM_CORE::getMemory();
+	int32_t& end = memoryRef<int32_t>(mem, 0);
+	int32_t old_end = end;
+	end += 8 * ((size + 7) / 8);
+	if (end <= old_end)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	return old_end;
+}
+
+DEFINE_INTRINSIC_FUNCTION1(env, free, free, none, i32, ptr) {
+	std::cout << "####free#####" << std::endl;
 }
