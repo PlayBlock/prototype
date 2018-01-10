@@ -59,7 +59,7 @@ public:
 	void load(State& _state);
 	void save(State& _state);
 	static std::map<Address, VoteInfo> getVoteInfoMap(State const& _state);
-	static std::map<Address, uint64_t> VoteInfo::getProducerMap(State const& _state);
+	static std::map<Address, uint64_t> getProducerMap(State const& _state);
 	bool getIsCandidate() const{ return m_isCandidate; }
 	void removeZeroVote();
 	uint64_t getReceivedVotedNumber() const{ return m_receivedVote; } 
