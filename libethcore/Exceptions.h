@@ -89,6 +89,7 @@ DEV_SIMPLE_EXCEPTION(DAGComputeFailure);
 // for dpos
 DEV_SIMPLE_EXCEPTION(InvalidProducer);
 DEV_SIMPLE_EXCEPTION(ExceedIrreversibleBlock);
+DEV_SIMPLE_EXCEPTION(ExceedRollbackImportBlock);
 
 // for hardfork
 DEV_SIMPLE_EXCEPTION(InvlidRuningVersion);

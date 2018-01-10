@@ -976,8 +976,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 						}
 					}
 				}
-
-				throw;
+				BOOST_THROW_EXCEPTION(ExceedRollbackImportBlock());
 			}
 			// FINALLY! change our best hash.
 			{
@@ -996,7 +995,12 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 	}
 	catch (dev::eth::ExceedIrreversibleBlock)
 	{
-		cwarn << "Exceed Irreversible Block";
+		cwarn << "Exceed Irreversible Block.";
+		throw;
+	}
+	catch (dev::eth::ExceedRollbackImportBlock)
+	{
+		cwarn << "Exceed Rollback block chain.";
 		throw;
 	}
 	catch (...)
