@@ -724,6 +724,9 @@ void chain_controller::update_last_irreversible_block()
 	// Trim fork_database and undo histories
 	//_fork_db.set_max_size(head_block_num() - new_last_irreversible_block_num + 1);
 	_db.commit(new_last_irreversible_block_num);
+	
+	//打印数据库内存映射文件用量
+	std::cout << "============>>>>>>DATABASE USED SIZE = " << _db.get_segment_manager()->get_size() - _db.get_segment_manager()->get_free_memory() << std::endl;
 }
 
 void chain_controller::databaseReversion(uint32_t _firstvalid)

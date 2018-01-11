@@ -13,7 +13,7 @@ producer_plugin::producer_plugin(const dev::eth::BlockChain& bc):
 	_timer(*_io_server)
 {
 	auto dbPath = bc.dbPath().string() + "/" + toHex(bc.genesisHash().ref().cropped(0, 4));
-	_db = std::make_shared<chainbase::database>(dbPath, chainbase::database::read_write, 10 * 1024 * 1024);
+	_db = std::make_shared<chainbase::database>(dbPath, chainbase::database::read_write, 1 * 1024 * 1024);
 
 	_chain = std::make_unique<chain::chain_controller>(bc, *_db);
 
