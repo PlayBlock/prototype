@@ -1151,7 +1151,7 @@ BOOST_AUTO_TEST_CASE(dtMortgage)
 	u256 balance = client.balance(Address(account[0].address));
 
 	//验证扣费包括：  1、抵押的金额  2、调用预编译合约的手续费
-	BOOST_REQUIRE(u256(1000000000000000000) - balance == u256(2100000) * u256(2000000000));
+	BOOST_REQUIRE(u256(1000000000000000000) - balance == u256(500000000000000000) + u256(2100000) * u256(2000000000));
 
 	//验证未使用的投票权
 	auto all_votes = client.get_votes();
