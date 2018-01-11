@@ -1090,7 +1090,7 @@ public:
 BOOST_FIXTURE_TEST_SUITE(DposTestsSuite, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(dtMakeProducer)
 {
-	g_logVerbosity = 13;
+	//g_logVerbosity = 13;
 
 	// make blockchain
 	DposTestClient client;
@@ -1109,19 +1109,32 @@ BOOST_AUTO_TEST_CASE(dtMakeProducer)
 	client.produce_blocks();
 	all_producers = client.get_all_producers();
 
+	//验证注册生产者，且得票数是“0”
 	// check this account has become a producer
 	BOOST_REQUIRE(all_producers.find(types::AccountName(account.address)) != all_producers.end());
 
 	// check every producer's vote is 0
 	BOOST_REQUIRE_EQUAL(all_producers[types::AccountName(account.address)], 0);
 
+	//验证注册成为生产者话费的gas，期望话费90gas，跟配置项一直
+	u256 balance = client.balance(Address(account.address));
+	cout << "balance.str(): " << balance.str() << endl;
+	BOOST_REQUIRE(u256(1000000000000000000) - balance = u256(2100000) * u256(2000000000));
+
 	// unmake producer
 	client.unmake_producer(account);
 
+	//验证不再是生产者
 	// check this account isn't producer anymore
 	client.produce_blocks();
 	all_producers = client.get_all_producers();
 	BOOST_REQUIRE(all_producers.find(types::AccountName(account.address)) == all_producers.end());
+
+	//验证注册成为生产者话费的gas，期望话费90gas，跟配置项一直
+	u256 balance1 = client.balance(Address(account.address));
+	u256 cost_1 = balance - balance1;
+	cout << "cost_1.str(): " << cost_1.str() << endl;
+	BOOST_REQUIRE(cost_1  = u256(210000) * u256(2000000000));
 }
 
 BOOST_AUTO_TEST_CASE(dtMortgage)
@@ -1135,9 +1148,12 @@ BOOST_AUTO_TEST_CASE(dtMortgage)
 
 	client.mortgage_eth(account[0], 500000000000000000);// Mortage 0.5 eth eth with 50 votes.
 	client.produce_blocks();
-	auto balance = client.balance(Address(account[0].address));
-	BOOST_REQUIRE(balance < u256(500000000000000000));// Account 0's balnce should reduce according to mortgage.
-	BOOST_REQUIRE(balance >= u256(500000000000000000) - u256(1000000000000000));
+	u256 balance = client.balance(Address(account[0].address));
+
+	//验证扣费包括：  1、抵押的金额  2、调用预编译合约的手续费
+	BOOST_REQUIRE(u256(1000000000000000000) - balance == u256(2100000) * u256(2000000000));
+
+	//验证未使用的投票权
 	auto all_votes = client.get_votes();
 	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getHoldVoteNumber(), 50); // Mortage eth to have 50 votes.
 

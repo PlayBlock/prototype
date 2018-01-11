@@ -109,8 +109,8 @@ namespace dev {
 
 		void DposTestClient::mortgage_eth(Account& _from, uint64_t balance)
 		{
-			string gasLimit = "0xc350";
-			string gasPrice = "0x04a817c800";
+			string gasLimit = "0x325aa0";
+			string gasPrice = "0x77359400";
 			string to = "0000000000000000000000000000000000000022";
 			string value = "0x0";
 			string nonce = boost::lexical_cast<string>(_from.nonce);
@@ -133,8 +133,8 @@ namespace dev {
 
 		void DposTestClient::redeem_eth(Account& _from, uint64_t voteCount)
 		{
-			string gasLimit = "0xc350";
-			string gasPrice = "0x04a817c800";
+			string gasLimit = "0x325aa0";
+			string gasPrice = "0x77359400";
 			string to = "0000000000000000000000000000000000000023";
 			string value = "0x0";
 			string nonce = boost::lexical_cast<string>(_from.nonce);
@@ -205,8 +205,8 @@ namespace dev {
 
 		void DposTestClient::make_producer(Account& _from, const string& name, const string& url)
 		{
-			string gasLimit = "0xc350";
-			string gasPrice = "0x04a817c800";
+			string gasLimit = "0x325aa0";
+			string gasPrice = "0x77359400";
 			string to = "0000000000000000000000000000000000000024";
 			string value = "0x0";
 			string nonce = boost::lexical_cast<string>(_from.nonce);
@@ -230,8 +230,8 @@ namespace dev {
 
 		void DposTestClient::unmake_producer(Account& _from)
 		{
-			string gasLimit = "0xc350";
-			string gasPrice = "0x04a817c800";
+			string gasLimit = "0x325aa0";
+			string gasPrice = "0x77359400";
 			string to = "0000000000000000000000000000000000000025";
 			string value = "0x0";
 			string nonce = boost::lexical_cast<string>(_from.nonce);
@@ -414,8 +414,8 @@ namespace dev {
 
 		void DposTestClient::send(Account& _from, const Account& on, uint64_t voteCount)
 		{
-			string gasLimit = "0xc350";
-			string gasPrice = "0x04a817c800";
+			string gasLimit = "0x325aa0";
+			string gasPrice = "0x77359400";
 			string to = "000000000000000000000000000000000000002a";
 			string value = "0x0";
 			string nonce = boost::lexical_cast<string>(_from.nonce);
@@ -438,8 +438,8 @@ namespace dev {
 
 		void DposTestClient::approve_producer(Account& voter, const Account& on, uint64_t voteCount)
 		{
-			string gasLimit = "0xc350";
-			string gasPrice = "0x04a817c800";
+			string gasLimit = "0x325aa0";
+			string gasPrice = "0x77359400";
 			string to = "0000000000000000000000000000000000000026";
 			string value = "0x0";
 			string nonce = boost::lexical_cast<string>(voter.nonce);
@@ -462,8 +462,8 @@ namespace dev {
 
 		void DposTestClient::unapprove_producer(Account& voter, const Account& on, uint64_t voteCount)
 		{
-			string gasLimit = "0xc350";
-			string gasPrice = "0x04a817c800";
+			string gasLimit = "0x325aa0";
+			string gasPrice = "0x77359400";
 			string to = "0000000000000000000000000000000000000027";
 			string value = "0x0";
 			string nonce = boost::lexical_cast<string>(voter.nonce);
@@ -487,7 +487,7 @@ namespace dev {
 		void DposTestClient::transfer_eth(Account& _from, const Account& _to, const u256& _value)
 		{
 			string gasLimit = "0xc350";
-			string gasPrice = "0x04a817c800";
+			string gasPrice = "0x77359400";
 			string to = _to.address;
 			string value = _value.str();
 			string nonce = boost::lexical_cast<string>(_from.nonce);
