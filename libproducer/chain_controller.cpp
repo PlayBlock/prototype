@@ -766,9 +766,7 @@ void chain_controller::init_allvotes(const BlockHeader& bh)
 void dev::eth::chain::chain_controller::init_hardforks()
 {
 	_hardfork_times[0] = fc::time_point_sec(config::ETI_GenesisTime);
-	_hardfork_versions[0] = hardfork_version(0, 0); 
-	_hardfork_times[1] = fc::time_point_sec(1);
-	_hardfork_versions[1] = hardfork_version(0, 1);
+	_hardfork_versions[0] = hardfork_version(0, 0);  
 
 	const auto& gpo = get_global_properties();
 

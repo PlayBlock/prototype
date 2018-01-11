@@ -94,10 +94,11 @@ ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db
    const auto& allProducerObjsByPOW = db.get_index<producer_multi_index, by_pow>(); 
 
    int powCount = 0;
+   const int alreadySelectCount = iActive;
    for (
 	   auto iProducer = allProducerObjsByPOW.upper_bound(0);
 	   iProducer != allProducerObjsByPOW.end() && 
-	   powCount < ( gprops.head_block_number > config::StartMinerVotingBlock ? config::POWProducersPerRound : (config::TotalProducersPerRound - iActive) );
+	   powCount < ( gprops.head_block_number > config::StartMinerVotingBlock ? config::POWProducersPerRound : (config::TotalProducersPerRound - alreadySelectCount) );
 	   iProducer++ )
    {
 	   if (processedProducers.count(iProducer->owner))
