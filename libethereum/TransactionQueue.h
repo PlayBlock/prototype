@@ -53,7 +53,7 @@ public:
 	/// @brief TransactionQueue
 	/// @param _limit Maximum number of pending transactions in the queue.
 	/// @param _futureLimit Maximum number of future nonce transactions.
-	TransactionQueue(unsigned _limit = 1024, unsigned _futureLimit = 1024);
+	TransactionQueue(unsigned _limit = 10240, unsigned _futureLimit = 10240);
 	TransactionQueue(Limits const& _l): TransactionQueue(_l.current, _l.future) {}
 	~TransactionQueue();
 	/// Add transaction to the queue to be verified and imported.

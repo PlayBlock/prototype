@@ -34,6 +34,7 @@
 #include <libdevcore/FixedHash.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
+#include <libethereum/BenchMark.h>
 
 #if ETH_PROFILING_GPERF
 #include <gperftools/profiler.h>
@@ -649,6 +650,11 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	cout << "_block.info.number(): " << _block.info.number() << endl;
 	ImportPerformanceLogger performanceLogger;
 
+#if BenchMarkFlag
+	Timer t;
+	cout << "BlockChain::import: check point 0 " << std::endl;
+#endif // BenchMarkFlag
+
 	// Check block doesn't already exist first!
 	if (_mustBeNew)
 		checkBlockIsNew(_block);
@@ -660,6 +666,12 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		// We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
 		BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(_block.info.parentHash()));
 	}
+
+#if BenchMarkFlag
+	cout << "BlockChain::import: check point 1 " << t.elapsed()<<std::endl;
+	t.restart();
+#endif // BenchMarkFlag
+
 
 	auto pd = details(_block.info.parentHash());
 	if (!pd)
@@ -677,8 +689,18 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 	checkBlockTimestamp(_block.info);
 
+#if BenchMarkFlag
+	cout << "BlockChain::import: check point 2 " << t.elapsed() << std::endl;
+	t.restart();
+#endif // BenchMarkFlag
+
 	// Verify parent-critical parts
 	verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);
+
+#if BenchMarkFlag
+	cout << "BlockChain::import: check point 3 " << t.elapsed() << std::endl;
+	t.restart();
+#endif // BenchMarkFlag
 
 	clog(BlockChainChat) << "Attempting import of " << _block.info.hash() << "...";
 
@@ -692,6 +714,11 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		// Get total difficulty increase and update state, checking it.
 		Block s(*this, _db);
 		auto tdIncrease = s.enactOn(_block, *this);
+
+#if BenchMarkFlag
+		cout << "BlockChain::import: check point 4 " << t.elapsed() << std::endl;
+		t.restart();
+#endif // BenchMarkFlag
 
 		for (unsigned i = 0; i < s.pending().size(); ++i)
 			br.receipts.push_back(s.receipt(i)); 
@@ -725,7 +752,16 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	// All ok - insert into DB
 	bytes const receipts = br.rlp();
 
+#if BenchMarkFlag
+	t.restart();
+	auto res = insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
+	cout << "BlockChain::import: insertBlockAndExtras /check point 4 " << t.elapsed() << std::endl;
+	return res;
+#else
 	return insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
+#endif // BenchMarkFlag
+
+	
 }
 
 ImportRoute BlockChain::insertWithoutParent(bytes const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty)

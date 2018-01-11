@@ -87,7 +87,7 @@ public:
 		std::shared_ptr<GasPricer> _gpForAdoption,
 		boost::filesystem::path const& _dbPath = boost::filesystem::path(),
 		WithExisting _forceAction = WithExisting::Trust,
-		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
+		TransactionQueue::Limits const& _l = TransactionQueue::Limits{10240, 10240}
 	);
 	/// Destructor.
 	virtual ~Client();

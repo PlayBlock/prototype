@@ -941,6 +941,53 @@ string Eth::eth_testSend2(string const& _a)
 	}
 }
 
+string Eth::eth_testTransaction(const Json::Value& _json)
+{
+	try
+	{
+		struct myAccount {
+			string address;
+			string secret;
+		};
+		std::vector<myAccount> as;
+		string filePath(boost::filesystem::current_path().string());
+		string s = contentsString(filePath + "/address-keys.json");
+		json_spirit::mValue v;
+		json_spirit::read_string(s, v);
+		json_spirit::mObject keys = v.get_obj();
+		for (const auto& key : keys)
+		{
+			myAccount account{ key.first , key.second.get_str() };
+			as.push_back(std::move(account));
+		}
+
+		int count = keys.size();
+
+		for (int i = 0; i < count; i++)
+		{
+			TransactionSkeleton ts;
+			ts.creation = false;
+			ts.to = Address(as[i].address);
+			ts.value = u256(1);
+			ts.gas = u256(50000);
+			ts.gasPrice = client()->gasBidPrice();
+
+			Secret secret("329cde16d721501c7f1d16d620644d34fe12f3d68e6fc9d7fd238a984e5dc289");
+			ts.from = Address("0x0070015693bb96335dd8c7025dded3a2da735db1");
+			ts.nonce = u256(i);
+			Transaction t(ts, secret);
+			EthereumHost::transactionCheat(t);
+		}
+		return toJS(count);
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+
+
 string Eth::eth_testSendBlock(string const& _a)
 {
 	try

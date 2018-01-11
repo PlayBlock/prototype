@@ -41,9 +41,9 @@ using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
-#define ETH_TIMED_ENACTMENTS 0
+#define ETH_TIMED_ENACTMENTS 1
 
-static const unsigned c_maxSyncTransactions = 1024;
+static const unsigned c_maxSyncTransactions = 10240;
 
 const char* BlockSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
 const char* BlockDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
@@ -312,6 +312,15 @@ bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockHeader const& _
 
 pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQueue& _tq, GasPricer const& _gp, unsigned msTimeout)
 {
+#if ETH_TIMED_ENACTMENTS
+	Timer time;
+	double sha3time = 0.0;
+	double executetime = 0.0;
+#endif
+	
+	
+	
+	
 	if (isSealed())
 		BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
 
@@ -329,18 +338,32 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 	for (int goodTxs = max(0, (int)ts.size() - 1); goodTxs < (int)ts.size(); )
 	{
 		goodTxs = 0;
-		for (auto const& t: ts)
+		for (auto const& t : ts)
+		{
+#if ETH_TIMED_ENACTMENTS
+			time.restart();
+#endif	
 			if (!m_transactionSet.count(t.sha3()))
 			{
+#if ETH_TIMED_ENACTMENTS
+				sha3time += time.elapsed();
+#endif				
 				try
 				{
 					if (t.gasPrice() >= _gp.ask(*this))
 					{
-//						Timer t;
+						//						Timer t;
+#if ETH_TIMED_ENACTMENTS
+						time.restart();
+#endif
 						execute(_bc.lastBlockHashes(), t);
+
+#if ETH_TIMED_ENACTMENTS
+						executetime += time.elapsed();
+#endif	
 						ret.first.push_back(m_receipts.back());
 						++goodTxs;
-//						cnote << "TX took:" << t.elapsed() * 1000;
+						//						cnote << "TX took:" << t.elapsed() * 1000;
 					}
 					else if (t.gasPrice() < _gp.ask(*this) * 9 / 10)
 					{
@@ -399,12 +422,19 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 					cwarn << t.sha3() << "Transaction caused low-level exception :(";
 				}
 			}
-		if (chrono::steady_clock::now() > deadline)
+		}
+		//if (chrono::steady_clock::now() > deadline)
+		if (chrono::steady_clock::now() > deadline || goodTxs < (int)ts.size())
 		{
 			ret.second = true;	// say there's more to the caller if we ended up crossing the deadline.
 			break;
 		}
 	}
+
+#if ETH_TIMED_ENACTMENTS
+	std::cout << "sha3time: " << sha3time << std::endl;
+	std::cout << "executetime: " << executetime << std::endl;
+#endif
 	return ret;
 }
 

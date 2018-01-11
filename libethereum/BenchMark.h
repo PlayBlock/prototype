@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libdevcore/Common.h>
-#define BenchMarkFlag
+#define BenchMarkFlag 0
 namespace dev
 {
 namespace eth

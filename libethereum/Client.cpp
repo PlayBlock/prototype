@@ -390,20 +390,23 @@ double static const c_targetDuration = 1;
 void Client::syncBlockQueue()
 {
 //	cdebug << "syncBlockQueue()";
-#ifdef BenchMarkFlag
-	static BenchMark mark1("syncTransactionBlocks");
-	BenchMark::makeCurrent(&mark1);
-	mark1.restartCount();
+#if BenchMarkFlag
+	//static BenchMark mark1("syncTransactionBlocks");
+	//BenchMark::makeCurrent(&mark1);
+	//mark1.restartCount();
+	//Timer time;
 #endif
 	ImportRoute ir;
 	unsigned count; //导入的块数
 	Timer t; //用来计算导入用时
 	tie(ir, m_syncBlockQueue, count) = bc().sync(m_bq, m_stateDB, m_syncAmount);
 
-#ifdef BenchMarkFlag
-	static Timer timer1;
-	mark1.showSummary(timer1.elapsed());
-	timer1.restart();
+#if BenchMarkFlag
+	//static Timer timer1;
+	//mark1.showSummary(timer1.elapsed());
+	//timer1.restart();
+
+	//std::cout << "Block Time: " << time.elapsed() << std::endl;
 #endif
 
 	//导入用时
@@ -440,18 +443,20 @@ void Client::syncTransactionQueue()
 		}
 
 
-#ifdef BenchMarkFlag
-		static BenchMark mark2("syncTransactionQueue");
-		BenchMark::makeCurrent(&mark2);
-		mark2.restartCount();
+#if BenchMarkFlag
+		//static BenchMark mark2("syncTransactionQueue");
+		//BenchMark::makeCurrent(&mark2);
+		//mark2.restartCount();
+		Timer time;
 #endif
 		tie(newPendingReceipts, m_syncTransactionQueue) = m_working.sync(bc(), m_tq, *m_gp);
 
-#ifdef BenchMarkFlag
-		static Timer timer2;
-		mark2.showSummary(timer2.elapsed());
-		timer2.restart();
-		BenchMark::makeCurrent(nullptr);
+#if BenchMarkFlag
+		std::cout <<"Transaction  Use Time: "<<time.elapsed() << std::endl;
+		//static Timer timer2;
+		//mark2.showSummary(timer2.elapsed());
+		//timer2.restart();
+		//BenchMark::makeCurrent(nullptr);
 #endif
 
 	}
