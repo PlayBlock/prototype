@@ -69,7 +69,7 @@ namespace dev {
 
 			void produce_pow_blocks(const AccountName& _address, uint32_t count);
 
-			void produce_Race_blocks(uint32_t count, std::map<AccountName, int>& _accountblock);
+			void produce_blocks_Number(uint32_t count, std::map<AccountName, int>& _accountblock);
 
 			string getWAVMData(string function, Address address = Address());
 

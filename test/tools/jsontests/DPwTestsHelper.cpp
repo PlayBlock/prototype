@@ -110,7 +110,7 @@ namespace dev {
 			}
 		}
 
-		void DposTestClient::produce_Race_blocks(uint32_t count, std::map<AccountName, int>& _accountblock)
+		void DposTestClient::produce_blocks_Number(uint32_t count, std::map<AccountName, int>& _accountblock)
 		{
 
 			for (int i = 0; i < count; i++)

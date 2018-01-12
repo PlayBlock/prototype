@@ -10,7 +10,7 @@ namespace dev {
 BOOST_FIXTURE_TEST_SUITE(PowTestsSuite, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(dtMakePowProducer)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(dtMakePowProducer)
 
 BOOST_AUTO_TEST_CASE(dtGetErrorSignature)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(dtGetErrorSignature)
 }
 BOOST_AUTO_TEST_CASE(dtGetErrorTarget)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(dtGetErrorTarget)
 
 BOOST_AUTO_TEST_CASE(dtGetErrorBlockid)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(dtGetErrorBlockid)
 //同时有N个节点计算出来target
 BOOST_AUTO_TEST_CASE(dtlowTarget)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(dtlowTarget)
 //pow计算过程中接收到新的块，停止计算
 BOOST_AUTO_TEST_CASE(dtHighTarget)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(dtHighTarget)
 //一个生产者计算出多个解
 BOOST_AUTO_TEST_CASE(dtGetTwoTarget)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(dtGetTwoTarget)
 //判断pow被选中的时候，队列中减少对应的生产者
 BOOST_AUTO_TEST_CASE(dtPowWitness)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(dtPowWitness)
 //Pow计算的时候产生新块，
 BOOST_AUTO_TEST_CASE(dtPowingaddBlock)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -301,12 +301,11 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 
-
 BOOST_FIXTURE_TEST_SUITE(BlockTestsSuite, TestOutputHelperFixture)
 /*创世期的test，需要把创世期的块高度改成84*/
 BOOST_AUTO_TEST_CASE(dtMoreDposProducer)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -346,7 +345,7 @@ BOOST_AUTO_TEST_CASE(dtMoreDposProducer)
 /*注意：测试时，需要把address-key中的账户减少到16个以下*/
 BOOST_AUTO_TEST_CASE(dtLittleDposProducer)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -386,7 +385,7 @@ BOOST_AUTO_TEST_CASE(dtLittleDposProducer)
 
 BOOST_AUTO_TEST_CASE(dtMakePowProducer)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -431,7 +430,7 @@ BOOST_AUTO_TEST_CASE(dtMakePowProducer)
 
 BOOST_AUTO_TEST_CASE(dtMakeMorePowProducer)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -466,7 +465,6 @@ BOOST_AUTO_TEST_CASE(dtMakeMorePowProducer)
 			if (types::AccountName(i.address) == types::AccountName(pro))
 				num++;
 	}
-	std::cout << "witenesses : " << client.get_dpo_witnesses() << "   num = " << num << std::endl;
 	BOOST_REQUIRE(num == currentProducers.size());
 
 	//第二轮出块，应该是剩余的个pow生产块
@@ -487,7 +485,7 @@ BOOST_AUTO_TEST_CASE(dtMakeMorePowProducer)
 /*注意：测试时，通过控制makeProducerCount个数来控制注册的pow个数*/
 BOOST_AUTO_TEST_CASE(dtMakeLittlePowProducer)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -534,7 +532,7 @@ BOOST_AUTO_TEST_CASE(dtMakeLittlePowProducer)
 //测试的时候需要动态调整pow注册的个数
 BOOST_AUTO_TEST_CASE(dtCheckPowProducer)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -595,7 +593,7 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducer)
 //无DPOS节点
 BOOST_AUTO_TEST_CASE(dtCheckPowProducers)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -640,7 +638,7 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducers)
 //无POW节点
 BOOST_AUTO_TEST_CASE(dtNoPowProducers)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -679,7 +677,7 @@ BOOST_AUTO_TEST_CASE(dtNoPowProducers)
 //无POW节点、DPOS节点充足
 BOOST_AUTO_TEST_CASE(dtEnoughDposProducers)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 	int num = 0;
@@ -719,7 +717,7 @@ BOOST_AUTO_TEST_CASE(dtEnoughDposProducers)
 
 BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 {
-	g_logVerbosity = 13;
+	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
 
@@ -739,8 +737,8 @@ BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 	}
 	client.produce_blocks();
 	//2.选出前16个生产者,抵押、每三个出一个块
-	//for (auto i = 0; i < 21; i++)
-	for (auto i = 0; i < 19; i++)
+	for (auto i = 0; i < 21; i++)
+	//for (auto i = 0; i < 19; i++)
 	{
 		client.mortgage_eth(accounts[i], 600000000000000000);	
 	}
@@ -750,14 +748,14 @@ BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 	{	
 		client.approve_producer(accounts[i], accounts[i], 60);
 	}
-	//client.produce_blocks();
+	client.produce_blocks();
 	//4.选出虚拟赛跑的生产者
 	for (auto i = config::DPOSVotedProducersPerRound,j =20; i < config::DPOSVotedProducersPerRound + 3; i++,j += 10)
 	{
 		client.approve_producer(accounts[i], accounts[i], j);
 	}
 	//结束本轮剩余出块
-	client.produce_blocks(18);
+	client.produce_blocks(17);
 
 	//第3-9轮出块，校验三个虚拟赛跑的生产者出块的个数比是否为2：3：4
 	std::map<AccountName, int> account_block;
@@ -767,7 +765,7 @@ BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 		{
 			client.make_pow_producer(accounts[i], setPowTest::none);
 		}
-		client.produce_Race_blocks(config::TotalProducersPerRound, account_block);
+		client.produce_blocks_Number(config::TotalProducersPerRound, account_block);
 
 	}
 
@@ -776,7 +774,119 @@ BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 	BOOST_REQUIRE(account_block[AccountName(accounts[18].address)] == 4);
 }
 
+BOOST_AUTO_TEST_CASE(dtVoteChangeTest)
+{
+	g_logVerbosity = 13;
+	//创建生产者
+	DposTestClient client;
+	BOOST_REQUIRE(client.get_accounts().size() >= 1);
 
+	auto& accounts = client.get_accounts();
+
+	//1.注册19个生产者
+	for (auto i = 0; i < 19; i++)
+	{
+		client.make_producer(accounts[i]);
+	}
+	client.produce_blocks();
+	//注册pow生产者
+	for (auto i = 19; i < 23; i++)
+	{
+		client.make_pow_producer(accounts[i], setPowTest::none);
+	}
+	client.produce_blocks();
+	//2.选出前16个生产者,抵押、每三个出一个块
+	for (auto i = 0; i < 19; i++)
+	{
+		client.mortgage_eth(accounts[i], 600000000000000000);
+	}
+	client.produce_blocks();
+	//3.投票、出块
+	for (auto i = 0; i < config::DPOSVotedProducersPerRound; i++)
+	{
+		client.approve_producer(accounts[i], accounts[i], 60);
+	}
+	//4.选出虚拟赛跑的生产者
+	for (auto i = config::DPOSVotedProducersPerRound, j = 20; i < config::DPOSVotedProducersPerRound + 3; i++, j += 10)
+	{
+		client.approve_producer(accounts[i], accounts[i], j);
+	}
+	//5.结束本轮剩余出块
+	client.produce_blocks(18);
+
+	//6.第3-9轮出块，校验每个生产者所对应的块数是否正确
+	std::map<AccountName, int> account_block;
+	for (auto run = 0; run < 9; run++)
+	{
+		for (auto i = 19; i < 23; i++)
+		{
+			client.make_pow_producer(accounts[i], setPowTest::none);
+		}
+		client.produce_blocks_Number(config::TotalProducersPerRound, account_block);
+
+	}
+	for (auto i = 0; i < 16; i++)
+	{
+		BOOST_CHECK_MESSAGE(account_block[AccountName(accounts[0].address)], 9);
+	}
+
+	BOOST_REQUIRE(account_block[AccountName(accounts[16].address)] == 2);
+	BOOST_REQUIRE(account_block[AccountName(accounts[17].address)] == 3);
+	BOOST_REQUIRE(account_block[AccountName(accounts[18].address)] == 4);
+
+	//7.给虚拟赛跑的生产者增加投票信息使投票大于等于60票
+    client.approve_producer(accounts[16], accounts[16],40);
+	client.produce_blocks(config::TotalProducersPerRound);
+
+	//8.出三轮块
+	for (auto run = 0; run < 3; run++)
+	{
+		for (auto i = 19; i < 23; i++)
+		{
+			client.make_pow_producer(accounts[i], setPowTest::none);
+		}
+		client.produce_blocks_Number(config::TotalProducersPerRound, account_block);
+
+	}
+	for (auto i = 0; i < 16; i++)
+	{
+		BOOST_CHECK_MESSAGE(account_block[AccountName(accounts[0].address)], 12);
+	}
+	BOOST_REQUIRE(account_block[AccountName(accounts[16].address)] == 5);
+	std::cout << "17 : " <<account_block[AccountName(accounts[17].address)] << std::endl;
+	std::cout << "18 : " << account_block[AccountName(accounts[18].address)] << std::endl;
+	//BOOST_REQUIRE(account_block[AccountName(accounts[17].address)] == 4);
+	//BOOST_REQUIRE(account_block[AccountName(accounts[18].address)] == 4);
+}
+
+BOOST_AUTO_TEST_CASE(dtMakeBlockETHest)
+{
+	//1.创建一个client
+	g_logVerbosity = 13;
+	//创建生产者
+	DposTestClient client;
+	BOOST_REQUIRE(client.get_accounts().size() >= 1);
+
+	//2.注册一个dpos生产者，获取balance
+	auto& account = client.get_accounts()[0];
+	client.make_producer(account);
+	u256 start_balance = client.balance(AccountName(account.address));
+
+	//3.第一轮出块
+	std::map<AccountName, int> account_block;
+	client.produce_blocks_Number(config::TotalProducersPerRound,account_block);
+
+	//4.第二轮出块
+	client.produce_blocks_Number(config::TotalProducersPerRound, account_block);
+
+	//5.获取balance和出块数
+	u256 end_balance = client.balance(AccountName(account.address));
+	int blockNums = account_block[AccountName(account.address)];
+
+	//6.比较balance和出块数
+	BOOST_REQUIRE(end_balance - start_balance >= blockNums*(u256)15000000000000000000 );
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
