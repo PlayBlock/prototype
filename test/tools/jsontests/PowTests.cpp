@@ -859,10 +859,10 @@ BOOST_AUTO_TEST_CASE(dtVoteChangeTest)
 	//BOOST_REQUIRE(account_block[AccountName(accounts[18].address)] == 4);
 }
 
-BOOST_AUTO_TEST_CASE(dtMakeBlockETHest)
+BOOST_AUTO_TEST_CASE(dtMakeBlockETHTest)
 {
 	//1.创建一个client
-	g_logVerbosity = 13;
+	//g_logVerbosity = 13;
 	//创建生产者
 	DposTestClient client;
 	BOOST_REQUIRE(client.get_accounts().size() >= 1);
@@ -870,20 +870,24 @@ BOOST_AUTO_TEST_CASE(dtMakeBlockETHest)
 	//2.注册一个dpos生产者，获取balance
 	auto& account = client.get_accounts()[0];
 	client.make_producer(account);
-	u256 start_balance = client.balance(AccountName(account.address));
 
 	//3.第一轮出块
-	std::map<AccountName, int> account_block;
-	client.produce_blocks_Number(config::TotalProducersPerRound,account_block);
+	client.produce_blocks(config::TotalProducersPerRound);
+	u256 start_balance = client.balance(AccountName(account.address));
 
 	//4.第二轮出块
-	client.produce_blocks_Number(config::TotalProducersPerRound, account_block);
+	std::map<AccountName, int> account_block;
+	std::cout << "account : " << account.address << std::endl;
+	client.produce_blocks_Number(config::TotalProducersPerRound*10, account_block);
 
 	//5.获取balance和出块数
 	u256 end_balance = client.balance(AccountName(account.address));
 	int blockNums = account_block[AccountName(account.address)];
 
 	//6.比较balance和出块数
+	std::cout << "start_balance : " << start_balance  << std::endl;
+	std::cout << "end_balance : " << end_balance << std::endl;
+	std::cout << "one block get eth :"<<(end_balance - start_balance)/blockNums << std::endl;
 	BOOST_REQUIRE(end_balance - start_balance >= blockNums*(u256)15000000000000000000 );
 
 }

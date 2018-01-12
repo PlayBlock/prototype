@@ -35,7 +35,7 @@ namespace dev {
 			int i = 0;
 			for (const auto& key : keys)
 			{
-				if (i++ > config::TotalProducersPerRound +10)
+				if (i++ > config::TotalProducersPerRound +5)
 					break;
 
 				Account account{ key.first , key.second.get_str() , 0 };
@@ -354,6 +354,7 @@ namespace dev {
 			uint64_t start = tryNonce;
 			uint64_t nonce = start;// +thread_num;
 			auto target = _producer_plugin->get_chain_controller().get_pow_target();
+			std::cout << "target = " << target << std::endl;
 
 			ETIProofOfWork::WorkPackage newWork{ bh.hash(), priviteKey, workerAccount, nonce, target };
 
