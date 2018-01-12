@@ -562,13 +562,15 @@ json_spirit::mObject fillFakeTest(json_spirit::mObject const& _input)
 	if (_input.count("network") > 0)
 		output["network"] = _input.at("network");
 	unsigned int  signe_num = 0;
-	unsigned int  irr_num = 0;
+	unsigned int  Timeout_num = 0;
 	//判断是否是作假签名
 	if (_input.count("fake"))
 	{
 		mObject fakeObj = _input.at("fake").get_obj();
 		if (fakeObj.count("signature"))
 			signe_num = (int)toInt(fakeObj.at("signature").get_obj().at("B"));
+		if(fakeObj.count("Timeout"))
+			Timeout_num = (int)toInt(fakeObj.at("Timeout").get_obj().at("B"));
 	}
 
 	for (auto const& bl : _input.at("blocks").get_array())
@@ -660,6 +662,10 @@ json_spirit::mObject fillFakeTest(json_spirit::mObject const& _input)
 		//block.mine(blockchain);
 		//生产块
 		auto slot = 1;
+		if (Timeout_num != 0 && chainname == "B" && importBlockNumber == Timeout_num)
+		{
+			slot = 2;
+		}
 		auto accountName = _chain.get_scheduled_producer(slot);
 		while (accountName == AccountName())
 			accountName = _chain.get_scheduled_producer(++slot);
