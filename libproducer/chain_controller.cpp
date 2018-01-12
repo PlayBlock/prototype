@@ -711,7 +711,7 @@ void chain_controller::update_last_irreversible_block()
 	std::nth_element(producer_objs.begin(), producer_objs.begin() + offset, producer_objs.end(),
 		[](const producer_object* a, const producer_object* b) {
 		return a->last_confirmed_block_num < b->last_confirmed_block_num;
-	});
+	}); 
 
 	uint32_t new_last_irreversible_block_num = producer_objs[offset]->last_confirmed_block_num;
 
@@ -726,7 +726,10 @@ void chain_controller::update_last_irreversible_block()
 	_db.commit(new_last_irreversible_block_num);
 	
 	//打印数据库内存映射文件用量
-	std::cout << "============>>>>>>DATABASE USED SIZE = " << _db.get_segment_manager()->get_size() - _db.get_segment_manager()->get_free_memory() << std::endl;
+	std::cout << "============>>>>>>DATABASE USED MEM = " << _db.get_segment_manager()->get_size() - _db.get_segment_manager()->get_free_memory() << std::endl;
+	std::cout << "============>>>>>>DATABASE FREE MEM = " << _db.get_segment_manager()->get_free_memory() << std::endl;
+	std::cout << "============>>>>>>DATABASE TOTAL MEM = " << _db.get_segment_manager()->get_size()<< std::endl; 
+
 }
 
 void chain_controller::databaseReversion(uint32_t _firstvalid)
