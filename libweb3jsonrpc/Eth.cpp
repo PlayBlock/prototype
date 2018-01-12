@@ -1037,12 +1037,162 @@ string Eth::eth_sign(string const& _a, string const& _b)
 		}
 
 		Secret secret(ma.secret);
-		bytes b_bytes = fromHex(_b);
-		h256 h;
-		memcpy(h.data(), b_bytes.data(), 32);
-		Signature sig = sign(secret, h);
+		h256 massage = sha3(fromHex(_b));
+		Signature sig = sign(secret, massage);
 
 		return sig.hex();
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string Eth::eth_sendTxWithRSV(Json::Value const& _json)
+{
+	try
+	{
+		if (_json["from"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack from field!"));
+		if (_json["r"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack r field!"));
+		if (_json["s"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack s field!"));
+		if (_json["v"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack v field!"));
+
+		string _r = _json["r"].asString();
+		string _s = _json["s"].asString();
+		string _v = _json["v"].asString();
+
+		if (_r.size() != 64)
+			BOOST_THROW_EXCEPTION(JsonRpcException("r length error!"));
+		if (_s.size() != 64)
+			BOOST_THROW_EXCEPTION(JsonRpcException("s length error!"));
+		if (_v.size() != 2)
+			BOOST_THROW_EXCEPTION(JsonRpcException("v length error!"));
+
+		SignatureStruct sigStruct;
+		sigStruct.r = h256(fromHex(_r));
+		sigStruct.s = h256(fromHex(_s));
+		sigStruct.v = fromHex(_v)[0];
+
+		TransactionSkeleton ts = toTransactionSkeleton(_json);
+
+		Transaction t(ts);
+		RLPStream RLPs; 
+
+		if (!t)
+			BOOST_THROW_EXCEPTION(JsonRpcException("Transaction error!"));
+
+		RLPs.appendList(9);
+		RLPs << t.nonce() << t.gasPrice() << t.gas();
+		if (!t.isCreation())
+			RLPs << t.receiveAddress();
+		else
+			RLPs << "";
+		RLPs << t.value() << t.data();
+
+		RLPs << (int)sigStruct.v;
+		RLPs << (u256)sigStruct.r << (u256)sigStruct.s;
+
+		// check signature
+		Transaction t_withRSV(RLPs.out(), CheckTransaction::Everything);
+		if (ts.from != t_withRSV.from())
+			BOOST_THROW_EXCEPTION(JsonRpcException("From field and signature not match!"));
+
+		if (client()->injectTransaction(RLPs.out()) == ImportResult::Success)
+		{
+			return toJS(t_withRSV.sha3());
+		}
+		else
+			return toJS(h256());
+	}
+	catch (JsonRpcException&)
+	{
+		throw;
+	}
+	catch (InvalidSignature const&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Invalid Signature!"));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string Eth::eth_checkSignature(Json::Value const& _json)
+{
+	try
+	{
+		if (_json["number"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack number field!"));
+		if (_json["r"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack r field!"));
+		if (_json["s"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack s field!"));
+		if (_json["v"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack v field!"));
+
+		string _number = _json["number"].asString();
+		string _r = _json["r"].asString();
+		string _s = _json["s"].asString();
+		string _v = _json["v"].asString();
+
+
+		if (_number.size() != 64)
+			BOOST_THROW_EXCEPTION(JsonRpcException("number length error!"));
+		if (_r.size() != 64)
+			BOOST_THROW_EXCEPTION(JsonRpcException("r length error!"));
+		if (_s.size() != 64)
+			BOOST_THROW_EXCEPTION(JsonRpcException("s length error!"));
+		if (_v.size() != 2)
+			BOOST_THROW_EXCEPTION(JsonRpcException("v length error!"));
+
+		h256 massage = sha3(fromHex(_number));
+		//Signature signature(fromHex(_signature));
+		//SignatureStruct sigStruct = *(SignatureStruct const*)&signature;
+
+		SignatureStruct sigStruct;
+		sigStruct.r = h256(fromHex(_r));
+		sigStruct.s = h256(fromHex(_s));
+		sigStruct.v = fromHex(_v)[0];
+
+		Signature signature = *(Signature const*)&sigStruct;
+		if (!sigStruct.isValid())
+			BOOST_THROW_EXCEPTION(InvalidSignature());
+		auto p = recover(signature, massage);
+		if (!p)
+			BOOST_THROW_EXCEPTION(InvalidSignature());
+		Address sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
+
+		return sender.hex();
+	}
+	catch (JsonRpcException&)
+	{
+		throw;
+	}
+	catch (InvalidSignature const&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Invalid Signature!"));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string Eth::eth_sendTxNative(Json::Value const& _json)
+{
+	try
+	{
+		TransactionSkeleton ts = toTransactionSkeleton(_json);
+		Secret secret("f0628dbe05977ea626c3f5775373c08e8c833c9e0415a8b5e464d7078ed53d6f");
+
+		auto res = client()->submitTransaction(ts, secret);
+
+		return toJS(res.first);
 	}
 	catch (...)
 	{

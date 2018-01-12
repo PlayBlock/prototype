@@ -1151,7 +1151,7 @@ BOOST_AUTO_TEST_CASE(dtMortgage)
 	u256 balance = client.balance(Address(account[0].address));
 
 	//验证扣费包括：  1、抵押的金额  2、调用预编译合约的手续费
-	BOOST_REQUIRE(u256(1000000000000000000) - balance == u256(500000000000000000) + u256(2100000) * u256(2000000000));
+	BOOST_REQUIRE(balance == u256(1000000000000000000) - u256(500000000000000000) - u256(2100000) * u256(2000000000));
 
 	//验证未使用的投票权
 	auto all_votes = client.get_votes();
@@ -1159,9 +1159,10 @@ BOOST_AUTO_TEST_CASE(dtMortgage)
 
 	client.redeem_eth(account[0], 5);// Redeem 5 votes with 0.05 eth.
 	client.produce_blocks();
-	balance = client.balance(Address(account[0].address));
-	BOOST_REQUIRE(balance < u256(550000000000000000));// Account 0's balnce should increase according to mortgage.
-	BOOST_REQUIRE(balance >= u256(550000000000000000) - u256(1000000000000000) * 2);
+	u256 balance2 = client.balance(Address(account[0].address));
+
+	//验证最新余额：  在之前余额的基础上增加赎回的金额，并扣除手续费
+	BOOST_REQUIRE(balance2 == balance + u256(50000000000000000) - u256(2100000) * u256(2000000000));
 	all_votes = client.get_votes();
 	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(account[0].address)].getHoldVoteNumber(), 45); // Redeem eth reduce to 45 votes.
 

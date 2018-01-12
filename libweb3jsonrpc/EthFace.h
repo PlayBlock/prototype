@@ -69,6 +69,9 @@ namespace dev {
 					this->bindAndAddMethod(jsonrpc::Procedure("eth_makeKeys", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_makeKeysI);
 					this->bindAndAddMethod(jsonrpc::Procedure("eth_testSendBlock", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_testSendBlockI);
 					this->bindAndAddMethod(jsonrpc::Procedure("eth_sign", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_STRING, "param2", jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_signI);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_sendTxWithRSV", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_sendTxWithRSVI);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_checkSignature", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_checkSignatureI);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_sendTxNative", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_sendTxNativeI);
                 }
 
                 inline virtual void eth_protocolVersionI(const Json::Value &request, Json::Value &response)
@@ -305,6 +308,18 @@ namespace dev {
 				{
 					response = this->eth_sign(request[0u].asString(), request[1u].asString());
 				}
+				inline virtual void eth_sendTxWithRSVI(const Json::Value &request, Json::Value &response)
+				{
+					response = this->eth_sendTxWithRSV(request[0u]);
+				}
+				inline virtual void eth_checkSignatureI(const Json::Value &request, Json::Value &response)
+				{
+					response = this->eth_checkSignature(request[0u]);
+				}
+				inline virtual void eth_sendTxNativeI(const Json::Value &request, Json::Value &response)
+				{
+					response = this->eth_sendTxNative(request[0u]);
+				}
                 virtual std::string eth_protocolVersion() = 0;
                 virtual std::string eth_hashrate() = 0;
                 virtual std::string eth_coinbase() = 0;
@@ -360,6 +375,9 @@ namespace dev {
 				virtual std::string eth_makeKeys(const std::string& param1) = 0;
 				virtual std::string eth_testSendBlock(const std::string& param1) = 0;
 				virtual std::string eth_sign(const std::string& param1, const std::string& param2) = 0;
+				virtual std::string eth_sendTxWithRSV(const Json::Value& param1) = 0;
+				virtual std::string eth_checkSignature(const Json::Value& param1) = 0;
+				virtual std::string eth_sendTxNative(const Json::Value& param1) = 0;
         };
 
     }

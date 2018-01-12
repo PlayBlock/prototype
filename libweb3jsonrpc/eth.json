@@ -55,7 +55,10 @@
 { "name": "eth_testSend1", "params": [""], "order": [], "returns": ""},
 { "name": "eth_testSend2", "params": [""], "order": [], "returns": ""},
 { "name": "eth_testSendBlock", "params": [""], "order": [], "returns": ""},
-{ "name": "eth_sign", "params": ["", ""], "order": [], "returns": ""}
+{ "name": "eth_sign", "params": ["", ""], "order": [], "returns": ""},
+{ "name": "eth_sendTxWithRSV", "params": [{}], "order": [], "returns": ""},
+{ "name": "eth_checkSignature", "params": [{}], "order": [], "returns": ""},
+{ "name": "eth_sendTxNative", "params": [{}], "order": [], "returns": ""}
 
 ]
 
