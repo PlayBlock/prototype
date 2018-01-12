@@ -317,8 +317,8 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 	double sha3time = 0.0;
 	double executetime = 0.0;
 #endif
-	
-	
+   std::cout<<msTimeout<<std::endl;	
+	msTimeout =200;
 	
 	
 	if (isSealed())
@@ -422,6 +422,11 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 					cwarn << t.sha3() << "Transaction caused low-level exception :(";
 				}
 			}
+            if (chrono::steady_clock::now() > deadline)
+            {
+                ret.second = true;
+                break;
+            }
 		}
 		//if (chrono::steady_clock::now() > deadline)
 		if (chrono::steady_clock::now() > deadline || goodTxs < (int)ts.size())

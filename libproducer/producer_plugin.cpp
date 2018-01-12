@@ -56,21 +56,21 @@ block_production_condition::block_production_condition_enum producer_plugin::sho
 	switch (result)
 	{
 
-	case block_production_condition::produced: {
-		ctrace << "Should produce new block";
+	case block_production_condition::produced: 
+		cnote << "Should produce new block";
 		break;
-	}
+	
 	case block_production_condition::not_synced:
-		ctrace << "Not producing block because production is disabled until we receive a recent block ";
+		cnote << "Not producing block because production is disabled until we receive a recent block ";
 		break;
 	case block_production_condition::not_my_turn:
-		ctrace << "Not producing block because it isn't my turn";
+		cnote << "Not producing block because it isn't my turn";
 		break;
 	case block_production_condition::not_time_yet:
-		ctrace << "Not producing block because slot has not yet arrived";
+		cnote << "Not producing block because slot has not yet arrived";
 		break;
 	case block_production_condition::no_private_key:
-		ctrace << "Not producing block because I don't have the private key for ${scheduled_key}";
+		cnote << "Not producing block because I don't have the private key for ${scheduled_key}";
 		break;
 	case block_production_condition::low_participation:
 		cnote << "Not producing block because node appears to be on a minority fork with only ${pct}% producer participation";
@@ -84,6 +84,9 @@ block_production_condition::block_production_condition_enum producer_plugin::sho
 	case block_production_condition::exception_producing_block:
 		cnote << "exception prodcing block";
 		break;
+    default:
+        cnote << "default" << result;
+        break;
 	}
 
 	return result;
@@ -96,10 +99,14 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 	fc::time_point now_fine = fc::time_point::now();
 	fc::time_point_sec now = now_fine + fc::microseconds(500000);
 
+    cnote << "in maybe produce" << now.sec_since_epoch();
+
+
 	// If the next block production opportunity is in the present or future, we're synced.
 	if (!_production_enabled)
 	{
-		cdebug << chain.get_slot_time(1).sec_since_epoch();
+	    std::cout<<"block_production_condition::not_synced"<<std::endl;
+        cdebug << chain.get_slot_time(1).sec_since_epoch();
 		cdebug << now.sec_since_epoch();
 
 		if (chain.get_slot_time(1) >= now)
@@ -113,6 +120,7 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 	ctrace << "slot num: " << slot;
 	if (slot == 0)
 	{
+        std::cout<<"block_production_condition::not_time_yet"<<std::endl;
 		return block_production_condition::not_time_yet;
 	}
 
@@ -131,6 +139,7 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 	// we must control the producer scheduled to produce the next block.
 	if (_producers.find(scheduled_producer) == _producers.end())
 	{
+        std::cout<<"block_production_condition::not_my_turn"<<std::endl;
 		return block_production_condition::not_my_turn;
 	}
 
@@ -140,7 +149,8 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 
 	if (private_key_itr == _private_keys.end())
 	{
-		return block_production_condition::no_private_key;
+	    std::cout<<"block_production_condition::no_private_key"<<std::endl;
+        return block_production_condition::no_private_key;
 	}
 
 	/// TODO 小于设置的参与率不能出块
@@ -154,6 +164,7 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 	if (llabs((scheduled_time - now).count()) > fc::milliseconds(500).count())
 	{
 		//capture("scheduled_time", scheduled_time)("now", now);
+        std::cout<<"block_production_condition::lag"<<std::endl;
 		return block_production_condition::lag;
 	}
 
