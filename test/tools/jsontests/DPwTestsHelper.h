@@ -66,6 +66,11 @@ namespace dev {
 			const private_key& get_private_key(const AccountName& address) const;
 
 			void produce_blocks(uint32_t count = 1);
+
+			void produce_pow_blocks(const AccountName& _address, uint32_t count);
+
+			void produce_Race_blocks(uint32_t count, std::map<AccountName, int>& _accountblock);
+
 			string getWAVMData(string function, Address address = Address());
 
 			void mortgage_eth(Account& _from, uint64_t balance);
@@ -120,6 +125,8 @@ namespace dev {
 			uint32_t get_dpo_witnesses() { return _producer_plugin->get_chain_controller().get_dynamic_global_properties().num_pow_witnesses; }
 			dev::h256 get_ownpow_target();
 			dev::h256 get_pow_target() { return _producer_plugin->get_chain_controller().get_pow_target(); };
+
+			std::vector<Address> getGenesisAccount() { return m_bc.getInterface().chainParams().initialProducers; };
 		private:
 
 			TestBlockChain m_bc;

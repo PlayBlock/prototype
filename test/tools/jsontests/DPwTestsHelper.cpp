@@ -35,7 +35,7 @@ namespace dev {
 			int i = 0;
 			for (const auto& key : keys)
 			{
-				if (i++ > config::TotalProducersPerRound + 2)
+				if (i++ > config::TotalProducersPerRound +10)
 					break;
 
 				Account account{ key.first , key.second.get_str() , 0 };
@@ -91,6 +91,53 @@ namespace dev {
 				m_working = TestBlock();
 			}
 		}
+
+		void DposTestClient::produce_pow_blocks(const AccountName& _address, uint32_t count)
+		{
+			for (int i = 0; i < count; i++)
+			{
+				auto slot = 1;
+				auto producer = _chain.get_scheduled_producer(slot);
+				while (producer == AccountName())
+					producer = _chain.get_scheduled_producer(++slot);
+
+				BOOST_REQUIRE(producer == _address);
+				//auto producer =  _chain.get_scheduled_producer(slot);
+				auto& private_key = get_private_key(producer);
+				m_working.dposMine(m_bc, _chain.get_slot_time(slot), producer, private_key);
+				m_bc.addBlock(m_working);
+				m_working = TestBlock();
+			}
+		}
+
+		void DposTestClient::produce_Race_blocks(uint32_t count, std::map<AccountName, int>& _accountblock)
+		{
+
+			for (int i = 0; i < count; i++)
+			{
+				auto slot = 1;
+				auto producer = _chain.get_scheduled_producer(slot);
+				while (producer == AccountName())
+					producer = _chain.get_scheduled_producer(++slot);
+				//计算race生产者的产块数
+				if (_accountblock.find(producer) != _accountblock.end())
+				{
+					_accountblock[producer]++;
+				}
+				else
+				{
+					_accountblock.emplace(producer,1);
+				}
+
+				//auto producer =  _chain.get_scheduled_producer(slot);
+				auto& private_key = get_private_key(producer);
+				m_working.dposMine(m_bc, _chain.get_slot_time(slot), producer, private_key);
+				m_bc.addBlock(m_working);
+				m_working = TestBlock();
+			}
+
+		}
+
 
 		string DposTestClient::getWAVMData(string function, Address address)
 		{
