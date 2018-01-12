@@ -22,7 +22,7 @@
 #pragma once
 
 #include "BenchMark.h"
-#define BenchMarkFlag 1
+
 using namespace dev;
 using namespace dev::eth;
 
