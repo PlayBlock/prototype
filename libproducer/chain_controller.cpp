@@ -726,9 +726,9 @@ void chain_controller::update_last_irreversible_block()
 	_db.commit(new_last_irreversible_block_num);
 	
 	//打印数据库内存映射文件用量
-	std::cout << "============>>>>>>DATABASE USED MEM = " << _db.get_segment_manager()->get_size() - _db.get_segment_manager()->get_free_memory() << std::endl;
-	std::cout << "============>>>>>>DATABASE FREE MEM = " << _db.get_segment_manager()->get_free_memory() << std::endl;
-	std::cout << "============>>>>>>DATABASE TOTAL MEM = " << _db.get_segment_manager()->get_size()<< std::endl; 
+	//std::cout << "============>>>>>>DATABASE USED MEM = " << _db.get_segment_manager()->get_size() - _db.get_segment_manager()->get_free_memory() << std::endl;
+	//std::cout << "============>>>>>>DATABASE FREE MEM = " << _db.get_segment_manager()->get_free_memory() << std::endl;
+	//std::cout << "============>>>>>>DATABASE TOTAL MEM = " << _db.get_segment_manager()->get_size()<< std::endl; 
 
 }
 
