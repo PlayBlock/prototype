@@ -36,6 +36,7 @@
 #include "Executive.h"
 #include "TransactionQueue.h"
 #include "GenesisInfo.h"
+#include "BenchMark.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -317,7 +318,6 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 	double sha3time = 0.0;
 	double executetime = 0.0;
 #endif
-   std::cout<<msTimeout<<std::endl;	
 	msTimeout =200;
 	
 	
@@ -335,6 +335,10 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 	assert(_bc.currentHash() == m_currentBlock.parentHash());
 	auto deadline =  chrono::steady_clock::now() + chrono::milliseconds(msTimeout);
 
+#if ETH_TIMED_ENACTMENTS
+	int count = 0;
+#endif	
+
 	for (int goodTxs = max(0, (int)ts.size() - 1); goodTxs < (int)ts.size(); )
 	{
 		goodTxs = 0;
@@ -345,6 +349,17 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 #endif	
 			if (!m_transactionSet.count(t.sha3()))
 			{
+
+#if BenchMarkFlag
+				if (ts.size()&& count==0)
+				{
+					u160 to = t.to();
+					std::cout << "First Transaction in this process: " << to.str() << std::endl;
+				}
+				count++;
+#endif
+
+
 #if ETH_TIMED_ENACTMENTS
 				sha3time += time.elapsed();
 #endif				
@@ -424,7 +439,14 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 			}
             if (chrono::steady_clock::now() > deadline)
             {
-                ret.second = true;
+#if BenchMarkFlag
+
+				std::cout << "Total Transaction: " << count << std::endl;
+
+#endif                
+				
+				
+				ret.second = true;
                 break;
             }
 		}
@@ -437,8 +459,9 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 	}
 
 #if ETH_TIMED_ENACTMENTS
-	std::cout << "sha3time: " << sha3time << std::endl;
-	std::cout << "executetime: " << executetime << std::endl;
+	//std::cout << "sha3time: " << sha3time << std::endl;
+	//std::cout << "executetime: " << executetime << std::endl;
+	std::cout << "Transaction num:" << ts.size() << std::endl;
 #endif
 	return ret;
 }
@@ -494,6 +517,10 @@ u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 {
+#if BenchMarkFlag
+	std::cout << "====================Block Import transactions:   "<< _block.transactions.size() << "number  :"<<_block.info.number() << std::endl;
+#endif
+	
 	noteChain(_bc);
 
 	DEV_TIMED_FUNCTION_ABOVE(500);

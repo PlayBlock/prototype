@@ -978,6 +978,63 @@ string Eth::eth_testTransaction(const Json::Value& _json)
 			Transaction t(ts, secret);
 			EthereumHost::transactionCheat(t);
 		}
+
+
+		//struct myAccount {
+		//	string address;
+		//	string secret;
+		//};
+		//std::vector<myAccount> as;
+		//string filePath(boost::filesystem::current_path().string());
+		//string s = contentsString(filePath + "/address-keys.json");
+		//json_spirit::mValue v;
+		//json_spirit::read_string(s, v);
+		//json_spirit::mObject keys = v.get_obj();
+		//for (const auto& key : keys)
+		//{
+		//	myAccount account{ key.first , key.second.get_str() };
+		//	as.push_back(std::move(account));
+		//}
+
+		//Address SourceAddress("0x0070015693bb96335dd8c7025dded3a2da735db1");
+		//Secret SourceSecret("329cde16d721501c7f1d16d620644d34fe12f3d68e6fc9d7fd238a984e5dc289");
+
+		//Address LastAddress;
+		//Secret LastSecret;
+
+
+		//u256 value = u256("900000000000000000000000");
+
+		//int count = keys.size();
+
+		//for (int i = 0; i < count; i++)
+		//{
+		//	TransactionSkeleton ts;
+		//	ts.creation = false;
+		//	ts.to = Address(as[i].address);
+		//	ts.value = value;
+		//	ts.gas = u256(500000);
+		//	ts.gasPrice = client()->gasBidPrice();
+
+		//	if (i == 0)
+		//	{
+		//		ts.from = Address("0x0070015693bb96335dd8c7025dded3a2da735db1");
+		//		ts.nonce = u256(0);
+		//		Transaction t(ts, SourceSecret);
+		//		EthereumHost::transactionCheat(t);
+		//	}
+		//	else {
+		//		ts.from = LastAddress;
+		//		ts.nonce = u256(0);
+		//		Transaction t(ts, LastSecret);
+		//		EthereumHost::transactionCheat(t);
+		//	}
+		//	LastAddress = Address(as[i].address);
+		//	LastSecret = Secret(as[i].secret);
+
+		//	value -= 100000000000000000;
+
+		//}
 		return toJS(count);
 	}
 	catch (...)

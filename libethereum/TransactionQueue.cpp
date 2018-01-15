@@ -20,7 +20,7 @@
  */
 
 #include "TransactionQueue.h"
-
+#include "BenchMark.h"
 #include <libdevcore/Log.h>
 #include <libethcore/Exceptions.h>
 #include "Transaction.h"
@@ -104,6 +104,10 @@ ImportResult TransactionQueue::import(Transaction const& _transaction, IfDropped
 
 Transactions TransactionQueue::topTransactions(unsigned _limit, h256Hash const& _avoid) const
 {
+#if BenchMarkFlag
+	std::cout << "TransactionQueue::topTransactions m_current: " << m_current.size() << std::endl;
+#endif
+
 	ReadGuard l(m_lock);
 	Transactions ret;
 	for (auto t = m_current.begin(); ret.size() < _limit && t != m_current.end(); ++t)
@@ -135,9 +139,13 @@ ImportResult TransactionQueue::manageImport_WITH_LOCK(h256 const& _h, Transactio
 					return ImportResult::OverbidGasPrice;
 				else
 				{
-					h256 dropped = (*t->second).transaction.sha3();
-					remove_WITH_LOCK(dropped);
-					m_onReplaced(dropped);
+					//h256 dropped = (*t->second).transaction.sha3();
+					//remove_WITH_LOCK(dropped);
+					//m_onReplaced(dropped);
+					//u160 f = _transaction.from();
+					//u160 t = _transaction.to();
+					//std::cout << "f:" << f << "   t:" << t << std::endl;
+					return ImportResult::AlreadyKnown;
 				}
 			}
 		}

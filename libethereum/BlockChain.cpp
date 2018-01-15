@@ -652,7 +652,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 #if BenchMarkFlag
 	Timer t;
-	cout << "BlockChain::import: check point 0 " << std::endl;
+	//cout << "BlockChain::import: check point 0 " << std::endl;
 #endif // BenchMarkFlag
 
 	// Check block doesn't already exist first!
@@ -668,7 +668,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	}
 
 #if BenchMarkFlag
-	cout << "BlockChain::import: check point 1 " << t.elapsed()<<std::endl;
+	//cout << "BlockChain::import: check point 1 " << t.elapsed()<<std::endl;
 	t.restart();
 #endif // BenchMarkFlag
 
@@ -690,7 +690,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	checkBlockTimestamp(_block.info);
 
 #if BenchMarkFlag
-	cout << "BlockChain::import: check point 2 " << t.elapsed() << std::endl;
+	//cout << "BlockChain::import: check point 2 " << t.elapsed() << std::endl;
 	t.restart();
 #endif // BenchMarkFlag
 
@@ -698,7 +698,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);
 
 #if BenchMarkFlag
-	cout << "BlockChain::import: check point 3 " << t.elapsed() << std::endl;
+	//cout << "BlockChain::import: check point 3 " << t.elapsed() << std::endl;
 	t.restart();
 #endif // BenchMarkFlag
 
@@ -716,7 +716,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		auto tdIncrease = s.enactOn(_block, *this);
 
 #if BenchMarkFlag
-		cout << "BlockChain::import: check point 4 " << t.elapsed() << std::endl;
+		//cout << "BlockChain::import: check point 4 " << t.elapsed() << std::endl;
 		t.restart();
 #endif // BenchMarkFlag
 
@@ -755,7 +755,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 #if BenchMarkFlag
 	t.restart();
 	auto res = insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
-	cout << "BlockChain::import: insertBlockAndExtras /check point 4 " << t.elapsed() << std::endl;
+	//cout << "BlockChain::import: insertBlockAndExtras /check point 4 " << t.elapsed() << std::endl;
 	return res;
 #else
 	return insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
