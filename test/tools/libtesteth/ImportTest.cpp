@@ -236,9 +236,8 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 		eth::ChangeLog changeLog = initialState.changeLog();
 		ImportTest::checkBalance(_preState, initialState);
 
-		//Finalize the state manually (clear logs)
-		bool removeEmptyAccounts = m_envInfo->number() >= se->chainParams().EIP158ForkBlock;
-		initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
+		//Finalize the state manually (clear logs) 
+		initialState.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 		return std::make_tuple(initialState, out, changeLog);
 	}
 	catch (Exception const& _e)

@@ -55,19 +55,9 @@ ChainOperationParams::ChainOperationParams():
 }
 
 EVMSchedule const& ChainOperationParams::scheduleForBlockNumber(u256 const& _blockNumber) const
-{
-	if (_blockNumber >= constantinopleForkBlock)
-		return ConstantinopleSchedule;
-	else if (_blockNumber >= byzantiumForkBlock)
-		return ByzantiumSchedule;
-	else if (_blockNumber >= EIP158ForkBlock)
-		return EIP158Schedule;
-	else if (_blockNumber >= EIP150ForkBlock)
-		return EIP150Schedule;
-	else if (_blockNumber >= homesteadForkBlock)
-		return HomesteadSchedule;
-	else
-		return FrontierSchedule;
+{ 
+	//只采用拜占庭
+	return ByzantiumSchedule; 
 }
 
 u256 ChainOperationParams::blockReward(EVMSchedule const& _schedule) const

@@ -103,9 +103,7 @@ private:
 	void requestBlocks(std::shared_ptr<EthereumPeer> _peer);
 	void clearPeerDownload(std::shared_ptr<EthereumPeer> _peer);
 	void clearPeerDownload();
-	void collectBlocks();
-	bool requestDaoForkBlockHeader(std::shared_ptr<EthereumPeer> _peer);
-	bool verifyDaoChallengeResponse(RLP const& _r);
+	void collectBlocks();  
 
 private:
 	struct Header
@@ -141,8 +139,7 @@ private:
 
 	EthereumHost& m_host;
 	Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
-	mutable RecursiveMutex x_sync;
-	std::set<std::weak_ptr<EthereumPeer>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_daoChallengedPeers; ///> Peers to which we've sent DAO challenge request
+	mutable RecursiveMutex x_sync; 
 	std::atomic<SyncState> m_state{SyncState::Idle};		///< Current sync state
 	h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
 	unsigned m_chainStartBlock = 0;

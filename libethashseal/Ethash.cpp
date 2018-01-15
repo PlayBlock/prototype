@@ -118,10 +118,6 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 		if (_bi.number() && _bi.extraData().size() > chainParams().maximumExtraDataSize)
 			BOOST_THROW_EXCEPTION(ExtraDataTooBig() << RequirementError(bigint(chainParams().maximumExtraDataSize), bigint(_bi.extraData().size())) << errinfo_extraData(_bi.extraData()));
 
-		u256 const& daoHardfork = chainParams().daoHardforkBlock;
-		if (daoHardfork != 0 && daoHardfork + 9 >= daoHardfork && _bi.number() >= daoHardfork && _bi.number() <= daoHardfork + 9)
-			if (_bi.extraData() != fromHex("0x64616f2d686172642d666f726b"))
-				BOOST_THROW_EXCEPTION(ExtraDataIncorrect() << errinfo_comment("Received block from the wrong fork (invalid extradata)."));
 	}
 
 	if (_parent)
@@ -179,14 +175,9 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 	SealEngineFace::verifyTransaction(_ir, _t, _header, _startGasUsed);
 
 	if (_ir & ImportRequirements::TransactionSignatures)
-	{
-		if (_header.number() >= chainParams().EIP158ForkBlock)
-		{
-			int chainID = chainParams().chainID;
-			_t.checkChainId(chainID);
-		}
-		else
-			_t.checkChainId(-4);
+	{ 
+		int chainID = chainParams().chainID;
+		_t.checkChainId(chainID); 
 	}
 	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(_header.number())) > _t.gas())
 		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic() << RequirementError((bigint)(_t.baseGasRequired(evmSchedule(_header.number()))), (bigint)_t.gas()));
@@ -222,26 +213,16 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	auto const& difficultyBoundDivisor = chainParams().difficultyBoundDivisor;
 	auto const& durationLimit = chainParams().durationLimit;
 
-	bigint target;	// stick to a bigint for the target. Don't want to risk going negative.
-	if (_bi.number() < chainParams().homesteadForkBlock)
-		// Frontier-era difficulty adjustment
-		target = _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
-	else
-	{
-		bigint const timestampDiff = bigint(_bi.timestamp()) - _parent.timestamp();
-		bigint const adjFactor = _bi.number() < chainParams().byzantiumForkBlock ?
-			max<bigint>(1 - timestampDiff / 10, -99) : // Homestead-era difficulty adjustment
-			max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9, -99); // Byzantium-era difficulty adjustment
-
-		target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor;
-	}
+	bigint target;	// stick to a bigint for the target. Don't want to risk going negative. 
+	bigint const timestampDiff = bigint(_bi.timestamp()) - _parent.timestamp();
+	bigint const adjFactor = max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9, -99); // Byzantium-era difficulty adjustment
+	target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor; 
 
 	bigint o = target;
 	unsigned exponentialIceAgeBlockNumber = unsigned(_parent.number() + 1);
 
-	// EIP-649 modifies exponentialIceAgeBlockNumber
-	if (_bi.number() >= chainParams().byzantiumForkBlock)
-	{
+	// EIP-649 modifies exponentialIceAgeBlockNumber 
+	{//²ÉÓÃ°ÝÕ¼Í¥
 		if (exponentialIceAgeBlockNumber >= 3000000)
 			exponentialIceAgeBlockNumber -= 3000000;
 		else

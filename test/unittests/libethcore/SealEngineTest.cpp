@@ -31,8 +31,7 @@ BOOST_FIXTURE_TEST_SUITE(SealEngineTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(UnsignedTransactionIsValidBeforeConstantinople)
 {
-	ChainOperationParams params;
-	params.constantinopleForkBlock = u256(0x1000);
+	ChainOperationParams params; 
 
 	Ethash ethash;
 	ethash.setChainParams(params);

@@ -86,13 +86,7 @@ public:
 	bool tieBreakingGas = true;
 	u256 minGasLimit;
 	u256 maxGasLimit;
-	u256 gasLimitBoundDivisor;
-	u256 homesteadForkBlock;
-	u256 EIP150ForkBlock;
-	u256 EIP158ForkBlock;
-	u256 byzantiumForkBlock;
-	u256 constantinopleForkBlock;
-	u256 daoHardforkBlock;
+	u256 gasLimitBoundDivisor;      
 	int chainID = 0; // Distinguishes different chains (mainnet, Ropsten, etc).
 	int networkID = 0; // Distinguishes different sub protocols.
 

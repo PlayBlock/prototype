@@ -84,7 +84,7 @@ json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
 		unique_ptr<SealEngineFace> se(params.createSealEngine());
 
 		// Test networks has forkblocks set to 0 if rules are enabled
-		bool onConstantinople = (bh.number() >= params.constantinopleForkBlock);
+		bool onConstantinople = false;
 
 		out[test::netIdToString(network)] = mObject();
 		mObject expectSection = getExpectSection(expectObj, network);
@@ -141,7 +141,8 @@ void TestTransactionTest(json_spirit::mObject const& _o)
 		BOOST_REQUIRE(_o.at(networkname).type() == json_spirit::obj_type);
 		ChainParams params(genesisInfo(network));
 		unique_ptr<SealEngineFace> se(params.createSealEngine());
-		bool onConstantinople = (bh.number() >= params.constantinopleForkBlock);
+
+		bool onConstantinople = false;
 		mObject obj = _o.at(networkname).get_obj();
 		try
 		{
