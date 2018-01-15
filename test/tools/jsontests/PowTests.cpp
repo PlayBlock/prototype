@@ -886,9 +886,9 @@ BOOST_AUTO_TEST_CASE(dtMakeBlockETHTest)
 
 	//6.比较balance和出块数
 	std::cout << "start_balance : " << start_balance  << std::endl;
-	std::cout << "end_balance : " << end_balance << std::endl;
-	std::cout << "one block get eth :"<<(end_balance - start_balance)/blockNums << std::endl;
-	BOOST_REQUIRE(end_balance - start_balance >= blockNums*(u256)15000000000000000000 );
+	std::cout << "end_balance   : " << end_balance << std::endl;
+	std::cout << "one block     :"<<(end_balance - start_balance)/blockNums << std::endl;
+	BOOST_REQUIRE((end_balance - start_balance)== (u256)5000000000000000000 );
 
 }
 
