@@ -313,7 +313,8 @@ private:
 	bytes m_currentBytes;						///< The current block's bytes.
 	bool m_committedToSeal = false;				///< Have we committed to mine on the present m_currentBlock?
 
-	bytes m_currentTxs;							///< The RLP-encoded block of transactions. 
+	bytes m_currentTxs;							///< The RLP-encoded block of transactions.
+	bytes m_currentUncles;						///< The RLP-encoded block of uncles.
 
 	Address m_author;							///< Our address (i.e. the address to which fees go).
 

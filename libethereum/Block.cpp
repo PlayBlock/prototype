@@ -592,8 +592,8 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 	// Initialise total difficulty calculation.
 	u256 tdIncrease = m_currentBlock.difficulty();
-	 
-	  
+
+   
 	assert(_bc.sealEngine());
 	DEV_TIMED_ABOVE("applyRewards", 500)
 		applyRewards(_bc.sealEngine()->blockReward(m_currentBlock.number()));
@@ -667,7 +667,9 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 	else
 		m_precommit = m_state;
 
- 
+	vector<BlockHeader> uncleBlockHeaders;
+
+
 
 	BytesMap transactionsMap;
 	BytesMap receiptsMap;
@@ -688,11 +690,15 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 		m_transactions[i].streamRLP(txrlp);
 		transactionsMap.insert(std::make_pair(k.out(), txrlp.out()));
 
-		txs.appendRaw(txrlp.out());
- 
+		txs.appendRaw(txrlp.out()); 
 	}
 
-	txs.swapOut(m_currentTxs); 
+	txs.swapOut(m_currentTxs);
+
+	RLPStream unclesData;
+	unsigned unclesCount = 0;
+
+	RLPStream(unclesCount).appendRaw(unclesData.out(), unclesCount).swapOut(m_currentUncles);
 
 	// Apply rewards last of all.
 	assert(_bc.sealEngine());
@@ -707,7 +713,7 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 
 	m_currentBlock.setLogBloom(logBloom());
 	m_currentBlock.setGasUsed(gasUsed());
-	m_currentBlock.setRoots(hash256(transactionsMap), hash256(receiptsMap), sha3(bytes()), m_state.rootHash());
+	m_currentBlock.setRoots(hash256(transactionsMap), hash256(receiptsMap), sha3(m_currentUncles), m_state.rootHash());
 
 	m_currentBlock.setParentHash(m_previousBlock.hash());
 	m_currentBlock.setExtraData(_extraData);
@@ -742,9 +748,10 @@ bool Block::sealBlock(bytesConstRef _header)
 
 	// Compile block:
 	RLPStream ret;
-	ret.appendList(2);
+	ret.appendList(3);
 	ret.appendRaw(_header);
-	ret.appendRaw(m_currentTxs); 
+	ret.appendRaw(m_currentTxs);
+	ret.appendRaw(m_currentUncles);
 	ret.swapOut(m_currentBytes);
 	m_currentBlock = BlockHeader(_header, HeaderData);
 //	cnote << "Mined " << m_currentBlock.hash() << "(parent: " << m_currentBlock.parentHash() << ")";
