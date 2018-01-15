@@ -592,103 +592,11 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 	// Initialise total difficulty calculation.
 	u256 tdIncrease = m_currentBlock.difficulty();
-
-	// Check uncles & apply their rewards to state.
-	if (rlp[2].itemCount() > 2)
-	{
-		TooManyUncles ex;
-		ex << errinfo_max(2);
-		ex << errinfo_got(rlp[2].itemCount());
-		BOOST_THROW_EXCEPTION(ex);
-	}
-
-	vector<BlockHeader> rewarded;
-	h256Hash excluded;
-	DEV_TIMED_ABOVE("allKin", 500)
-		excluded = _bc.allKinFrom(m_currentBlock.parentHash(), 6);
-	excluded.insert(m_currentBlock.hash());
-
-	unsigned ii = 0;
-	DEV_TIMED_ABOVE("uncleCheck", 500)
-		for (auto const& i: rlp[2])
-		{
-			try
-			{
-				auto h = sha3(i.data());
-				if (excluded.count(h))
-				{
-					UncleInChain ex;
-					ex << errinfo_comment("Uncle in block already mentioned");
-					ex << errinfo_unclesExcluded(excluded);
-					ex << errinfo_hash256(sha3(i.data()));
-					BOOST_THROW_EXCEPTION(ex);
-				}
-				excluded.insert(h);
-
-				// CheckNothing since it's a VerifiedBlock.
-				BlockHeader uncle(i.data(), HeaderData, h);
-
-				BlockHeader uncleParent;
-				if (!_bc.isKnown(uncle.parentHash()))
-					BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(uncle.parentHash()));
-				uncleParent = BlockHeader(_bc.block(uncle.parentHash()));
-
-				// m_currentBlock.number() - uncle.number()		m_cB.n - uP.n()
-				// 1											2
-				// 2
-				// 3
-				// 4
-				// 5
-				// 6											7
-				//												(8 Invalid)
-				bigint depth = (bigint)m_currentBlock.number() - (bigint)uncle.number();
-				if (depth > 6)
-				{
-					UncleTooOld ex;
-					ex << errinfo_uncleNumber(uncle.number());
-					ex << errinfo_currentNumber(m_currentBlock.number());
-					BOOST_THROW_EXCEPTION(ex);
-				}
-				else if (depth < 1)
-				{
-					UncleIsBrother ex;
-					ex << errinfo_uncleNumber(uncle.number());
-					ex << errinfo_currentNumber(m_currentBlock.number());
-					BOOST_THROW_EXCEPTION(ex);
-				}
-				// cB
-				// cB.p^1	    1 depth, valid uncle
-				// cB.p^2	---/  2
-				// cB.p^3	-----/  3
-				// cB.p^4	-------/  4
-				// cB.p^5	---------/  5
-				// cB.p^6	-----------/  6
-				// cB.p^7	-------------/
-				// cB.p^8
-				auto expectedUncleParent = _bc.details(m_currentBlock.parentHash()).parent;
-				for (unsigned i = 1; i < depth; expectedUncleParent = _bc.details(expectedUncleParent).parent, ++i) {}
-				if (expectedUncleParent != uncleParent.hash())
-				{
-					UncleParentNotInChain ex;
-					ex << errinfo_uncleNumber(uncle.number());
-					ex << errinfo_currentNumber(m_currentBlock.number());
-					BOOST_THROW_EXCEPTION(ex);
-				}
-				uncle.verify(CheckNothingNew/*CheckParent*/, uncleParent);
-
-				rewarded.push_back(uncle);
-				++ii;
-			}
-			catch (Exception& ex)
-			{
-				ex << errinfo_uncleIndex(ii);
-				throw;
-			}
-		}
-
+	 
+	  
 	assert(_bc.sealEngine());
 	DEV_TIMED_ABOVE("applyRewards", 500)
-		applyRewards(rewarded, _bc.sealEngine()->blockReward(m_currentBlock.number()));
+		applyRewards(_bc.sealEngine()->blockReward(m_currentBlock.number()));
 
 	// Commit all cached state changes to the state trie. 
 	DEV_TIMED_ABOVE("commit", 500)
@@ -734,14 +642,9 @@ ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const
 	return resultReceipt.first;
 }
 
-void Block::applyRewards(vector<BlockHeader> const& _uncleBlockHeaders, u256 const& _blockReward)
+void Block::applyRewards(u256 const& _blockReward)
 {
-	u256 r = _blockReward;
-	for (auto const& i: _uncleBlockHeaders)
-	{
-		m_state.addBalance(i.author(), _blockReward * (8 + i.number() - m_currentBlock.number()) / 8);
-		r += _blockReward / 32;
-	}
+	u256 r = _blockReward; 
 	m_state.addBalance(m_currentBlock.author(), r);
 }
 
@@ -764,32 +667,7 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 	else
 		m_precommit = m_state;
 
-	vector<BlockHeader> uncleBlockHeaders;
-
-	RLPStream unclesData;
-	unsigned unclesCount = 0;
-	if (m_previousBlock.number() != 0)
-	{
-		// Find great-uncles (or second-cousins or whatever they are) - children of great-grandparents, great-great-grandparents... that were not already uncles in previous generations.
-		clog(StateDetail) << "Checking " << m_previousBlock.hash() << ", parent=" << m_previousBlock.parentHash();
-		h256Hash excluded = _bc.allKinFrom(m_currentBlock.parentHash(), 6);
-		auto p = m_previousBlock.parentHash();
-		for (unsigned gen = 0; gen < 6 && p != _bc.genesisHash() && unclesCount < 2; ++gen, p = _bc.details(p).parent)
-		{
-			auto us = _bc.details(p).children;
-			assert(us.size() >= 1);	// must be at least 1 child of our grandparent - it's our own parent!
-			for (auto const& u: us)
-				if (!excluded.count(u))	// ignore any uncles/mainline blocks that we know about.
-				{
-					uncleBlockHeaders.push_back(_bc.info(u));
-					unclesData.appendRaw(_bc.headerData(u));
-					++unclesCount;
-					if (unclesCount == 2)
-						break;
-					excluded.insert(u);
-				}
-		}
-	}
+ 
 
 	BytesMap transactionsMap;
 	BytesMap receiptsMap;
@@ -811,22 +689,14 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 		transactionsMap.insert(std::make_pair(k.out(), txrlp.out()));
 
 		txs.appendRaw(txrlp.out());
-
-//#if ETH_PARANOIA
-/*		if (fromPending(i).transactionsFrom(m_transactions[i].from()) != m_transactions[i].nonce())
-		{
-			cwarn << "GAAA Something went wrong! " << fromPending(i).transactionsFrom(m_transactions[i].from()) << "!=" << m_transactions[i].nonce();
-		}*/
-//#endif
+ 
 	}
 
-	txs.swapOut(m_currentTxs);
-
-	RLPStream(unclesCount).appendRaw(unclesData.out(), unclesCount).swapOut(m_currentUncles);
+	txs.swapOut(m_currentTxs); 
 
 	// Apply rewards last of all.
 	assert(_bc.sealEngine());
-	applyRewards(uncleBlockHeaders, _bc.sealEngine()->blockReward(m_currentBlock.number()));
+	applyRewards(_bc.sealEngine()->blockReward(m_currentBlock.number()));
 
 	// Commit any and all changes to the trie that are in the cache, then update the state root accordingly. 
 	DEV_TIMED_ABOVE("commit", 500)
@@ -837,7 +707,7 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 
 	m_currentBlock.setLogBloom(logBloom());
 	m_currentBlock.setGasUsed(gasUsed());
-	m_currentBlock.setRoots(hash256(transactionsMap), hash256(receiptsMap), sha3(m_currentUncles), m_state.rootHash());
+	m_currentBlock.setRoots(hash256(transactionsMap), hash256(receiptsMap), sha3(bytes()), m_state.rootHash());
 
 	m_currentBlock.setParentHash(m_previousBlock.hash());
 	m_currentBlock.setExtraData(_extraData);
@@ -872,10 +742,9 @@ bool Block::sealBlock(bytesConstRef _header)
 
 	// Compile block:
 	RLPStream ret;
-	ret.appendList(3);
+	ret.appendList(2);
 	ret.appendRaw(_header);
-	ret.appendRaw(m_currentTxs);
-	ret.appendRaw(m_currentUncles);
+	ret.appendRaw(m_currentTxs); 
 	ret.swapOut(m_currentBytes);
 	m_currentBlock = BlockHeader(_header, HeaderData);
 //	cnote << "Mined " << m_currentBlock.hash() << "(parent: " << m_currentBlock.parentHash() << ")";

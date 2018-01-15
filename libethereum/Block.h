@@ -291,7 +291,7 @@ private:
 	u256 enact(VerifiedBlockRef const& _block, BlockChain const& _bc);
 
 	/// Finalise the block, applying the earned rewards.
-	void applyRewards(std::vector<BlockHeader> const& _uncleBlockHeaders, u256 const& _blockReward);
+	void applyRewards( u256 const& _blockReward);
 
 	/// @returns gas used by transactions thus far executed.
 	u256 gasUsed() const { return m_receipts.size() ? m_receipts.back().gasUsed() : 0; }
@@ -313,8 +313,7 @@ private:
 	bytes m_currentBytes;						///< The current block's bytes.
 	bool m_committedToSeal = false;				///< Have we committed to mine on the present m_currentBlock?
 
-	bytes m_currentTxs;							///< The RLP-encoded block of transactions.
-	bytes m_currentUncles;						///< The RLP-encoded block of uncles.
+	bytes m_currentTxs;							///< The RLP-encoded block of transactions. 
 
 	Address m_author;							///< Our address (i.e. the address to which fees go).
 
