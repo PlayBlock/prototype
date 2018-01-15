@@ -274,11 +274,11 @@ void TestBlock::dposMine(TestBlockChain const& _bc, fc::time_point_sec when, con
 
 		size_t transactionsOnImport = m_transactionQueue.topTransactions(1024).size();
 		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
+		//block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
+		//block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
+		//block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
+		//block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
+		//block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
 		if (transactionsOnImport >  m_transactionQueue.topTransactions(1024).size())
 			cnote << "Dropped invalid Transactions when mining!";
 
