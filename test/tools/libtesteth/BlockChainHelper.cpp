@@ -260,7 +260,8 @@ void TestBlock::dposMine(TestBlockChain const& _bc, fc::time_point_sec when, con
 	BlockChain const& blockchain = _bc.getInterface();
 
 	Block block = blockchain.genesisBlock(genesisDB);
-	block.setAuthor(genesisBlock.beneficiary());
+	//block.setAuthor(genesisBlock.beneficiary());
+	block.setAuthor(producer);
 
 	//set some header data before mining from original SignedBlockHeader
 	dev::eth::BlockHeader& blockInfo = *const_cast<dev::eth::BlockHeader*>(&block.info());
@@ -274,11 +275,7 @@ void TestBlock::dposMine(TestBlockChain const& _bc, fc::time_point_sec when, con
 
 		size_t transactionsOnImport = m_transactionQueue.topTransactions(1024).size();
 		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		//block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		//block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		//block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		//block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		//block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
+
 		if (transactionsOnImport >  m_transactionQueue.topTransactions(1024).size())
 			cnote << "Dropped invalid Transactions when mining!";
 
