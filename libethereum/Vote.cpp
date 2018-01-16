@@ -338,7 +338,7 @@ bool VoteManager::candidateDeregister(Address const& _address, State& _state)
 	map<Address, VoteInfo> infoMap = VoteInfo::getVoteInfoMap(_state);
 	for (auto & p : infoMap)
 	{
-		auto x = p.second.m_voteRecord;
+		//auto x = p.second.m_voteRecord;
 		p.second.m_holdVotes += p.second.m_voteRecord[_address];
 		p.second.m_voteRecord[_address] = 0;
 		p.second.save(_state);
