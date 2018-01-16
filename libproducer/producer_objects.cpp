@@ -90,8 +90,29 @@ ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db
    }
 
 
+
+
    //选出1个POW见证人   
    const auto& allProducerObjsByPOW = db.get_index<producer_multi_index, by_pow>(); 
+
+   if (gprops.num_pow_witnesses > config::TotalProducersPerRound )
+   {//若当前POW队列中人数超过每轮人数上限，则每轮从队首干掉一个POW见证人
+
+	   auto itr = allProducerObjsByPOW.upper_bound(0);
+
+	   if (itr != allProducerObjsByPOW.end())
+	   {
+		   db.modify(*itr, [&](producer_object& prod)
+		   {
+			   prod.pow_worker = 0;
+		   });
+		   db.modify(gprops, [&](dynamic_global_property_object& obj)
+		   {
+			   obj.num_pow_witnesses--;
+		   });
+	   }
+   }
+
 
    int powCount = 0;
    const int alreadySelectCount = iActive;
