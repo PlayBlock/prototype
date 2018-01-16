@@ -29,6 +29,8 @@
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/jsontests/BlockChainTests.h>
 #include <libproducer/producer_plugin.hpp>
+#include <libethereum/vote.h>
+
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
@@ -534,6 +536,15 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 			cerr << testName << "\n";
 	}
 
+	if (_input.count("vote") > 0)
+	{
+		map<Address, VoteInfo> _all_voteInfo;
+		_all_voteInfo = VoteInfo::getVoteInfoMap(testChain.topBlock().state());
+		auto add_obj = _input.at("vote").get_obj();
+		if (add_obj.count("0x000d9a2034e8383e9b8a76b55a19aed2cb74dcb1") > 0);
+			BOOST_REQUIRE(_all_voteInfo[AccountName("0x000d9a2034e8383e9b8a76b55a19aed2cb74dcb1")].getHoldVoteNumber() == (int)toInt(add_obj.at("0x000d9a2034e8383e9b8a76b55a19aed2cb74dcb1")));
+	}
+
 	output["blocks"] = blArray;
 	output["postState"] = fillJsonWithState(testChain.topBlock().state());
 	output["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
@@ -680,7 +691,7 @@ void testBCTest(json_spirit::mObject const& _o)
 			blockNumber = blObj["blocknumber"].get_str();
 
 		//check the balance before and after the block according to mining rules
-		if (blockFromFields.blockHeader().parentHash() == preHash)
+		if (blockFromFields.blockHeader().parentHash() == preHash &&(_o.count("vote") < 0))
 		{
 			State const postState = testChain.topBlock().state();
 			assert(testChain.getInterface().sealEngine());
