@@ -64,6 +64,7 @@ public:
 	void removeZeroVote();
 	uint64_t getReceivedVotedNumber() const{ return m_receivedVote; } 
 	uint64_t getHoldVoteNumber() const { return m_holdVotes; }
+	std::map<Address, uint64_t> getHoldVoteRecord() const { return m_voteRecord; }
 	std::string getName() { return m_name; }
 	std::string getURL() { return m_url; }
 	

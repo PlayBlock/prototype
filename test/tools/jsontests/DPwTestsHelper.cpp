@@ -35,8 +35,8 @@ namespace dev {
 			int i = 0;
 			for (const auto& key : keys)
 			{
-				if (i++ > config::TotalProducersPerRound +5)
-					break;
+				//if (i++ > config::TotalProducersPerRound +5)
+				//	break;
 
 				Account account{ key.first , key.second.get_str() , 0 };
 
