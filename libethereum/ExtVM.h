@@ -97,7 +97,7 @@ public:
 	//transfer for wavm
 	virtual void transferBalance(Address _address, u256 _value)
 	{
-		m_s.transferBalance(myAddress, _address, value);
+		m_s.transferBalance(myAddress, _address, _value);
 	};
 
 
