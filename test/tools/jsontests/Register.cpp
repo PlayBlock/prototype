@@ -960,10 +960,12 @@ U256ComparatorDelarationAndImp(lt_u256, <)
 }
 
 DEFINE_INTRINSIC_FUNCTION1(env, test1, test1, none, i32, a) {
+	WASM_VM::AddUsedGas(sstoreSetGas);
 	std::cout << "test1 " << "a: " << a << std::endl;
 }
 
 DEFINE_INTRINSIC_FUNCTION2(env, test2, test2, none, i32, a, i32, b) {
+	WASM_VM::AddUsedGas(sstoreSetGas);
 	std::cout << "test2 " << "a: " << a << " b:" << b << std::endl;
 }
 
