@@ -152,6 +152,7 @@ BOOST_AUTO_TEST_CASE(dtlowTarget)
 {
 	//g_logVerbosity = 14;
 	//创建生产者
+	EthashCPUMiner::setNumInstances(1);
 	DposTestClient client;
 	int num = 0;
 	// pick an account
@@ -238,6 +239,7 @@ BOOST_AUTO_TEST_CASE(dtPowWitness)
 {
 	//g_logVerbosity = 14;
 	//创建生产者
+	EthashCPUMiner::setNumInstances(1);
 	DposTestClient client;
 	int num = 0;
 	// pick an account
@@ -441,6 +443,7 @@ BOOST_AUTO_TEST_CASE(dtMakeMorePowProducer)
 {
 	//g_logVerbosity = 14;
 	//创建生产者
+	EthashCPUMiner::setNumInstances(1);
 	DposTestClient client;
 	int num = 0;
 	// pick an account
@@ -496,6 +499,7 @@ BOOST_AUTO_TEST_CASE(dtMakeLittlePowProducer)
 {
 	//g_logVerbosity = 14;
 	//创建生产者
+	EthashCPUMiner::setNumInstances(1);
 	DposTestClient client;
 	int num = 0;
 	// pick an account
@@ -541,6 +545,7 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducer)
 {
 	//g_logVerbosity = 14;
 	//创建生产者
+	EthashCPUMiner::setNumInstances(1);
 	DposTestClient client;
 	int num = 0;
 	// pick an account
@@ -599,6 +604,9 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducer)
 
 BOOST_AUTO_TEST_SUITE_END()
 
+
+
+
 BOOST_FIXTURE_TEST_SUITE(StableBlockTestsSuite, TestOutputHelperFixture)
 
 //无DPOS节点
@@ -606,6 +614,7 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducers)
 {
 	//g_logVerbosity = 14;
 	//创建生产者
+	EthashCPUMiner::setNumInstances(1);
 	DposTestClient client;
 	int num = 0;
 	// pick an account
@@ -730,6 +739,7 @@ BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 {
 	//g_logVerbosity = 14;
 	//创建生产者
+	EthashCPUMiner::setNumInstances(1);
 	DposTestClient client;
 
 	BOOST_REQUIRE(client.get_accounts().size() >= 1);
@@ -787,8 +797,9 @@ BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 
 BOOST_AUTO_TEST_CASE(dtVoteChangeTest)
 {
-	g_logVerbosity = 13;
+	//g_logVerbosity = 13;
 	//创建生产者
+	EthashCPUMiner::setNumInstances(1);
 	DposTestClient client;
 	BOOST_REQUIRE(client.get_accounts().size() >= 1);
 
