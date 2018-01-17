@@ -27,15 +27,15 @@ namespace config {
 	  
 
 	//每轮DPOS Worker总数
-	const static int DPOSProducersPerRound = 4;
+	const static int DPOSProducersPerRound = 17;
 	//每轮靠选票稳定出的DPOS见证人总数
-	const static int DPOSVotedProducersPerRound = 3;
+	const static int DPOSVotedProducersPerRound = 16;
 	//每轮虚拟赛跑的见证人总数
 	const static int DPOSRunnerupProducersPerRound = 1;
 	//每轮POW 见证人总数
-	const static int POWProducersPerRound = 1;
+	const static int POWProducersPerRound = 4;
 	//每轮见证人总数
-	const static int TotalProducersPerRound = 5;
+	const static int TotalProducersPerRound = 21;
 
 
 	//ETI创世时间
