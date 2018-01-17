@@ -182,15 +182,15 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(_header.number())) > _t.gas())
 		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic() << RequirementError((bigint)(_t.baseGasRequired(evmSchedule(_header.number()))), (bigint)_t.gas()));
 
-	// Avoid transactions that would take us beyond the block gas limit.
+	// Avoid transactions that would take us beyond the block gas limit. 
 	if (_startGasUsed + (bigint)_t.gas() > _header.gasLimit())
 		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_header.gasLimit() - _startGasUsed), (bigint)_t.gas()));
 }
 
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const
 {
-	u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
-	u256 gasLimit = _bi.gasLimit();
+	u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? ETI_BLOCKGASLIMIT : _gasFloorTarget;
+	u256 gasLimit = _bi.gasLimit(); 
 	u256 boundDivisor = chainParams().gasLimitBoundDivisor;
 	if (gasLimit < gasFloorTarget)
 		return min<u256>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);

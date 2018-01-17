@@ -78,7 +78,7 @@ R"E(
 		"timestamp": "0x00",
 		"parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
 		"extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-		"gasLimit": "0x1388",
+		"gasLimit": "0xcd14000",
         "initialProducers" : [
 				"0x110e3e0a01EcE3a91e04a818F840E9E3D17B3C8f",
 				"0x7A62B4Df0Df87742E3d4a0099B39C30939A7D74c",

@@ -58,7 +58,7 @@
             "timestamp": "0x00",
             "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
             "extraData": "0x",
-            "gasLimit": "0x2fefd8",
+            "gasLimit": "0x‭cd14000‬",
 			"initialProducers" : [
 				"0x110e3e0a01EcE3a91e04a818F840E9E3D17B3C8f",
 				"0x7A62B4Df0Df87742E3d4a0099B39C30939A7D74c",
