@@ -432,18 +432,11 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 					cwarn << t.sha3() << "Transaction caused low-level exception :(";
 				}
 			}
-          //  if (chrono::steady_clock::now() > deadline)
-         //   {
-#if BenchMarkFlag
-
-				std::cout << "Total Transaction: " << count << std::endl;
-
-#endif                
-				
-				
-		//		ret.second = true;
-      //          break;
-          //  }
+			if (chrono::steady_clock::now() > deadline)
+			{		
+				ret.second = true;
+                break;
+            }
 		}
 		//if (chrono::steady_clock::now() > deadline)
 		if (chrono::steady_clock::now() > deadline || goodTxs < (int)ts.size())
@@ -456,7 +449,7 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 #if ETH_TIMED_ENACTMENTS
 	//std::cout << "sha3time: " << sha3time << std::endl;
 	//std::cout << "executetime: " << executetime << std::endl;
-	std::cout << "Top Transaction num:" << ts.size() << std::endl;
+	//std::cout << "Top Transaction num:" << ts.size() << std::endl;
 #endif
 	return ret;
 }
