@@ -29,7 +29,6 @@
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/jsontests/BlockChainTests.h>
 #include <libproducer/producer_plugin.hpp>
-#include <libethereum/vote.h>
 
 using namespace std;
 using namespace json_spirit;
