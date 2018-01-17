@@ -88,7 +88,7 @@ static const h256 LatestBlockHash = h256(2);
 static const h256 EarliestBlockHash = h256(1);
 static const h256 PendingBlockHash = h256(0);
 
-static const u256 DefaultBlockGasLimit = 4712388;
+static const u256 DefaultBlockGasLimit = 4712388000;
 
 enum class RelativeBlock: BlockNumber
 {
