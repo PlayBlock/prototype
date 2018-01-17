@@ -361,6 +361,7 @@ private:
 	std::shared_ptr<class producer_plugin> m_producer_plugin;
 
 	static bool m_cheat;
+	u256 m_lastProducedNumber = std::numeric_limits<u256>::max();
 };
 
 }

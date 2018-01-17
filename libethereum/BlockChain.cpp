@@ -647,7 +647,6 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& _db, bool _mustBeNew)
 {
 	//@tidy This is a behemoth of a method - could do to be split into a few smaller ones.
-	cout << "_block.info.number(): " << _block.info.number() << endl;
 	ImportPerformanceLogger performanceLogger;
 
 #if BenchMarkFlag
@@ -790,12 +789,12 @@ void BlockChain::checkBlockIsNew(VerifiedBlockRef const& _block) const
 void BlockChain::checkBlockTimestamp(BlockHeader const& _header) const
 {
 	// Check it's not crazy
-	if (_header.timestamp() > utcTime() && !m_params.allowFutureBlocks)
-	{
-		clog(BlockChainChat) << _header.hash() << ": Future time " << _header.timestamp() << " (now at " << utcTime() << ")";
-		// Block has a timestamp in the future. This is no good.
-		BOOST_THROW_EXCEPTION(FutureTime());
-	}
+	//if (_header.timestamp() > utcTime() && !m_params.allowFutureBlocks)
+	//{
+	//	clog(BlockChainChat) << _header.hash() << ": Future time " << _header.timestamp() << " (now at " << utcTime() << ")";
+	//	// Block has a timestamp in the future. This is no good.
+	//	BOOST_THROW_EXCEPTION(FutureTime());
+	//}
 }
 
 ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger)

@@ -27,16 +27,19 @@ producer_plugin::producer_plugin(const dev::eth::BlockChain& bc):
 
 void producer_plugin::schedule_production_loop() 
 {
-	//Schedule for the next second's tick regardless of chain state
-	// If we would wait less than 50ms, wait for the whole second.
-	fc::time_point now = fc::time_point::now();
-	int64_t time_to_next_second = 1000000 - (now.time_since_epoch().count() % 1000000);
-	if (time_to_next_second < 50000)      // we must sleep for at least 50ms
-		time_to_next_second += 1000000;
 
-	_timer.expires_from_now(boost::posix_time::microseconds(time_to_next_second));
+	_timer.expires_from_now(boost::posix_time::microseconds(10000));
 	_timer.wait();
-	//_timer.async_wait(boost::bind(&producer_plugin::block_production_loop, this));
+	////Schedule for the next second's tick regardless of chain state
+	//// If we would wait less than 50ms, wait for the whole second.
+	//fc::time_point now = fc::time_point::now();
+	//int64_t time_to_next_second = 1000000 - (now.time_since_epoch().count() % 1000000);
+	//if (time_to_next_second < 50000)      // we must sleep for at least 50ms
+	//	time_to_next_second += 1000000;
+
+	//_timer.expires_from_now(boost::posix_time::microseconds(time_to_next_second));
+	//_timer.wait();
+	////_timer.async_wait(boost::bind(&producer_plugin::block_production_loop, this));
 }
 
 block_production_condition::block_production_condition_enum producer_plugin::should_produce()

@@ -43,7 +43,7 @@ void BenchMark::showSummary(double passTime)
 	std::cout << " Transfer      : " << _current->Transfer;
 	std::cout << " WrongDeal     : " << _current->WrongDeal;
 	std::cout << " ContractCall  : " << _current->ContractCall;
-	std::cout << " ContractCreate: " << _current->ContractCreate;
+	std::cout << " ContractCreate: " << _current->ContractCreate << std::endl;;
 	std::cout << " Speed: ";
 	std::cout << " Transfer      : " << _current->Transfer/ passTime;
 	std::cout << " WrongDeal     : " << _current->WrongDeal/ passTime;

@@ -391,10 +391,10 @@ void Client::syncBlockQueue()
 {
 //	cdebug << "syncBlockQueue()";
 #if BenchMarkFlag
-	static BenchMark mark1("syncTransactionBlocks");
-	BenchMark::makeCurrent(&mark1);
-	mark1.restartCount();
-	Timer time;
+	//static BenchMark mark1("syncTransactionBlocks");
+	//BenchMark::makeCurrent(&mark1);
+	//mark1.restartCount();
+	//Timer time;
 #endif
 	ImportRoute ir;
 	unsigned count; //导入的块数
@@ -402,11 +402,11 @@ void Client::syncBlockQueue()
 	tie(ir, m_syncBlockQueue, count) = bc().sync(m_bq, m_stateDB, m_syncAmount);
 
 #if BenchMarkFlag
-	static Timer timer1;
-	mark1.showSummary(timer1.elapsed());
-	timer1.restart();
+	//static Timer timer1;
+	//mark1.showSummary(timer1.elapsed());
+	//timer1.restart();
 
-	std::cout << "Block Time: " << time.elapsed() << std::endl;
+	//std::cout << "Block Time: " << time.elapsed() << std::endl;
 #endif
 
 	//导入用时
@@ -444,18 +444,24 @@ void Client::syncTransactionQueue()
 
 
 #if BenchMarkFlag
-		static BenchMark mark2("syncTransactionQueue");
+		static BenchMark mark2("Transaction TPS: ");
 		BenchMark::makeCurrent(&mark2);
-		mark2.restartCount();
+		
 		Timer time;
 #endif
 		tie(newPendingReceipts, m_syncTransactionQueue) = m_working.sync(bc(), m_tq, *m_gp);
 
 #if BenchMarkFlag
-		std::cout <<"Transaction  Use Time: "<<time.elapsed() << std::endl;
+		//std::cout <<"Transaction  Use Time: "<<time.elapsed() << std::endl;
+		static int roundcount = 0;
+		roundcount++;
 		static Timer timer2;
-		mark2.showSummary(timer2.elapsed());
-		timer2.restart();
+		if (roundcount % 10==0)
+		{
+			mark2.showSummary(timer2.elapsed());
+			timer2.restart();
+			mark2.restartCount();
+		}
 		BenchMark::makeCurrent(nullptr);
 #endif
 
@@ -527,8 +533,8 @@ void Client::resyncStateFromChain()
 			return;
 		
 #if BenchMarkFlag
-	std::cout << "m_working.info().parentHash()" << m_working.info().parentHash() <<std::endl;
-	std::cout << "lient::resyncStateFromChain" << std::endl;
+	//std::cout << "m_working.info().parentHash()" << m_working.info().parentHash() <<std::endl;
+	//std::cout << "lient::resyncStateFromChain" << std::endl;
 #endif
 
 	// RESTART MINING
@@ -737,8 +743,6 @@ void Client::generate_block(
     //m_working.currentBlock().setAuthor(producer);
 
 
-	
-
 	clog(ClientTrace) << "Rejigging seal engine...";
 	DEV_WRITE_GUARDED(x_working)
 	{
@@ -769,6 +773,8 @@ void Client::generate_block(
 	{
 		std::cerr << "submitSealed error!" << std::endl;
 	}
+	m_lastProducedNumber = m_working.info().number();
+	//std::cout << "m_lastProducedNumber: " << m_lastProducedNumber.str() << std::endl;
 }
 
 
@@ -863,14 +869,18 @@ void Client::doWork(bool _doWait)
 #if	BenchMarkFlag
 	Timer worktime;
 	Timer totaltime;
+	//std::cout << "=================doWork start==============" << std::endl;
+	//if (step1)
+	//{
+	//	std::cout << "step1 start:m_syncBlockQueue: " << m_syncBlockQueue << std::endl;
+	//}
 #endif
 	//若m_syncBlockQueue置位则同步BlockQueue
 	if (m_syncBlockQueue.compare_exchange_strong(t, false))
 		syncBlockQueue();
 
 #if	BenchMarkFlag
-	std::cout << "=================doWork start==============" << std::endl;
-	std::cout << "******syncBlockQueue:" << worktime.elapsed() << std::endl;
+	double step1 = worktime.elapsed();
 #endif
 
 #if	BenchMarkFlag
@@ -883,7 +893,7 @@ void Client::doWork(bool _doWait)
 		m_needStateReset = false;
 
 #if	BenchMarkFlag
-		std::cout << "******resetState:" << worktime.elapsed() << std::endl;
+		std::cout << "******resetState: " << worktime.elapsed() << std::endl;
 #endif
 	}
 
@@ -901,19 +911,27 @@ void Client::doWork(bool _doWait)
 		syncTransactionQueue();
 
 #if	BenchMarkFlag
-	std::cout << "******syncTransactionQueue:" << worktime.elapsed() << std::endl;
+	double step2 = worktime.elapsed();
 	worktime.restart();
+	//std::cout << "step3 start:m_syncTransactionQueue: " << m_syncTransactionQueue << std::endl;
 #endif
 
 	tick();
 
-	rejigSealing();
+	if (m_lastProducedNumber != m_working.info().number())
+	{
+		rejigSealing();
+	}
+	else {
+		//std::cout << "already rejig so quit" << std::endl;
+	}
 
 	callQueuedFunctions();
 
 #if	BenchMarkFlag
-	std::cout << "******rejigSealing:" << worktime.elapsed() << std::endl;
+	double step3 = worktime.elapsed();
 	worktime.restart();
+	//std::cout << "step4 start:m_syncBlockQueue: "<< m_syncBlockQueue<< " m_syncTransactionQueue: " << m_syncTransactionQueue << " isSealed: "<< isSealed <<std::endl;
 #endif
 
 	DEV_READ_GUARDED(x_working)
@@ -928,10 +946,10 @@ void Client::doWork(bool _doWait)
 	}
 
 #if	BenchMarkFlag
-	std::cout << "******production_loop:" << worktime.elapsed() << std::endl;
-	std::cout << "******WorkTime total:" << totaltime.elapsed() << std::endl;
+	//double step4 = worktime.elapsed();
+	//std::cout << "WorkTime total:" << totaltime.elapsed() << std::endl;
 
-	std::cout << "=================doWork end==============" << std::endl;
+	//std::cout << "===loop Time: "<<totaltime.elapsed()<< " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4 << std::endl;
 #endif
 
 }
