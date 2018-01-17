@@ -270,11 +270,6 @@ void TestBlock::dposMine(TestBlockChain const& _bc, fc::time_point_sec when, con
 	{
 		ZeroGasPricer gp;
 		block.sync(blockchain);  //sync block with blockchain
-		block.sync(blockchain);
-		block.sync(blockchain);
-		block.sync(blockchain);
-		block.sync(blockchain);
-		block.sync(blockchain);
 		premineUpdate(blockInfo);
 
 		size_t transactionsOnImport = m_transactionQueue.topTransactions(1024).size();

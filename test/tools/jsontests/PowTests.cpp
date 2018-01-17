@@ -259,8 +259,17 @@ BOOST_AUTO_TEST_CASE(dtPowWitness)
 	int n = 2;
 	for (auto i =1; i <= n;i++)
 	{
-		client.produce_blocks(config::TotalProducersPerRound);
-		BOOST_REQUIRE(client.get_dpo_witnesses() == (accounts.size() - config::POWProducersPerRound*i));
+		if (client.get_dpo_witnesses() > config::TotalProducersPerRound)
+		{
+			client.produce_blocks(config::TotalProducersPerRound);
+			BOOST_REQUIRE(client.get_dpo_witnesses() == (accounts.size() - (config::POWProducersPerRound+1)*i));
+		}
+		else
+		{
+			client.produce_blocks(config::TotalProducersPerRound);
+			BOOST_REQUIRE(client.get_dpo_witnesses() == (accounts.size() - config::POWProducersPerRound*i));
+		}
+		
 	}
 }
 
@@ -342,7 +351,6 @@ BOOST_AUTO_TEST_CASE(dtMoreDposProducer)
 	BOOST_REQUIRE(num == 0);
 }
 
-/*注意：测试时，需要把address-key中的账户减少到16个以下*/
 BOOST_AUTO_TEST_CASE(dtLittleDposProducer)
 {
 	//g_logVerbosity = 14;
@@ -359,16 +367,17 @@ BOOST_AUTO_TEST_CASE(dtLittleDposProducer)
 	BOOST_REQUIRE(VoteProducers.size() == 0);
 
 	//注册DPOS生产者
-	for (auto i : accounts)
+	int producerNum = 15;
+	for (auto i =0;i <producerNum;i++)
 	{
-		client.make_producer(i);
+		client.make_producer(accounts[i]);
 	}
 	//创世期出块
 	client.produce_blocks(config::TotalProducersPerRound);
 
 	//当前全部都是DPOS生产者出块
 	VoteProducers = client.get_all_producers();
-	BOOST_REQUIRE(VoteProducers.size() == accounts.size());
+	BOOST_REQUIRE(VoteProducers.size() == producerNum);
 
 	auto currentProducers = client.get_active_producers();
 	std::vector<Address> initProducers = client.getGenesisAccount();
@@ -526,8 +535,6 @@ BOOST_AUTO_TEST_CASE(dtMakeLittlePowProducer)
 
 }
 
-
-
 /*创世期->稳定期*/
 //测试的时候需要动态调整pow注册的个数
 BOOST_AUTO_TEST_CASE(dtCheckPowProducer)
@@ -590,6 +597,10 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducer)
 
 }
 
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(StableBlockTestsSuite, TestOutputHelperFixture)
+
 //无DPOS节点
 BOOST_AUTO_TEST_CASE(dtCheckPowProducers)
 {
@@ -629,10 +640,10 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducers)
 				num++;
 	}
 	//1)pow充足的情况下（动态调整）
-	//BOOST_REQUIRE(num == config::POWProducersPerRound);
+	BOOST_REQUIRE(num == config::POWProducersPerRound);
 	//2)pow不充足的情况
-	BOOST_REQUIRE(num == accounts.size());
-	BOOST_REQUIRE(num > 0);
+	//BOOST_REQUIRE(num == accounts.size());
+	//BOOST_REQUIRE(num > 0);
 
 }
 //无POW节点
@@ -877,7 +888,6 @@ BOOST_AUTO_TEST_CASE(dtMakeBlockETHTest)
 
 	//4.第二轮出块
 	std::map<AccountName, int> account_block;
-	std::cout << "account : " << account.address << std::endl;
 	client.produce_blocks_Number(config::TotalProducersPerRound*10, account_block);
 
 	//5.获取balance和出块数
@@ -885,10 +895,7 @@ BOOST_AUTO_TEST_CASE(dtMakeBlockETHTest)
 	int blockNums = account_block[AccountName(account.address)];
 
 	//6.比较balance和出块数
-	std::cout << "start_balance : " << start_balance  << std::endl;
-	std::cout << "end_balance   : " << end_balance << std::endl;
-	std::cout << "one block     :"<<(end_balance - start_balance)/blockNums << std::endl;
-	BOOST_REQUIRE((end_balance - start_balance)== (u256)5000000000000000000 );
+	BOOST_REQUIRE((end_balance - start_balance) / blockNums == (u256)5000000000000000000 );
 
 }
 
