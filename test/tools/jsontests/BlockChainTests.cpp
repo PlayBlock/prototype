@@ -293,7 +293,7 @@ ETIProofOfWork::Solution make_pow_producer(ChainBranch* _chainName)
 
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	json_spirit::mObject output;
 	string const& testName = TestOutputHelper::get().testName();
 	TestBlock genesisBlock(_input.at("genesisBlockHeader").get_obj(), _input.at("pre").get_obj());
