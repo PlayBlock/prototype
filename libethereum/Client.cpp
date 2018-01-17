@@ -946,10 +946,10 @@ void Client::doWork(bool _doWait)
 	}
 
 #if	BenchMarkFlag
-	//double step4 = worktime.elapsed();
+	double step4 = worktime.elapsed();
 	//std::cout << "WorkTime total:" << totaltime.elapsed() << std::endl;
 
-	//std::cout << "===loop Time: "<<totaltime.elapsed()<< " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4 << std::endl;
+	std::cout << "===loop Time: "<<totaltime.elapsed()<< " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4 << std::endl;
 #endif
 
 }

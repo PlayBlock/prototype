@@ -28,7 +28,7 @@ producer_plugin::producer_plugin(const dev::eth::BlockChain& bc):
 void producer_plugin::schedule_production_loop() 
 {
 
-	_timer.expires_from_now(boost::posix_time::microseconds(10000));
+	_timer.expires_from_now(boost::posix_time::microseconds(100000));
 	_timer.wait();
 	////Schedule for the next second's tick regardless of chain state
 	//// If we would wait less than 50ms, wait for the whole second.
