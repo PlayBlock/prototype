@@ -31,7 +31,7 @@ using namespace dev::eth;
 const char* TransactionQueueChannel::name() { return EthCyan "┉┅▶"; }
 const char* TransactionQueueTraceChannel::name() { return EthCyan " ┅▶"; }
 
-const size_t c_maxVerificationQueueSize = 8192;
+const size_t c_maxVerificationQueueSize = 81920;
 
 TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit):
 	m_current(PriorityCompare { *this }),
