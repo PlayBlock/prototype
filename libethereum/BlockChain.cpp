@@ -651,6 +651,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 #if BenchMarkFlag
 	Timer t;
+	Timer total;
 	//cout << "BlockChain::import: check point 0 " << std::endl;
 #endif // BenchMarkFlag
 
@@ -754,7 +755,9 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 #if BenchMarkFlag
 	t.restart();
 	auto res = insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
-	cout << " step 5  dpos two populdate: " << t.elapsed() << std::endl;
+	cout << " ZP populdate: " << t.elapsed() << std::endl;
+	cout << " Total Import Time: " << total.elapsed() << std::endl;
+	
 	return res;
 #else
 	return insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
