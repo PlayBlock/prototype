@@ -1150,6 +1150,31 @@ namespace dev {
 
 		}
 
+		BOOST_AUTO_TEST_CASE(ctTestSampleTransaction)
+		{
+			DposTestClient client;
+
+			BOOST_REQUIRE(client.get_accounts().size() >= 2);
+			Account& account = client.get_accounts()[0];
+			Account& account2 = client.get_accounts()[1];
+
+			string gasLimit = "0x1f71b2";
+			string gasPrice = "0x04a817c800";
+			string value = "0x05";
+
+			client.sendTransaction(gasLimit, gasPrice, account2.address, value, "0x" , account);
+			client.produce_blocks();
+
+			u256 balance = client.balance(Address(account.address));
+			u256 balance2 = client.balance(Address(account2.address));
+			BOOST_REQUIRE(balance2 - u256(1000000000000000000)  == u256(5));
+
+			u256 cost = u256(1000000000000000000) - balance - u256(5);
+			u256 gasSample = cost / u256(20000000000);
+			cout << "cost: " << cost << endl;
+			cout << "gasSample: " << gasSample << endl;
+		}
+
 		BOOST_AUTO_TEST_SUITE_END()
 
 	}

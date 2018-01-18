@@ -90,6 +90,7 @@ public:
 	using Interface::codeAt;
 	using Interface::codeHashAt;
 	using Interface::storageAt;
+	using Interface::getState;
 
 	virtual u256 balanceAt(Address _a, BlockNumber _block) const override;
 	virtual u256 countAt(Address _a, BlockNumber _block) const override;
@@ -98,6 +99,7 @@ public:
 	virtual bytes codeAt(Address _a, BlockNumber _block) const override;
 	virtual h256 codeHashAt(Address _a, BlockNumber _block) const override;
 	virtual std::map<h256, std::pair<u256, u256>> storageAt(Address _a, BlockNumber _block) const override;
+	virtual State getState(BlockNumber _block) const override;
 
 	virtual LocalisedLogEntries logs(unsigned _watchId) const override;
 	virtual LocalisedLogEntries logs(LogFilter const& _filter) const override;
