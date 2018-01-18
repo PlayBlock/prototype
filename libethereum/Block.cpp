@@ -449,7 +449,7 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 #if ETH_TIMED_ENACTMENTS
 	//std::cout << "sha3time: " << sha3time << std::endl;
 	//std::cout << "executetime: " << executetime << std::endl;
-	//std::cout << "Top Transaction num:" << ts.size() << std::endl;
+	std::cout << "Top Transaction num:" << ts.size() << std::endl;
 #endif
 	return ret;
 }
