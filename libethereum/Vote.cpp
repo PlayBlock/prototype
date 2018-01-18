@@ -571,13 +571,4 @@ ETH_REGISTER_PRECOMPILED(send)(bytesConstRef _in, Address const& _address, State
 	return make_pair(true, bytes());
 }
 
-ETH_REGISTER_PRECOMPILED(assign)(bytesConstRef _in, Address const& _address, State& _state)
-{
-	return make_pair(true, bytes());
-}
-
-ETH_REGISTER_PRECOMPILED(deAssign)(bytesConstRef _in, Address const& _address, State& _state)
-{
-	return make_pair(true, bytes());
-}
 
