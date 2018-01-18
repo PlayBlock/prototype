@@ -956,11 +956,11 @@ void Client::doWork(bool _doWait)
 	{
 		//std::unique_lock<std::mutex> l(x_signalled);
 		//m_signalled.wait_for(l, chrono::seconds(1));
-        m_producer_plugin->schedule_production_loop(100000);
+        m_producer_plugin->schedule_production_loop(200000);
 	}
 	else
 	{
-		m_producer_plugin->schedule_production_loop(10000);
+		m_producer_plugin->schedule_production_loop(50000);
 	}
 
 #if	BenchMarkFlag
