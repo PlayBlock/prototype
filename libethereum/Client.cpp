@@ -960,7 +960,7 @@ void Client::doWork(bool _doWait)
 	}
 	else
 	{
-		m_producer_plugin->schedule_production_loop(50000);
+		m_producer_plugin->schedule_production_loop(100000);
 	}
 
 #if	BenchMarkFlag
