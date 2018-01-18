@@ -743,6 +743,11 @@ void chain_controller::databaseReversion(uint32_t _firstvalid)
 void chain_controller::push_block(const BlockHeader& b)
 {
 	try {
+
+		std::cout << "=============>>> usedSize = " << _db.get_segment_manager()->get_size() - _db.get_segment_manager()->get_free_memory() << std::endl;
+		std::cout << "=============>>> freeSize = " << _db.get_segment_manager()->get_free_memory() << std::endl;
+		std::cout << "=============>>> totalSize = " << _db.get_segment_manager()->get_size() << std::endl;
+		
 		auto session = _db.start_undo_session(true);
 		apply_block(b);
 		session.push();
