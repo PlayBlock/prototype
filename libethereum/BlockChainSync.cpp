@@ -673,7 +673,7 @@ void BlockChainSync::collectBlocks()
 	clog(NetMessageSummary) << dec << success << "imported OK," << unknown << "with unknown parents," << future << "with future timestamps," << got << " already known received.";
 
 	if (host().bq().unknownFull())
-	{//太多未知块，需要重新同步
+	{//太多未知块，需要重新同步 
 		clog(NetWarn) << "Too many unknown blocks, restarting sync";
 		restartSync();
 		return;
