@@ -453,15 +453,20 @@ void Client::syncTransactionQueue()
 
 #if BenchMarkFlag
 		//std::cout <<"Transaction  Use Time: "<<time.elapsed() << std::endl;
-		static int roundcount = 0;
-		roundcount++;
-		static Timer timer2;
-		if (roundcount % 10==0)
-		{
-			mark2.showSummary(timer2.elapsed());
-			timer2.restart();
-			mark2.restartCount();
-		}
+		//static int roundcount = 0;
+		//roundcount++;
+		//static Timer timer2;
+		//if (roundcount % 10==0)
+		//{
+		//	//mark2.showSummary(timer2.elapsed());
+		//	mark2.showSummary(time.elapsed());
+		//	timer2.restart();
+		//	mark2.restartCount();
+		//}
+		//BenchMark::makeCurrent(nullptr);
+		mark2.showSummary(time.elapsed());
+		time.restart();
+		mark2.restartCount();
 		BenchMark::makeCurrent(nullptr);
 #endif
 
@@ -956,11 +961,11 @@ void Client::doWork(bool _doWait)
 	{
 		//std::unique_lock<std::mutex> l(x_signalled);
 		//m_signalled.wait_for(l, chrono::seconds(1));
-        m_producer_plugin->schedule_production_loop(200000);
+        m_producer_plugin->schedule_production_loop(10000);
 	}
 	else
 	{
-		m_producer_plugin->schedule_production_loop(100000);
+		m_producer_plugin->schedule_production_loop(10000);
 	}
 
 #if	BenchMarkFlag
@@ -968,7 +973,7 @@ void Client::doWork(bool _doWait)
 	//std::cout << "WorkTime total:" << totaltime.elapsed() << std::endl;
 	if (m_doRealWork)
 	{
-		//std::cout << "A real work loop: " << totaltime.elapsed() << " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4 << std::endl;
+		std::cout << "A real work loop: " << totaltime.elapsed() << " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4 << std::endl;
 	}
 
 #endif
