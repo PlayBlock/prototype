@@ -468,12 +468,12 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 		}
 		if (haveItem(m_headers, blockNumber))
 		{//headerÒÑ´æÔÚ
-			clog(NetMessageSummary) << "Skipping header " << blockNumber;
+			clog(NetMessageSummary) << "Skipping header : already haveItem" << blockNumber;
 			continue;
 		}
 		if (blockNumber <= m_lastImportedBlock && m_haveCommonHeader)
 		{
-			clog(NetMessageSummary) << "Skipping header " << blockNumber;
+			clog(NetMessageSummary) << "Skipping header : blockNumber <= m_lastImportedBlock && m_haveCommonHeader" << blockNumber;
 			continue;
 		}
 		if (blockNumber > m_highestBlock)
