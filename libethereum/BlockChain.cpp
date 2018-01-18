@@ -755,8 +755,8 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 #if BenchMarkFlag
 	t.restart();
 	auto res = insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
-	cout << " ZP populdate: " << t.elapsed() << std::endl;
-	cout << " Total Import Time: " << total.elapsed() << std::endl;
+	//cout << " ZP populdate: " << t.elapsed() << std::endl;
+	cout << " Total Import Time: " << total.elapsed() <<" number:"<<_block.info.number()<<" size:"<< _block.transactions.size() <<std::endl;
 	
 	return res;
 #else
