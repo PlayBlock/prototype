@@ -917,7 +917,7 @@ void Client::doWork(bool _doWait)
 	if (!isSealed && !isMajorSyncing() && !m_remoteWorking && m_syncTransactionQueue.compare_exchange_strong(t, false))
 	{
 #if	BenchMarkFlag		
-		std::cout <<"syncTransactionQueue"<< std::endl;
+		//std::cout <<"syncTransactionQueue"<< std::endl;
 #endif
 		m_doRealWork = true;
 		syncTransactionQueue();
