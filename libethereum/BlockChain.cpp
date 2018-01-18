@@ -667,7 +667,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	}
 
 #if BenchMarkFlag
-	//cout << "BlockChain::import: check point 1 " << t.elapsed()<<std::endl;
+	cout << "Block Import: step1: " << t.elapsed();
 	t.restart();
 #endif // BenchMarkFlag
 
@@ -689,7 +689,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	checkBlockTimestamp(_block.info);
 
 #if BenchMarkFlag
-	//cout << "BlockChain::import: check point 2 " << t.elapsed() << std::endl;
+	cout << " step 2: " << t.elapsed();
 	t.restart();
 #endif // BenchMarkFlag
 
@@ -697,7 +697,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);
 
 #if BenchMarkFlag
-	//cout << "BlockChain::import: check point 3 " << t.elapsed() << std::endl;
+	cout << " step 3: " << t.elapsed();
 	t.restart();
 #endif // BenchMarkFlag
 
@@ -715,7 +715,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		auto tdIncrease = s.enactOn(_block, *this);
 
 #if BenchMarkFlag
-		//cout << "BlockChain::import: check point 4 " << t.elapsed() << std::endl;
+		cout << " step 4: " << t.elapsed();
 		t.restart();
 #endif // BenchMarkFlag
 
@@ -754,7 +754,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 #if BenchMarkFlag
 	t.restart();
 	auto res = insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
-	//cout << "BlockChain::import: insertBlockAndExtras /check point 4 " << t.elapsed() << std::endl;
+	cout << " step 5  dpos two populdate: " << t.elapsed() << std::endl;
 	return res;
 #else
 	return insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);

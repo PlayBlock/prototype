@@ -37,7 +37,7 @@ public:
 		//_db.reset();
 	};
 
-	void schedule_production_loop();
+	void schedule_production_loop(int microsecond);
 
 
 	block_production_condition::block_production_condition_enum should_produce();

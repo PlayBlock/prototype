@@ -25,10 +25,10 @@ producer_plugin::producer_plugin(const dev::eth::BlockChain& bc):
 	_producers = bc.chainParams().accountNames;
 }
 
-void producer_plugin::schedule_production_loop() 
+void producer_plugin::schedule_production_loop(int microsecond)
 {
 
-	_timer.expires_from_now(boost::posix_time::microseconds(100000));
+	_timer.expires_from_now(boost::posix_time::microseconds(microsecond));
 	_timer.wait();
 	////Schedule for the next second's tick regardless of chain state
 	//// If we would wait less than 50ms, wait for the whole second.

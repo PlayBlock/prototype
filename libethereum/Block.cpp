@@ -506,7 +506,7 @@ u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 {
 #if BenchMarkFlag
-	std::cout << "Block Enact transactions: "<< _block.transactions.size() << "number  :"<<_block.info.number() << std::endl;
+	//std::cout << "Block Enact transactions: "<< _block.transactions.size() << "number  :"<<_block.info.number() << std::endl;
 #endif
 	
 	noteChain(_bc);

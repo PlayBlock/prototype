@@ -28,6 +28,7 @@
 #include "BlockChain.h"
 #include "VerifiedBlock.h"
 #include "State.h"
+#include "BenchMark.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -111,7 +112,13 @@ void BlockQueue::verifierBody()
 		swap(work.blockData, res.blockData);
 		try
 		{
+#if BenchMarkFlag
+			Timer time;
+#endif
 			res.verified = m_bc->verifyBlock(&res.blockData, m_onBad, ImportRequirements::OutOfOrderChecks);
+#if BenchMarkFlag
+			std::cout << "Verify Block Time: " << time.elapsed() << " number: " << res.verified.info.number() << std::endl;
+#endif
 		}
 		catch (std::exception const& _ex)
 		{

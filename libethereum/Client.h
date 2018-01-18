@@ -362,6 +362,7 @@ private:
 
 	static bool m_cheat;
 	u256 m_lastProducedNumber = std::numeric_limits<u256>::max();
+	bool m_doRealWork;
 };
 
 }

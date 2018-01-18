@@ -738,6 +738,7 @@ void Client::generate_block(
 		EthereumHost::blockCheat(newBlock, bh_cheat.difficulty());
 	}
 
+
 	// 所有出块条件全部具备时开始出块
 	m_working.currentBlock().setTimestamp(u256(when.sec_since_epoch()));
     //m_working.currentBlock().setAuthor(producer);
@@ -762,6 +763,11 @@ void Client::generate_block(
 			m_postSeal = m_working;
 		m_sealingInfo = m_working.info();
 	}
+
+	m_doRealWork = true;
+#if	BenchMarkFlag		
+	std::cout << "m_realProduceBlock" << std::endl;
+#endif
 
 	//generateSeal(m_sealingInfo);
 	m_sealingInfo.sign(block_signing_private_key); 
@@ -863,21 +869,22 @@ void Client::noteChanged(h256Hash const& _filters)
 
 void Client::doWork(bool _doWait)
 {
-	//cout << "Client::doWork()" << endl;
+	m_doRealWork = false;
 	bool t = true;
-
 #if	BenchMarkFlag
 	Timer worktime;
 	Timer totaltime;
-	//std::cout << "=================doWork start==============" << std::endl;
-	//if (step1)
-	//{
-	//	std::cout << "step1 start:m_syncBlockQueue: " << m_syncBlockQueue << std::endl;
-	//}
+
 #endif
 	//若m_syncBlockQueue置位则同步BlockQueue
 	if (m_syncBlockQueue.compare_exchange_strong(t, false))
+	{
+#if	BenchMarkFlag		
+		//std::cout << "m_syncBlockQueue" << std::endl;
+#endif
+		m_doRealWork = true;
 		syncBlockQueue();
+	}
 
 #if	BenchMarkFlag
 	double step1 = worktime.elapsed();
@@ -908,7 +915,14 @@ void Client::doWork(bool _doWait)
 	DEV_READ_GUARDED(x_working)
 		isSealed = m_working.isSealed();
 	if (!isSealed && !isMajorSyncing() && !m_remoteWorking && m_syncTransactionQueue.compare_exchange_strong(t, false))
+	{
+#if	BenchMarkFlag		
+		std::cout <<"syncTransactionQueue"<< std::endl;
+#endif
+		m_doRealWork = true;
 		syncTransactionQueue();
+	}
+
 
 #if	BenchMarkFlag
 	double step2 = worktime.elapsed();
@@ -942,14 +956,21 @@ void Client::doWork(bool _doWait)
 	{
 		//std::unique_lock<std::mutex> l(x_signalled);
 		//m_signalled.wait_for(l, chrono::seconds(1));
-        m_producer_plugin->schedule_production_loop();
+        m_producer_plugin->schedule_production_loop(100000);
+	}
+	else
+	{
+		m_producer_plugin->schedule_production_loop(10000);
 	}
 
 #if	BenchMarkFlag
 	double step4 = worktime.elapsed();
 	//std::cout << "WorkTime total:" << totaltime.elapsed() << std::endl;
+	if (m_doRealWork)
+	{
+		//std::cout << "A real work loop: " << totaltime.elapsed() << " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4 << std::endl;
+	}
 
-	std::cout << "===loop Time: "<<totaltime.elapsed()<< " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4 << std::endl;
 #endif
 
 }
