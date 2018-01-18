@@ -277,6 +277,10 @@ DEFINE_INTRINSIC_FUNCTION0(env, gascount10, gascount10, none)
 
 DEFINE_INTRINSIC_FUNCTION0(env, checktime, checktime, none) {
 	//std::cout << "check time" << std::endl;
+	if (WASM_CORE::IsExecuteExceed())
+	{
+		BOOST_THROW_EXCEPTION(WASMTimeExceed());
+	}
 }
 
 //

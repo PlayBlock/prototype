@@ -582,13 +582,14 @@ namespace dev {
 
 		const std::map<Address, uint64_t> DposTestClient::get_all_producers()
 		{
-			std::map<Address, VoteInfo> voteInfo = _producer_plugin->get_chain_controller().get_votes();
-			std::map<Address, uint64_t> ret;
-			for (auto i : voteInfo)
-			{
-				ret[i.first] = i.second.getReceivedVotedNumber();
-			}
-			return ret;
+			return _producer_plugin->get_chain_controller().get_producers();
+			//std::map<Address, VoteInfo> voteInfo = _producer_plugin->get_chain_controller().get_votes();
+			//std::map<Address, uint64_t> ret;
+			//for (auto i : voteInfo)
+			//{
+			//	ret[i.first] = i.second.getReceivedVotedNumber();
+			//}
+			//return ret;
 		}
 
 		u256 DposTestClient::balance(const Address& _address) const

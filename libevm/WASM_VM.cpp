@@ -11,6 +11,7 @@ ExtVMFace* WASM_CORE::current_ext;
 bytes WASM_CORE::current_parameter;
 u256 WASM_CORE::u256_temp;
 WASM_CORE* WASM_VM::m_core;
+Timer WASM_CORE::execute_time;
 //by dz
 u256* WASM_VM::m_io_gas = nullptr;
 int WASM_CORE::mem_end = 0;
@@ -215,6 +216,7 @@ void WASM_CORE::destory()
 
 bytes WASM_CORE::run(const std::string& string, const char* functionName, uint64_t applyFunction, const bytes& args, ExtVMFace& _ext, bool isCreation)
 {
+	ResetTime();
 	if (*(U32*)string.data() != 0x6d736100)
 	{
 		return bytes(0);

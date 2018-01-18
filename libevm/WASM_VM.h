@@ -25,6 +25,7 @@ ETH_SIMPLE_EXCEPTION_VM(WASMOutOfGas);
 ETH_SIMPLE_EXCEPTION_VM(WASMWrongMemory);
 ETH_SIMPLE_EXCEPTION_VM(WASMParameterLengthTooSmall);
 ETH_SIMPLE_EXCEPTION_VM(WASMAssertFailed);
+ETH_SIMPLE_EXCEPTION_VM(WASMTimeExceed);
 
 const U32 CT256Size = sizeof(h256);
 const U32 AddressSize = sizeof(Address);
@@ -59,12 +60,6 @@ using namespace Runtime;
 
 class WASM_CORE
 {
-private:
-	static Runtime::MemoryInstance* current_memory;
-	static ExtVMFace* current_ext;
-	static bytes current_parameter;
-	static int mem_end;
-
 public:
 	WASM_CORE();
 	~WASM_CORE();
@@ -79,12 +74,27 @@ public:
 	static ExtVMFace* getExt() { return current_ext; }
 
 	static bytes getParameter() { return current_parameter; }
-	
+
 	static u256 u256_temp;
 
 	static void setMemoryEnd(int end) { mem_end = end; };
 
 	static int getMemoryEnd() { return mem_end; };
+	
+	static void ResetTime() {
+		execute_time.restart();
+	};
+	static bool IsExecuteExceed()
+	{
+		return execute_time.duration().count()>1000000;
+	}
+private:
+	static Runtime::MemoryInstance* current_memory;
+	static ExtVMFace* current_ext;
+	static bytes current_parameter;
+	static int mem_end;
+	static Timer execute_time;
+
 };
 
 

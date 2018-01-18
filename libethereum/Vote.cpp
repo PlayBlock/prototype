@@ -415,7 +415,7 @@ bool VoteManager::vote(Address const& _toAddress, uint64_t _votes, Address const
 		//not enough votes
 		return false;
 	}
-	if (sender.m_voteRecord.size() >= 15)
+	if (sender.m_voteRecord.size() >= 15 && sender.m_voteRecord.count(_toAddress)==0)
 	{
 		//not enough votes
 		return false;
