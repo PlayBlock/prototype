@@ -176,10 +176,13 @@ public:
 
 	void insert(KeyType const& _key, h256 const& _hash, bytes&& _blockData)
 	{
+		//此处是因为后面的std::move会把_blockData移空
+		std::size_t temp = _blockData.size();
+
 		auto hashAndBlock = std::make_pair(_hash, std::move(_blockData));
 		auto keyAndValue = std::make_pair(_key, std::move(hashAndBlock));
 		m_map.insert(std::move(keyAndValue));
-		m_size += _blockData.size();
+		m_size += temp;
 	}
 
 	std::vector<std::pair<h256, bytes>> removeByKeyEqual(KeyType const& _key)
