@@ -154,7 +154,20 @@ namespace dev {
 			return toHex(total);
 		}
 
-		void DposTestClient::mortgage_eth(Account& _from, uint64_t balance)
+		int precompiledCost(int base, int word, const string& data)
+		{
+			bytes _data = fromHex(data);
+			int baseGas = 21000;
+			for (auto i : _data)
+				baseGas += i ? 68 : 4;
+
+			int s = _data.size();
+			int pGas = base + (s + 31) / 32 * word;
+
+			return baseGas + pGas;
+		}
+
+		int DposTestClient::mortgage_eth(Account& _from, uint64_t balance)
 		{
 			string gasLimit = "0x325aa0";
 			string gasPrice = "0x77359400";
@@ -176,9 +189,11 @@ namespace dev {
 			m_working.addTransaction(tx);
 
 			_from.nonce++;
+
+			return precompiledCost(210000, 7, data);
 		}
 
-		void DposTestClient::redeem_eth(Account& _from, uint64_t voteCount)
+		int DposTestClient::redeem_eth(Account& _from, uint64_t voteCount)
 		{
 			string gasLimit = "0x325aa0";
 			string gasPrice = "0x77359400";
@@ -200,64 +215,19 @@ namespace dev {
 			m_working.addTransaction(tx);
 
 			_from.nonce++;
+
+			return precompiledCost(210000, 8, data);
 		}
 
-		//void DposTestClient::assign(Account& _from, uint64_t voteCount)
-		//{
-		//	string gasLimit = "0xc350";
-		//	string gasPrice = "0x04a817c800";
-		//	string to = "0000000000000000000000000000000000000028";
-		//	string value = "0x0";
-		//	string nonce = boost::lexical_cast<string>(_from.nonce);
-		//	string data = toHex(boost::lexical_cast<string>(voteCount));
-		//	string secretKey = _from.secret;
-		//
-		//	json_spirit::mObject obj;
-		//	obj.emplace(make_pair("gasLimit", gasLimit));
-		//	obj.emplace(make_pair("gasPrice", gasPrice));
-		//	obj.emplace(make_pair("to", to));
-		//	obj.emplace(make_pair("value", value));
-		//	obj.emplace(make_pair("nonce", nonce));
-		//	obj.emplace(make_pair("data", data));
-		//	obj.emplace(make_pair("secretKey", secretKey));
-		//	TestTransaction tx(obj);
-		//	m_working.addTransaction(tx);
-		//
-		//	_from.nonce++;
-		//}
-		//
-		//void DposTestClient::deAssign(Account& _from, uint64_t voteCount)
-		//{
-		//	string gasLimit = "0xc350";
-		//	string gasPrice = "0x04a817c800";
-		//	string to = "0000000000000000000000000000000000000029";
-		//	string value = "0x0";
-		//	string nonce = boost::lexical_cast<string>(_from.nonce);
-		//	string data = toHex(boost::lexical_cast<string>(voteCount));
-		//	string secretKey = _from.secret;
-		//
-		//	json_spirit::mObject obj;
-		//	obj.emplace(make_pair("gasLimit", gasLimit));
-		//	obj.emplace(make_pair("gasPrice", gasPrice));
-		//	obj.emplace(make_pair("to", to));
-		//	obj.emplace(make_pair("value", value));
-		//	obj.emplace(make_pair("nonce", nonce));
-		//	obj.emplace(make_pair("data", data));
-		//	obj.emplace(make_pair("secretKey", secretKey));
-		//	TestTransaction tx(obj);
-		//	m_working.addTransaction(tx);
-		//
-		//	_from.nonce++;
-		//}
 
-		void DposTestClient::make_producer(Account& _from, const string& name, const string& url)
+		int DposTestClient::make_producer(Account& _from, const string& name, const string& url)
 		{
 			string gasLimit = "0x325aa0";
 			string gasPrice = "0x77359400";
 			string to = "0000000000000000000000000000000000000024";
 			string value = "0x0";
 			string nonce = boost::lexical_cast<string>(_from.nonce);
-			string data = "0x" + toHex(name) + "00" + toHex(url);
+			string data = toHex(name) + "00" + toHex(url);
 
 			string secretKey = _from.secret;
 
@@ -273,9 +243,11 @@ namespace dev {
 			m_working.addTransaction(tx);
 
 			_from.nonce++;
+
+			return precompiledCost(2100000, 9, data);
 		}
 
-		void DposTestClient::unmake_producer(Account& _from)
+		int DposTestClient::unmake_producer(Account& _from)
 		{
 			string gasLimit = "0x325aa0";
 			string gasPrice = "0x77359400";
@@ -297,6 +269,8 @@ namespace dev {
 			m_working.addTransaction(tx);
 
 			_from.nonce++;
+
+			return precompiledCost(210000, 10, data);
 		}
 		void DposTestClient::make_pow_transaction(Account& _from, ETIProofOfWork::Solution& _sol)
 		{
@@ -483,7 +457,7 @@ namespace dev {
 			_from.nonce++;
 		}
 
-		void DposTestClient::approve_producer(Account& voter, const Account& on, uint64_t voteCount)
+		int DposTestClient::approve_producer(Account& voter, const Account& on, uint64_t voteCount)
 		{
 			string gasLimit = "0x325aa0";
 			string gasPrice = "0x77359400";
@@ -505,6 +479,8 @@ namespace dev {
 			m_working.addTransaction(tx);
 
 			voter.nonce++;
+
+			return precompiledCost(210000, 6, data);
 		}
 
 		void DposTestClient::unapprove_producer(Account& voter, const Account& on, uint64_t voteCount)

@@ -1025,8 +1025,8 @@ namespace dev {
 
 			u256 balance2 = client.balance(Address(account.address));
 			u256 cost_call = balance1 - balance2;
-			BOOST_REQUIRE(cost_call == u256(502320000000000));
 			cout << "cost_call.str(): " << cost_call.str() << endl;
+			BOOST_REQUIRE(cost_call == u256(452460000000000));
 
 			//调用合约方法2 减
 			client.sendTransaction(gasLimit, gasPrice, s_address, value, test_func2_string, account);  //Call contract code.
@@ -1034,8 +1034,8 @@ namespace dev {
 
 			u256 balance3 = client.balance(Address(account.address));
 			u256 cost_call_2 = balance2 - balance3;
-			BOOST_REQUIRE(cost_call_2 == u256(501040000000000));
 			cout << "cost_call_2.str(): " << cost_call_2.str() << endl;
+			BOOST_REQUIRE(cost_call_2 == u256(451180000000000));
 
 			
 			//调用合约方法3 IO
@@ -1044,8 +1044,8 @@ namespace dev {
 
 			u256 balance4 = client.balance(Address(account.address));
 			u256 cost_call_3 = balance3 - balance4;
-			BOOST_REQUIRE(cost_call_3 == u256(1009400000000000));
 			cout << "cost_call_3.str(): " << cost_call_3.str() << endl;
+			BOOST_REQUIRE(cost_call_3 == u256(957580000000000));
 		}
 
 		BOOST_AUTO_TEST_CASE(ctInitGas)

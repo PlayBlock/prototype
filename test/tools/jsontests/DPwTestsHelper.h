@@ -73,13 +73,13 @@ namespace dev {
 
 			string getWAVMData(string function, Address address = Address());
 
-			void mortgage_eth(Account& _from, uint64_t balance);
+			int mortgage_eth(Account& _from, uint64_t balance);
 
-			void redeem_eth(Account& _from, uint64_t voteCount);
+			int redeem_eth(Account& _from, uint64_t voteCount);
 
-			void make_producer(Account& _from, const string& name = "a", const string& url = "bcdef");
+			int make_producer(Account& _from, const string& name = "a", const string& url = "bcdef");
 
-			void unmake_producer(Account& _from);
+			int unmake_producer(Account& _from);
 
 			void make_pow_producer(Account& _from, enum class setPowTest);
 
@@ -90,7 +90,7 @@ namespace dev {
 
 			void send(Account& _from, const Account& on, uint64_t voteCount);
 
-			void approve_producer(Account& voter, const Account& on, uint64_t voteCount);
+			int approve_producer(Account& voter, const Account& on, uint64_t voteCount);
 
 			void unapprove_producer(Account& voter, const Account& on, uint64_t voteCount);
 
