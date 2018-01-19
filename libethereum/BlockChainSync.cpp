@@ -251,16 +251,9 @@ void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
 	if (!_peer->isLlegal())
 		return;
 
-	u256 td = host().chain().details().totalDifficulty;
-	if (host().bq().isActive())
-		td += host().bq().difficulty();
-
-	u256 syncingDifficulty = std::max(m_syncingTotalDifficulty, td);
-
-	if (_force || _peer->m_totalDifficulty > syncingDifficulty)
+	if (_force)
 	{
 		// start sync
-		m_syncingTotalDifficulty = _peer->m_totalDifficulty;
 		if (m_state == SyncState::Idle || m_state == SyncState::NotSynced)
 			m_state = SyncState::Blocks;
 		_peer->requestBlockHeaders(_peer->m_latestHash, 1, 0, false);

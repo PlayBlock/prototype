@@ -577,7 +577,7 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 	// Send any new blocks.
 	auto detailsFrom = m_chain.details(m_latestBlockSent);
 	auto detailsTo = m_chain.details(_currentHash);
-	if (detailsFrom.totalDifficulty < detailsTo.totalDifficulty)
+	if (detailsFrom.number < detailsTo.number)
 	{
 		if (diff(detailsFrom.number, detailsTo.number) < 20)
 		{
