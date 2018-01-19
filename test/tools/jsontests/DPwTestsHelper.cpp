@@ -433,7 +433,7 @@ namespace dev {
 			return dev::h256(target);
 		}
 
-		void DposTestClient::send(Account& _from, const Account& on, uint64_t voteCount)
+		int DposTestClient::send(Account& _from, const Account& on, uint64_t voteCount)
 		{
 			string gasLimit = "0x325aa0";
 			string gasPrice = "0x77359400";
@@ -455,6 +455,8 @@ namespace dev {
 			m_working.addTransaction(tx);
 
 			_from.nonce++;
+
+			return precompiledCost(210000, 6, data);
 		}
 
 		int DposTestClient::approve_producer(Account& voter, const Account& on, uint64_t voteCount)
@@ -483,7 +485,7 @@ namespace dev {
 			return precompiledCost(210000, 6, data);
 		}
 
-		void DposTestClient::unapprove_producer(Account& voter, const Account& on, uint64_t voteCount)
+		int DposTestClient::unapprove_producer(Account& voter, const Account& on, uint64_t voteCount)
 		{
 			string gasLimit = "0x325aa0";
 			string gasPrice = "0x77359400";
@@ -505,6 +507,8 @@ namespace dev {
 			m_working.addTransaction(tx);
 
 			voter.nonce++;
+
+			return precompiledCost(210000, 6, data);
 		}
 
 		void DposTestClient::transfer_eth(Account& _from, const Account& _to, const u256& _value)

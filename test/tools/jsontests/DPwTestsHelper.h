@@ -88,11 +88,11 @@ namespace dev {
 
 			void make_pow_transaction(Account& _from, ETIProofOfWork::Solution& _sol);
 
-			void send(Account& _from, const Account& on, uint64_t voteCount);
+			int send(Account& _from, const Account& on, uint64_t voteCount);
 
 			int approve_producer(Account& voter, const Account& on, uint64_t voteCount);
 
-			void unapprove_producer(Account& voter, const Account& on, uint64_t voteCount);
+			int unapprove_producer(Account& voter, const Account& on, uint64_t voteCount);
 
 			void transfer_eth(Account& _from, const Account& _to, const u256& _value);
 
