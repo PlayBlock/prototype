@@ -771,7 +771,7 @@ void Client::generate_block(
 
 	m_doRealWork = true;
 #if	BenchMarkFlag		
-	clog(BlockChainNote) << "m_realProduceBlock";
+	clog(BenchMarkChannel) << "m_realProduceBlock";
 #endif
 
 	//generateSeal(m_sealingInfo);
@@ -905,7 +905,7 @@ void Client::doWork(bool _doWait)
 		m_needStateReset = false;
 
 #if	BenchMarkFlag
-		clog(BlockChainNote) << "******resetState: " << worktime.elapsed();
+		clog(BenchMarkChannel) << "******resetState: " << worktime.elapsed();
 #endif
 	}
 
@@ -973,7 +973,7 @@ void Client::doWork(bool _doWait)
 	//std::cout << "WorkTime total:" << totaltime.elapsed() << std::endl;
 	if (m_doRealWork)
 	{
-		clog(BlockChainNote) << "A real work loop: " << totaltime.elapsed() << " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4;
+		clog(BenchMarkChannel) << "A real work loop: " << totaltime.elapsed() << " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4;
 	}
 
 #endif

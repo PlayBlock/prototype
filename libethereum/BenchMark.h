@@ -20,9 +20,11 @@
  */
 
 #pragma once
-
+#include <libdevcore/Log.h>
 #include <libdevcore/Common.h>
-#define BenchMarkFlag 0
+struct BenchMarkChannel : public LogChannel { static const char* name(); static const int verbosity = 0; static const bool debug = false;
+};
+#define BenchMarkFlag 1
 namespace dev
 {
 namespace eth

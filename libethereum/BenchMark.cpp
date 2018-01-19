@@ -20,9 +20,8 @@
  */
 
 #pragma once
-
 #include "BenchMark.h"
-
+const char* BenchMarkChannel::name() { return EthGreen "BenchMark"; }
 using namespace dev;
 using namespace dev::eth;
 
@@ -39,16 +38,8 @@ void BenchMark::makeCurrent(BenchMark* current)
 
 void BenchMark::showSummary(double passTime)
 {
-	std::cout << "Count: "<< _current->Name;
-	std::cout << " Transfer      : " << _current->Transfer;
-	std::cout << " WrongDeal     : " << _current->WrongDeal;
-	std::cout << " ContractCall  : " << _current->ContractCall;
-	std::cout << " ContractCreate: " << _current->ContractCreate << std::endl;;
-	std::cout << " Speed: ";
-	std::cout << " Transfer      : " << _current->Transfer/ passTime;
-	std::cout << " WrongDeal     : " << _current->WrongDeal/ passTime;
-	std::cout << " ContractCall  : " << _current->ContractCall/ passTime;
-	std::cout << " ContractCreate: " << _current->ContractCreate/ passTime<<std::endl;
+	
+	clog(BenchMarkChannel) << "Count: "<< _current->Name<< " Transfer  : " << _current->Transfer << " WrongDeal : " << _current->WrongDeal<< " ContractCall  : " << _current->ContractCall<< " ContractCreate: " << _current->ContractCreate << " Speed: " << " Transfer      : " << _current->Transfer/ passTime << " WrongDeal     : " << _current->WrongDeal/ passTime << " ContractCall  : " << _current->ContractCall/ passTime<< " ContractCreate: " << _current->ContractCreate/ passTime;
 }
 void BenchMark::IncreaseInvalidDeal()
 {

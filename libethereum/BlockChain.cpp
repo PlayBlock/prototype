@@ -668,7 +668,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	}
 
 #if BenchMarkFlag
-	clog(BlockChainNote) << "Block Import: step1: " << t.elapsed();
+	clog(BenchMarkChannel) << "Block Import: step1: " << t.elapsed();
 	t.restart();
 #endif // BenchMarkFlag
 
@@ -690,7 +690,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	checkBlockTimestamp(_block.info);
 
 #if BenchMarkFlag
-	clog(BlockChainNote) << " step 2: " << t.elapsed();
+	clog(BenchMarkChannel) << " step 2: " << t.elapsed();
 	t.restart();
 #endif // BenchMarkFlag
 
@@ -698,7 +698,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);
 
 #if BenchMarkFlag
-	clog(BlockChainNote) << " step 3: " << t.elapsed();
+	clog(BenchMarkChannel) << " step 3: " << t.elapsed();
 	t.restart();
 #endif // BenchMarkFlag
 
@@ -716,7 +716,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		auto tdIncrease = s.enactOn(_block, *this);
 
 #if BenchMarkFlag
-		clog(BlockChainNote) << " step 4: " << t.elapsed();
+		clog(BenchMarkChannel) << " step 4: " << t.elapsed();
 		t.restart();
 #endif // BenchMarkFlag
 
@@ -756,7 +756,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	t.restart();
 	auto res = insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
 	//cout << " ZP populdate: " << t.elapsed() << std::endl;
-	clog(BlockChainNote) << " Total Import Time: " << total.elapsed() <<" number:"<<_block.info.number()<<" size:"<< _block.transactions.size();
+	clog(BenchMarkChannel) << " Total Import Time: " << total.elapsed() <<" number:"<<_block.info.number()<<" size:"<< _block.transactions.size();
 	
 	return res;
 #else
