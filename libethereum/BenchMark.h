@@ -22,13 +22,15 @@
 #pragma once
 #include <libdevcore/Log.h>
 #include <libdevcore/Common.h>
-struct BenchMarkChannel : public LogChannel { static const char* name(); static const int verbosity = 0; static const bool debug = false;
-};
-#define BenchMarkFlag 1
+
+#define BenchMarkFlag 0
 namespace dev
 {
 namespace eth
 {
+struct BenchMarkChannel : public LogChannel {
+	static const char* name(); static const int verbosity = 0; static const bool debug = false;
+};
 class BenchMark
 {
 public:	

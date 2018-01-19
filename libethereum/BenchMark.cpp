@@ -21,9 +21,10 @@
 
 #pragma once
 #include "BenchMark.h"
-const char* BenchMarkChannel::name() { return EthGreen "BenchMark"; }
+
 using namespace dev;
 using namespace dev::eth;
+const char* BenchMarkChannel::name() { return EthGreen "BenchMark"; }
 
 BenchMark* BenchMark::_current = nullptr;
 
