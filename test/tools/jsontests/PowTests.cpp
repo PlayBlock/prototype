@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(dtGetErrorBlockid)
 	}
 	BOOST_REQUIRE(num == 0);
 
-	std::cout << "account.balance = " << client.balance(AccountName(account.address)) << std::endl;
+	ctrace << "account.balance = " << client.balance(AccountName(account.address));
 	BOOST_REQUIRE((u256(1000000000000000000) - client.balance(AccountName(account.address))) >=0);
 }
 //同时有N个节点计算出来target
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(dtLittleDposProducer)
 
 	//当前没有DPOS生产者
 	auto VoteProducers = client.get_all_producers();
-	std::cout << "currentProducers : " << VoteProducers.size() << std::endl;
+	ctrace << "currentProducers : " << VoteProducers.size() ;
 	BOOST_REQUIRE(VoteProducers.size() == 0);
 
 	//注册DPOS生产者
@@ -875,8 +875,8 @@ BOOST_AUTO_TEST_CASE(dtVoteChangeTest)
 		BOOST_CHECK_MESSAGE(account_block[AccountName(accounts[0].address)], 12);
 	}
 	BOOST_REQUIRE(account_block[AccountName(accounts[16].address)] == 5);
-	std::cout << "17 : " <<account_block[AccountName(accounts[17].address)] << std::endl;
-	std::cout << "18 : " << account_block[AccountName(accounts[18].address)] << std::endl;
+	ctrace << "17 : " <<account_block[AccountName(accounts[17].address)];
+	ctrace << "18 : " << account_block[AccountName(accounts[18].address)];
 	//BOOST_REQUIRE(account_block[AccountName(accounts[17].address)] == 4);
 	//BOOST_REQUIRE(account_block[AccountName(accounts[18].address)] == 4);
 }

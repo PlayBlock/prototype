@@ -214,7 +214,7 @@ Options::Options(int argc, char** argv)
 				randomCodeOptionsPath = file;
 			else
 			{
-				std::cerr << "Options file not found! Default options at: tests/src/randomCodeOptions.json\n";
+				ctrace << "Options file not found! Default options at: tests/src/randomCodeOptions.json\n";
 				exit(0);
 			}
 		}

@@ -144,7 +144,7 @@ ImportResult TransactionQueue::manageImport_WITH_LOCK(h256 const& _h, Transactio
 					//m_onReplaced(dropped);
 					//u160 f = _transaction.from();
 					//u160 t = _transaction.to();
-					//std::cout << "f:" << f << "   t:" << t << std::endl;
+					//ctrace << "f:" << f << "   t:" << t;
 					return ImportResult::AlreadyKnown;
 				}
 			}

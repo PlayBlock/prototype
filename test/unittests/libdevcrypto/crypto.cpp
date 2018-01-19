@@ -800,7 +800,7 @@ BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::label("perf"))
 {
 	if (!test::Options::get().all)
 	{
-		std::cout << "Skipping test Crypto/devcrypto/PerfSHA256_32. Use --all to run it.\n";
+		ctrace << "Skipping test Crypto/devcrypto/PerfSHA256_32. Use --all to run it.\n";
 		return;
 	}
 
@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(PerfSHA256_4000, *utf::label("perf"))
 {
 	if (!test::Options::get().all)
 	{
-		std::cout << "Skipping test Crypto/devcrypto/PerfSHA256_4000. Use --all to run it.\n";
+		ctrace << "Skipping test Crypto/devcrypto/PerfSHA256_4000. Use --all to run it.\n";
 		return;
 	}
 

@@ -427,10 +427,10 @@ bool BlockQueue::unknownFull() const
 	bool ret = unknownSize() > c_maxUnknownSize || unknownCount() > c_maxUnknownCount;
 
 	if (ret) {
-		std::cout << "=====>>> unknownSize = " << unknownSize() << std::endl;
-		std::cout << "=====>>> c_maxUnknownSize = " << c_maxUnknownSize << std::endl;
-		std::cout << "=====>>> unknownCount = " << unknownCount() << std::endl;
-		std::cout << "=====>>> c_maxUnknownCount = " << c_maxUnknownCount << std::endl;
+		ctrace << "=====>>> unknownSize = " << unknownSize();
+		ctrace << "=====>>> c_maxUnknownSize = " << c_maxUnknownSize;
+		ctrace << "=====>>> unknownCount = " << unknownCount();
+		ctrace << "=====>>> c_maxUnknownCount = " << c_maxUnknownCount;
 	}
 	return ret;
 }

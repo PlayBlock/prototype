@@ -447,9 +447,9 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 	}
 
 #if ETH_TIMED_ENACTMENTS
-	//std::cout << "sha3time: " << sha3time << std::endl;
-	//std::cout << "executetime: " << executetime << std::endl;
-	std::cout << "Top Transaction num:" << ts.size() << std::endl;
+	//ctrace << "sha3time: " << sha3time;
+	//ctrace << "executetime: " << executetime;
+	ctrace << "Top Transaction num:" << ts.size();
 #endif
 	return ret;
 }
@@ -506,7 +506,7 @@ u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 {
 #if BenchMarkFlag
-	//std::cout << "Block Enact transactions: "<< _block.transactions.size() << "number  :"<<_block.info.number() << std::endl;
+	//ctrace << "Block Enact transactions: "<< _block.transactions.size() << "number  :"<<_block.info.number();
 #endif
 	
 	noteChain(_bc);

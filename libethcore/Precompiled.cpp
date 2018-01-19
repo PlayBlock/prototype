@@ -288,7 +288,7 @@ ETH_REGISTER_PRECOMPILED(powReceive)(bytesConstRef _in, Address const& _address,
 
 	if (sizeOfBuf != _in.size())
 	{
-		std::cout << "illegal _in buf size : " << _in.size() << " size should be : " << sizeOfBuf << std::endl;
+		ctrace << "illegal _in buf size : " << _in.size() << " size should be : " << sizeOfBuf;
 		return make_pair(false, bytes());
 	}
 
@@ -301,11 +301,11 @@ ETH_REGISTER_PRECOMPILED(powReceive)(bytesConstRef _in, Address const& _address,
 	op._loadImpl(inBuf);
 
 	if (!op.validate()) {//未验证成功
-		std::cout << "illegal pow answer !!!!" << std::endl;
+		ctrace << "illegal pow answer !!!!";
 		return make_pair(false, bytes());
 	}
 
-	std::cout << "POW Worker Pass Answer Validation!! address = " << _address.hex() << std::endl;  
+	ctrace << "POW Worker Pass Answer Validation!! address = " << _address.hex();  
 
 	//记录pow信息到state
  	VoteDelegate::pow(_address, _state,

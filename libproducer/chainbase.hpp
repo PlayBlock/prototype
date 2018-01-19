@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <typeindex>
 #include <typeinfo>
+#include "libdevcore/Log.h"
 
 #ifndef CHAINBASE_NUM_RW_LOCKS
    #define CHAINBASE_NUM_RW_LOCKS 10
@@ -923,7 +924,7 @@ namespace chainbase {
                while( !lock.timed_lock( boost::posix_time::microsec_clock::local_time() + boost::posix_time::microseconds( wait_micro ) ) )
                {
                   _rw_manager->next_lock();
-                  std::cerr << "Lock timeout, moving to lock " << _rw_manager->current_lock_num() << std::endl;
+				  ctrace << "Lock timeout, moving to lock " << _rw_manager->current_lock_num();
                   lock = write_lock( _rw_manager->current_lock(), boost::defer_lock_t() );
                }
             }

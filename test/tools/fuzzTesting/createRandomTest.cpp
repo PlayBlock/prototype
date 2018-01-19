@@ -49,7 +49,7 @@ bool createRandomTest()
 		if (options.randomCodeOptionsPath.is_initialized())
 			codeOptions.loadFromFile(options.randomCodeOptionsPath.get());
 		std::string test = test::RandomCode::get().fillRandomTest(suite, c_testExampleStateTest, codeOptions);
-		std::cout << test << "\n";
+		ctrace << test << "\n";
 		return test.empty() ? false : true;
 	}
 }

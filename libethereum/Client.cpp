@@ -72,7 +72,7 @@ Client::Client(
 ):
 	ClientBase(),
 	Worker("eth", 0),
-	m_bc(_params, _dbPath, _forceAction, [](unsigned d, unsigned t){ std::cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
+	m_bc(_params, _dbPath, _forceAction, [](unsigned d, unsigned t){ ctrace<< "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
 	m_tq(_l),
 	m_gp(_gpForAdoption ? _gpForAdoption : make_shared<TrivialGasPricer>()),
 	m_preSeal(chainParams().accountStartNonce),
@@ -406,7 +406,7 @@ void Client::syncBlockQueue()
 	//mark1.showSummary(timer1.elapsed());
 	//timer1.restart();
 
-	//std::cout << "Block Time: " << time.elapsed() << std::endl;
+	//ctrace << "Block Time: " << time.elapsed();
 #endif
 
 	//导入用时
@@ -452,7 +452,7 @@ void Client::syncTransactionQueue()
 		tie(newPendingReceipts, m_syncTransactionQueue) = m_working.sync(bc(), m_tq, *m_gp);
 
 #if BenchMarkFlag
-		//std::cout <<"Transaction  Use Time: "<<time.elapsed() << std::endl;
+		//ctrace <<"Transaction  Use Time: "<<time.elapsed();
 		//static int roundcount = 0;
 		//roundcount++;
 		//static Timer timer2;
@@ -538,8 +538,8 @@ void Client::resyncStateFromChain()
 			return;
 		
 #if BenchMarkFlag
-	//std::cout << "m_working.info().parentHash()" << m_working.info().parentHash() <<std::endl;
-	//std::cout << "lient::resyncStateFromChain" << std::endl;
+	//ctrace << "m_working.info().parentHash()" << m_working.info().parentHash();
+	//ctrace << "lient::resyncStateFromChain";
 #endif
 
 	// RESTART MINING
@@ -726,7 +726,7 @@ void Client::generate_block(
 		bh_cheat.streamRLP(blockHeaderRLP_cheat);
 		//if (!submitSealed(blockHeaderRLP_cheat.out()))
 		//{
-			//std::cerr << "submitSealed error!" << std::endl;
+			//ctrace << "submitSealed error!";
 		//}
 
 		bytes newBlock;
@@ -782,10 +782,10 @@ void Client::generate_block(
 
 	if (!submitSealed(blockHeaderRLP.out()))
 	{
-		std::cerr << "submitSealed error!" << std::endl;
+		ctrace << "submitSealed error!";
 	}
 	m_lastProducedNumber = m_working.info().number();
-	//std::cout << "m_lastProducedNumber: " << m_lastProducedNumber.str() << std::endl;
+	//ctrace << "m_lastProducedNumber: " << m_lastProducedNumber.str();
 }
 
 
@@ -885,7 +885,7 @@ void Client::doWork(bool _doWait)
 	if (m_syncBlockQueue.compare_exchange_strong(t, false))
 	{
 #if	BenchMarkFlag		
-		//std::cout << "m_syncBlockQueue" << std::endl;
+		//ctrace << "m_syncBlockQueue";
 #endif
 		m_doRealWork = true;
 		syncBlockQueue();
@@ -922,7 +922,7 @@ void Client::doWork(bool _doWait)
 	if (!isSealed && !isMajorSyncing() && !m_remoteWorking && m_syncTransactionQueue.compare_exchange_strong(t, false))
 	{
 #if	BenchMarkFlag		
-		//std::cout <<"syncTransactionQueue"<< std::endl;
+		//ctrace <<"syncTransactionQueue";
 #endif
 		m_doRealWork = true;
 		syncTransactionQueue();
@@ -932,7 +932,7 @@ void Client::doWork(bool _doWait)
 #if	BenchMarkFlag
 	double step2 = worktime.elapsed();
 	worktime.restart();
-	//std::cout << "step3 start:m_syncTransactionQueue: " << m_syncTransactionQueue << std::endl;
+	//ctrace << "step3 start:m_syncTransactionQueue: " << m_syncTransactionQueue;
 #endif
 
 	tick();
@@ -942,7 +942,7 @@ void Client::doWork(bool _doWait)
 		rejigSealing();
 	}
 	else {
-		//std::cout << "already rejig so quit" << std::endl;
+		//ctrace << "already rejig so quit";
 	}
 
 	callQueuedFunctions();
@@ -950,7 +950,7 @@ void Client::doWork(bool _doWait)
 #if	BenchMarkFlag
 	double step3 = worktime.elapsed();
 	worktime.restart();
-	//std::cout << "step4 start:m_syncBlockQueue: "<< m_syncBlockQueue<< " m_syncTransactionQueue: " << m_syncTransactionQueue << " isSealed: "<< isSealed <<std::endl;
+	//ctrace << "step4 start:m_syncBlockQueue: "<< m_syncBlockQueue<< " m_syncTransactionQueue: " << m_syncTransactionQueue << " isSealed: "<< isSealed;
 #endif
 
 	DEV_READ_GUARDED(x_working)
@@ -970,7 +970,7 @@ void Client::doWork(bool _doWait)
 
 #if	BenchMarkFlag
 	double step4 = worktime.elapsed();
-	//std::cout << "WorkTime total:" << totaltime.elapsed() << std::endl;
+	//ctrace << "WorkTime total:" << totaltime.elapsed();
 	if (m_doRealWork)
 	{
 		clog(BenchMarkChannel) << "A real work loop: " << totaltime.elapsed() << " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4;

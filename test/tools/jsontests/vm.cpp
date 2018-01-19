@@ -487,7 +487,7 @@ public:
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "vmPerformance" && !Options::get().all)
 		{
-			std::cout << "Skipping " << casename << " because --all option is not specified.\n";
+			ctrace << "Skipping " << casename << " because --all option is not specified.\n";
 			return;
 		}
 		suite.runAllTestsInFolder(casename);

@@ -92,7 +92,7 @@ public:
 	/// True if the trie is initialised but empty (i.e. that the DB contains the root node which is empty).
 	bool isEmpty() const { return m_root == EmptyTrie && node(m_root).size(); }
 
-	h256 const& root() const { if (node(m_root).empty()) BOOST_THROW_EXCEPTION(BadRoot(m_root)); /*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/ return m_root; }	// patch the root in the case of the empty trie. TODO: handle this properly.
+	h256 const& root() const { if (node(m_root).empty()) BOOST_THROW_EXCEPTION(BadRoot(m_root)); /*ctrace << "Returning root as " << ret << " (really " << m_root << ")";*/ return m_root; }	// patch the root in the case of the empty trie. TODO: handle this properly.
 
 	std::string at(bytes const& _key) const { return at(&_key); }
 	std::string at(bytesConstRef _key) const;
@@ -868,7 +868,7 @@ template <class DB> bytes GenericTrieDB<DB>::mergeAt(RLP const& _orig, h256 cons
 		}
 
 		auto sh = _k.shared(k);
-//		std::cout << _k << " sh " << k << " = " << sh << std::endl;
+//		ctrace << _k << " sh " << k << " = " << sh;
 		if (sh)
 		{
 			// shared stuff - cleve at disagreement.
@@ -1171,7 +1171,7 @@ template <class DB> bytes GenericTrieDB<DB>::graft(RLP const& _orig)
 
 	return rlpList(hexPrefixEncode(keyOf(_orig), keyOf(n), isLeaf(n)), n[1]);
 //	auto ret =
-//	std::cout << keyOf(_orig) << " ++ " << keyOf(n) << " == " << keyOf(RLP(ret)) << std::endl;
+//	ctrace << keyOf(_orig) << " ++ " << keyOf(n) << " == " << keyOf(RLP(ret));
 //	return ret;
 }
 

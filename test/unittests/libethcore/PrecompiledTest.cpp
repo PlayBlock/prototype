@@ -674,7 +674,7 @@ void benchmarkPrecompiled(char const name[], vector_ref<const PrecompiledTest> t
 	State* p = nullptr; State NullConference(*p);
 	if (!Options::get().all)
 	{
-		std::cout << "Skipping benchmark test because --all option is not specified.\n";
+		ctrace << "Skipping benchmark test because --all option is not specified.\n";
 		return;
 	}
 
@@ -696,7 +696,7 @@ void benchmarkPrecompiled(char const name[], vector_ref<const PrecompiledTest> t
 		auto d = timer.duration() / n;
 
 		auto t = std::chrono::duration_cast<std::chrono::nanoseconds>(d).count();
-		std::cout << ut::framework::current_test_case().p_name << "/" << test.name << ": " << t << " ns\n";
+		ctrace << ut::framework::current_test_case().p_name << "/" << test.name << ": " << t << " ns\n";
 	}
 }
 }
