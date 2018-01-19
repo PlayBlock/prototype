@@ -212,7 +212,7 @@ ProducerRound chain_controller::calculate_next_round(const BlockHeader& next_blo
 void chain_controller::update_global_properties(const BlockHeader& b) {
 	// If we're at the end of a round, update the BlockchainConfiguration, producer schedule
 	// and "producers" special account authority
-	ctrace << "============>BlockNum = "<<b.number().convert_to<uint32_t>();
+	ctrace << "============>BlockNum = "<<b.number().convert_to<uint32_t>()<<" "<<b.producer();
 	if (b.number().convert_to<uint32_t>() % config::TotalProducersPerRound == 0) {
 		try {
 			auto schedule = calculate_next_round(b);
