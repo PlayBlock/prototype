@@ -105,7 +105,7 @@ ImportResult TransactionQueue::import(Transaction const& _transaction, IfDropped
 Transactions TransactionQueue::topTransactions(unsigned _limit, h256Hash const& _avoid) const
 {
 #if BenchMarkFlag
-	std::cout << "TransactionQueue::topTransactions m_current: " << m_current.size() << std::endl;
+	clog(TransactionQueueTraceChannel) << "TransactionQueue::topTransactions m_current: " << m_current.size();
 #endif
 
 	ReadGuard l(m_lock);
@@ -173,7 +173,7 @@ ImportResult TransactionQueue::manageImport_WITH_LOCK(h256 const& _h, Transactio
 		while (m_current.size() > m_limit)
 		{
 #if BenchMarkFlag
-			std::cout << "Dropping out of bounds transaction: " << m_current.size() << std::endl;
+			clog(TransactionQueueTraceChannel) << "Dropping out of bounds transaction: " << m_current.size();
 #endif
 			clog(TransactionQueueTraceChannel) << "Dropping out of bounds transaction" << _h;
 			remove_WITH_LOCK(m_current.rbegin()->transaction.sha3());

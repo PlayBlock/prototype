@@ -117,7 +117,7 @@ void BlockQueue::verifierBody()
 #endif
 			res.verified = m_bc->verifyBlock(&res.blockData, m_onBad, ImportRequirements::OutOfOrderChecks);
 #if BenchMarkFlag
-			std::cout << "Verify Block Time: " << time.elapsed() << " number: " << res.verified.info.number() << std::endl;
+			clog(BlockChainNote) << "Verify Block Time: " << time.elapsed() << " number: " << res.verified.info.number();
 #endif
 		}
 		catch (std::exception const& _ex)
