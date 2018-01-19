@@ -591,16 +591,33 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 					return !p->m_knownBlocks.count(_currentHash);
 				return false;
 			});
-			for (shared_ptr<EthereumPeer> const& p: get<0>(s))
-				for (auto const& b: blocks)
-				{
-					RLPStream ts;
-					p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(m_chain.details(b).totalDifficulty);
+			//for (shared_ptr<EthereumPeer> const& p: get<0>(s))
+			//	for (auto const& b: blocks)
+			//	{
+			//		RLPStream ts;
+			//		p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(m_chain.details(b).totalDifficulty);
 
-					Guard l(p->x_knownBlocks);
-					p->sealAndSend(ts);
-					p->m_knownBlocks.clear();
+			//		Guard l(p->x_knownBlocks);
+			//		p->sealAndSend(ts);
+			//		p->m_knownBlocks.clear();
+			//	}
+
+			// 给所有peer发送NewBlockHashesPacket
+			for (shared_ptr<EthereumPeer> const& p : get<0>(s))
+			{
+				RLPStream ts;
+				p->prep(ts, NewBlockHashesPacket, blocks.size());
+				for (auto const& b : blocks)
+				{
+					ts.appendList(2);
+					ts.append(b);
+					ts.append(m_chain.number(b));
 				}
+
+				Guard l(p->x_knownBlocks);
+				p->sealAndSend(ts);
+				p->m_knownBlocks.clear();
+			}
 			for (shared_ptr<EthereumPeer> const& p: get<1>(s))
 			{
 				RLPStream ts;
