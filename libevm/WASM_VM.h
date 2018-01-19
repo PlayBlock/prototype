@@ -86,7 +86,7 @@ public:
 	};
 	static bool IsExecuteExceed()
 	{
-		return execute_time.duration().count()>1000000;
+		return execute_time.duration().count()>1000000000;
 	}
 private:
 	static Runtime::MemoryInstance* current_memory;
