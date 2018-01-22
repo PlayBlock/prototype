@@ -1111,56 +1111,67 @@ string Eth::eth_sendTxWithRSV(Json::Value const& _json)
 	{
 		if (_json["from"].empty())
 			BOOST_THROW_EXCEPTION(JsonRpcException("Lack from field!"));
-		if (_json["r"].empty())
-			BOOST_THROW_EXCEPTION(JsonRpcException("Lack r field!"));
-		if (_json["s"].empty())
-			BOOST_THROW_EXCEPTION(JsonRpcException("Lack s field!"));
-		if (_json["v"].empty())
-			BOOST_THROW_EXCEPTION(JsonRpcException("Lack v field!"));
+		if (_json["signedTx"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack signedTx field!"));
 
-		string _r = _json["r"].asString();
-		string _s = _json["s"].asString();
-		string _v = _json["v"].asString();
-
-		if (_r.size() != 64)
-			BOOST_THROW_EXCEPTION(JsonRpcException("r length error!"));
-		if (_s.size() != 64)
-			BOOST_THROW_EXCEPTION(JsonRpcException("s length error!"));
-		if (_v.size() != 2)
-			BOOST_THROW_EXCEPTION(JsonRpcException("v length error!"));
-
-		SignatureStruct sigStruct;
-		sigStruct.r = h256(fromHex(_r));
-		sigStruct.s = h256(fromHex(_s));
-		sigStruct.v = fromHex(_v)[0];
+		string signedTx = _json["signedTx"].asString();
 
 		TransactionSkeleton ts = toTransactionSkeleton(_json);
-
 		Transaction t(ts);
-		RLPStream RLPs; 
 
-		if (!t)
-			BOOST_THROW_EXCEPTION(JsonRpcException("Transaction error!"));
-
-		RLPs.appendList(9);
-		RLPs << t.nonce() << t.gasPrice() << t.gas();
-		if (!t.isCreation())
-			RLPs << t.receiveAddress();
-		else
-			RLPs << "";
-		RLPs << t.value() << t.data();
-
-		RLPs << (int)sigStruct.v;
-		RLPs << (u256)sigStruct.r << (u256)sigStruct.s;
+		//SignatureStruct sigStruct;
+		//sigStruct.r = h256(fromHex(_r));
+		//sigStruct.s = h256(fromHex(_s));
+		//
+		//int v_temp = fromHex(_v)[0];
+		//int chainId;
+		//if (v_temp > 36)
+		//	chainId = (v_temp - 35) / 2;
+		//else if (v_temp == 27 || v_temp == 28)
+		//	chainId = -4;
+		//else
+		//	BOOST_THROW_EXCEPTION(InvalidSignature());
+		//sigStruct.v = static_cast<byte>(v_temp - (chainId * 2 + 35));
+		//
+		//TransactionSkeleton ts = toTransactionSkeleton(_json);
+		//
+		//Transaction t(ts);
+		//RLPStream RLPs; 
+		//
+		//if (!t)
+		//	BOOST_THROW_EXCEPTION(JsonRpcException("Transaction error!"));
+		//
+		//RLPs.appendList(9);
+		//RLPs << t.nonce() << t.gasPrice() << t.gas();
+		//if (!t.isCreation())
+		//	RLPs << t.receiveAddress();
+		//else
+		//	RLPs << "";
+		//RLPs << t.value() << t.data();
+		//
+		//RLPs << (int)sigStruct.v;
+		//RLPs << (u256)sigStruct.r << (u256)sigStruct.s;
 
 		// check signature
-		Transaction t_withRSV(RLPs.out(), CheckTransaction::Everything);
-		if (ts.from != t_withRSV.from())
+		Transaction t_raw(fromHex(signedTx), CheckTransaction::Everything);
+		if (ts.from != t_raw.from())
 			BOOST_THROW_EXCEPTION(JsonRpcException("From field and signature not match!"));
+		if (t.receiveAddress() != t_raw.receiveAddress())
+			BOOST_THROW_EXCEPTION(JsonRpcException("ReceiveAddress field and signature not match!"));
+		if (t.data() != t_raw.data())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Data field and signature not match!"));
+		if (t.value() != t_raw.value())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Value field and signature not match!"));
+		if (t.nonce() != t_raw.nonce())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Nonce field and signature not match!"));
+		if (t.gas() != t_raw.gas())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Gas field and signature not match!"));
+		if (t.gasPrice() != t_raw.gasPrice())
+			BOOST_THROW_EXCEPTION(JsonRpcException("GasPrice field and signature not match!"));
 
-		if (client()->injectTransaction(RLPs.out()) == ImportResult::Success)
+		if (client()->injectTransaction(t_raw.rlp()) == ImportResult::Success)
 		{
-			return toJS(t_withRSV.sha3());
+			return toJS(t_raw.sha3());
 		}
 		else
 			return toJS(h256());
@@ -1208,13 +1219,20 @@ string Eth::eth_checkSignature(Json::Value const& _json)
 			BOOST_THROW_EXCEPTION(JsonRpcException("v length error!"));
 
 		h256 massage = sha3(fromHex(_number));
-		//Signature signature(fromHex(_signature));
-		//SignatureStruct sigStruct = *(SignatureStruct const*)&signature;
 
 		SignatureStruct sigStruct;
 		sigStruct.r = h256(fromHex(_r));
 		sigStruct.s = h256(fromHex(_s));
-		sigStruct.v = fromHex(_v)[0];
+
+		int v_temp = fromHex(_v)[0];
+		int chainId;
+		if (v_temp > 36)
+			chainId = (v_temp - 35) / 2;
+		else if (v_temp == 27 || v_temp == 28)
+			chainId = -4;
+		else
+			BOOST_THROW_EXCEPTION(InvalidSignature());
+		sigStruct.v = static_cast<byte>(v_temp - (chainId * 2 + 35));
 
 		Signature signature = *(Signature const*)&sigStruct;
 		if (!sigStruct.isValid())
