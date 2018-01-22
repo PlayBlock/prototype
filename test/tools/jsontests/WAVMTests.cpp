@@ -62,6 +62,7 @@ namespace dev {
 		BOOST_FIXTURE_TEST_SUITE(ContractTestsSuite, TestOutputHelperFixture)
 		BOOST_AUTO_TEST_CASE(ctCreateContract)
 		{
+			cout << "ctCreateContract" << endl;
 			std::string currencyHex = loadData("currency.wasm");
 
 			DposTestClient client;
@@ -163,6 +164,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctCodeSize)
 		{
+			cout << "ctCodeSize" << endl;
 			std::string currencyHex = loadData("currency.wasm");
 
 			std::string currency_2Hex = loadData("currency_2.wasm");
@@ -215,6 +217,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctLackBalance)
 		{
+			cout << "ctLackBalance" << endl;
 			DposTestClient client;
 
 			BOOST_REQUIRE(client.get_accounts().size() >= 3);
@@ -276,6 +279,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctCompile)
 		{
+			cout << "ctCompile" << endl;
 			std::string currencyHex = loadData("currency.wasm");
 
 			DposTestClient client;
@@ -304,6 +308,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctLackField)
 		{
+			cout << "ctLackField" << endl;
 			std::string currencyHex = loadData("currency.wasm");
 
 			DposTestClient client;
@@ -369,6 +374,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctInit)
 		{
+			cout << "ctInit" << endl;
 			DposTestClient client;
 
 			BOOST_REQUIRE(client.get_accounts().size() >= 3);
@@ -407,6 +413,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctDiv0)
 		{
+			cout << "ctDiv0" << endl;
 			DposTestClient client;
 
 			BOOST_REQUIRE(client.get_accounts().size() >= 2);
@@ -449,6 +456,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctInvalidU256Print)
 		{
+			cout << "ctInvalidU256Print" << endl;
 			DposTestClient client;
 
 			BOOST_REQUIRE(client.get_accounts().size() >= 2);
@@ -480,6 +488,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctInfiniteLoop)
 		{
+			cout << "ctInfiniteLoop" << endl;
 			std::string infiniteLoopHex = loadData("infiniteLoop.wasm");
 
 			DposTestClient client;
@@ -513,6 +522,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctInfiniteLoop2)
 		{
+			cout << "ctInfiniteLoop2" << endl;
 			std::string infiniteLoop2Hex = loadData("infiniteLoop2.wasm");
 
 			DposTestClient client;
@@ -538,6 +548,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctOverflow)
 		{
+			cout << "ctOverflow" << endl;
 			std::string overflowHex = loadData("overflow.wasm");
 
 			DposTestClient client;
@@ -571,6 +582,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctOverflow2)
 		{
+			cout << "ctOverflow2" << endl;
 			std::string overflow2Hex = loadData("overflow2.wasm");
 
 			DposTestClient client;
@@ -604,6 +616,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctAssert)
 		{
+			cout << "ctAssert" << endl;
 			std::string assertHex = loadData("assert.wasm");
 
 			DposTestClient client;
@@ -637,6 +650,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctThrow)
 		{
+			cout << "ctThrow" << endl;
 			std::string throwHex = loadData("throw.wasm");
 
 			DposTestClient client;
@@ -662,6 +676,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctOverflow3)
 		{
+			cout << "ctOverflow3" << endl;
 			std::string overflow3Hex = loadData("overflow3.wasm");
 
 			DposTestClient client;
@@ -695,6 +710,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctCast)
 		{
+			cout << "ctCast" << endl;
 			std::string castHex = loadData("cast.wasm");
 
 			DposTestClient client;
@@ -728,6 +744,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctInvalidDeletedPoint)
 		{
+			cout << "ctInvalidDeletedPoint" << endl;
 			std::string accessDestroyHex = loadData("accessDestroy.wasm");
 
 			DposTestClient client;
@@ -761,6 +778,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctNewDelete)
 		{
+			cout << "ctNewDelete" << endl;
 			std::string newDelete_2Hex = loadData("newDelete_2.wasm");
 
 			DposTestClient client;
@@ -794,6 +812,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctUnknowInstruction)
 		{
+			cout << "ctUnknowInstruction" << endl;
 			std::string unknowInstructionHex = loadData("unknowInstruction.wasm");
 
 			DposTestClient client;
@@ -819,6 +838,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctMemoryRef)
 		{
+			cout << "ctMemoryRef" << endl;
 			std::string memoryRefHex = loadData("memoryRef.wasm");
 
 			DposTestClient client;
@@ -849,6 +869,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctTransferBalance)
 		{
+			cout << "ctTransferBalance" << endl;
 			std::string transferBalanceHex = loadData("transferBalance.wasm");
 
 			DposTestClient client;
@@ -907,6 +928,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctTransferBalance2)
 		{
+			cout << "ctTransferBalance2" << endl;
 			std::string currencyHex = loadData("currency.wasm");
 			std::string transferBalanceHex = loadData("transferBalance.wasm");
 
@@ -965,6 +987,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctLackApply)
 		{
+			cout << "ctLackApply" << endl;
 			std::string lackApplyHex = loadData("lackApply.wasm");
 
 			DposTestClient client;
@@ -1000,6 +1023,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctGas)
 		{
+			cout << "ctGas" << endl;
 			std::string gasHex = loadData("gas.wasm");
 
 			DposTestClient client;
@@ -1050,6 +1074,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctInitGas)
 		{
+			cout << "ctInitGas" << endl;
 			std::string initGas_1Hex = loadData("initGas_1.wasm");
 
 			std::string initGas_2Hex = loadData("initGas_2.wasm");
@@ -1089,6 +1114,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctCallContract)
 		{
+			cout << "ctCallContract" << endl;
 			std::string currencyHex = loadData("currency.wasm");
 
 			DposTestClient client;
@@ -1152,6 +1178,7 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctTestSampleTransaction)
 		{
+			cout << "ctTestSampleTransaction" << endl;
 			DposTestClient client;
 
 			BOOST_REQUIRE(client.get_accounts().size() >= 2);
