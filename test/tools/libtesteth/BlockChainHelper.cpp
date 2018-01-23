@@ -563,8 +563,11 @@ bool TestBlockChain::addBlock(TestBlock const& _block)
 	{
 		try
 		{
+			ImportRoute route;
 			_block.verify(*this); //check that block header match TestBlock contents
-			m_blockChain.get()->import(_block.bytes(), m_genesisBlock.state().db());
+			route = m_blockChain.get()->import(_block.bytes(), m_genesisBlock.state().db());
+			if(route.goodTranactions.size() == 0)
+				BOOST_THROW_EXCEPTION(ExceedRollbackImportBlock());
 			break;
 		}
 		catch (FutureTime)
