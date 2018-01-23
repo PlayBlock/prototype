@@ -428,12 +428,12 @@ bool Executive::go(OnOpFunc const& _onOp)
 #if ETH_TIMED_EXECUTIONS
 		Timer t;
 #endif
+		std::unique_ptr<VMFace> vm = VMFactory::createWASM();
 		try
 		{
 			// Create VM instance. Force Interpreter if tracing requested.
 			//auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
 		
-			std::unique_ptr<VMFace> vm = VMFactory::createWASM();
 			if (m_isCreation)
 			{
 				m_s.clearStorage(m_ext->myAddress);
@@ -444,7 +444,9 @@ bool Executive::go(OnOpFunc const& _onOp)
 					m_res->depositSize = out.size();
 				}
 				if (out.size() > m_ext->evmSchedule().maxCodeSize)
+				{
 					BOOST_THROW_EXCEPTION(OutOfGas());
+				}
 				else if (out.size() * m_ext->evmSchedule().createDataGas <= m_gas)
 				{
 					if (m_res)
@@ -454,7 +456,9 @@ bool Executive::go(OnOpFunc const& _onOp)
 				else
 				{
 					if (m_ext->evmSchedule().exceptionalFailedCodeDeposit)
+					{
 						BOOST_THROW_EXCEPTION(OutOfGas());
+					}
 					else
 					{
 						if (m_res)
@@ -472,6 +476,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 		catch (RevertInstruction& _e)
 		{
 			revert();
+			vm->clearCodeCache(m_ext->myAddress);
 			m_output = _e.output();
 			m_excepted = TransactionException::RevertInstruction;
 		}
@@ -481,6 +486,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 			m_gas = 0;
 			m_excepted = toTransactionException(_e);
 			revert();
+			vm->clearCodeCache(m_ext->myAddress);
 		}
 		catch (Exception const& _e)
 		{
