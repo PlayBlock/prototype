@@ -900,7 +900,7 @@ namespace dev {
 			u256 balance3 = client.balance(Address("0x0000000000000000000000000000000000011111"));
 			BOOST_REQUIRE(balance3 == u256(0));
 
-			//向合约地址转账
+			//向合约地址转账，data有值
 			client.sendTransaction(gasLimit, gasPrice, s_address, "99999", test_func3_string, account);
 			client.produce_blocks();
 			u256 balance4 = client.balance(Address(s_address));
@@ -917,13 +917,33 @@ namespace dev {
 			BOOST_REQUIRE(cost_call2 < u256(2060722) * u256(20000000000));
 
 			u256 balance7 = client.balance(Address("0x0000000000000000000000000000000000011111"));
-			cout << "balance7.str(): " << balance7.str() << endl;
-			u256 balance8 = client.balance(Address("0000000000000000000000000000000000002b67"));
-			cout << "balance8.str(): " << balance8.str() << endl;
-			u256 balance9 = client.balance(Address(s_address));
-			cout << "balance9.str(): " << balance9.str() << endl;
+			u256 balance8 = client.balance(Address(s_address));
+			BOOST_REQUIRE_EQUAL(balance7, u256(123));
+			BOOST_REQUIRE_EQUAL(balance8, u256(99876));
 
-			BOOST_REQUIRE(balance7 == u256(123));
+			//向合约地址转账，data为空
+			client.sendTransaction(gasLimit, gasPrice, s_address, "123", "", account);
+			client.produce_blocks();
+
+			u256 balance9 = client.balance(Address(account.address));
+			u256 cost_call3 = balance6 - balance9;
+			BOOST_REQUIRE(cost_call3 < u256(2060722) * u256(20000000000));
+
+			u256 balance10 = client.balance(Address(s_address));
+			cout << "balance10.str(): " << balance10.str() << endl;
+			BOOST_REQUIRE_EQUAL(balance10 , u256(99999));
+
+			//向合约地址转账，data的值错误
+			client.sendTransaction(gasLimit, gasPrice, s_address, "11111", test_func3_string.substr(0, 14), account);
+			client.produce_blocks();
+
+			u256 balance11 = client.balance(Address(account.address));
+			u256 cost_call4 = balance9 - balance11;
+			BOOST_REQUIRE_EQUAL(cost_call4 , u256(2060722) * u256(20000000000));
+
+			u256 balance12 = client.balance(Address(s_address));
+			cout << "balance12.str(): " << balance12.str() << endl;
+			BOOST_REQUIRE_EQUAL(balance12, u256(99999));
 		}
 
 		BOOST_AUTO_TEST_CASE(ctTransferBalance2)
@@ -1200,6 +1220,56 @@ namespace dev {
 			u256 gasSample = cost / u256(20000000000);
 			cout << "cost: " << cost << endl;
 			cout << "gasSample: " << gasSample << endl;
+		}
+
+		BOOST_AUTO_TEST_CASE(ctDefault)
+		{
+			WASM_CORE::destoryInstance();
+			std::string defaultHex = loadData("default.wasm");
+
+			DposTestClient client;
+
+			BOOST_REQUIRE(client.get_accounts().size() >= 2);
+			Account& account = client.get_accounts()[0];
+
+			string gasLimit = "0x1f71b2";
+			string gasPrice = "0x04a817c800";
+			string value = "0x0";
+
+
+			Address m_newAddress = newAddress(account);  //Contract Address.
+			string s_address = m_newAddress.hex();
+			client.sendTransaction(gasLimit, gasPrice, "", value, "0x" + defaultHex, account);  //Create contract.
+			client.produce_blocks();
+
+			u256 balance3 = client.balance(Address(account.address));
+			bytes contractCode = client.code(m_newAddress);  //Get contract address.
+			string s_contractCode = toHex(contractCode);
+			BOOST_REQUIRE(s_contractCode.compare(defaultHex) == 0);  //Check contract code.
+
+			//调用default方法
+			client.sendTransaction(gasLimit, gasPrice, s_address, "0x3", "", account);  //Call contract code.
+			client.produce_blocks();
+
+			u256 balance4 = client.balance(Address(account.address));
+			u256 cost_call = balance3 - balance4;
+			BOOST_REQUIRE(cost_call < u256(2060722) * u256(20000000000));
+			u256 res1 = client.storage(m_newAddress, u256(1));  //Get contract storage.
+			BOOST_REQUIRE_EQUAL(res1 , u256(24));
+			BOOST_REQUIRE_EQUAL(client.balance(m_newAddress), u256(3));
+
+
+			//调用合约方法apply
+			client.sendTransaction(gasLimit, gasPrice, s_address, "0x4", test_func1_string, account);  //Call contract code.
+			client.produce_blocks();
+
+			u256 balance5 = client.balance(Address(account.address));
+			u256 cost_call_2 = balance4 - balance5;
+			BOOST_REQUIRE(cost_call_2 < u256(2060722) * u256(20000000000));
+			u256 res2 = client.storage(m_newAddress, u256(1));  //Get contract storage.
+			BOOST_REQUIRE_EQUAL(res2, u256(8));
+			BOOST_REQUIRE_EQUAL(client.balance(m_newAddress), u256(7));
+
 		}
 
 		BOOST_AUTO_TEST_SUITE_END()
