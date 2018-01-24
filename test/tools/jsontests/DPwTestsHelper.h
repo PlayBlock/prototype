@@ -29,6 +29,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libethereum/Vote.h>
 #include <test/tools/libtestutils/Common.h>
 #include <libproducer/producer_plugin.hpp>
+#include <libproducer/producer_objects.hpp>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <libethcore/SealEngine.h>
 
@@ -119,6 +120,8 @@ namespace dev {
 			void setGasLimit(u256 const& _v);
 
 			uint32_t get_dpo_witnesses() { return _producer_plugin->get_chain_controller().get_dynamic_global_properties().num_pow_witnesses; }
+
+			auto &get_allproducer_power() { return _producer_plugin->get_db().get_index<eos::chain::producer_multi_index, eos::chain::by_pow>(); }
 			dev::h256 get_ownpow_target();
 			dev::h256 get_pow_target() { return _producer_plugin->get_chain_controller().get_pow_target(); };
 
