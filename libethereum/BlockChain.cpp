@@ -820,18 +820,24 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 
 		_performanceLogger.onStageFinished("collation");
 
+		//将块放入blocksBatch
 		blocksBatch.Put(toSlice(_block.info.hash()), ldb::Slice(_block.block));
+
+		//将新更新的父块detail放入extrasBatch
 		DEV_READ_GUARDED(x_details)
 			extrasBatch.Put(toSlice(_block.info.parentHash(), ExtraDetails), (ldb::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
+		//将新块detail放入extrasBatch
 		BlockDetails const details((unsigned)_block.info.number(), _totalDifficulty, _block.info.parentHash(), {});
 		extrasBatch.Put(toSlice(_block.info.hash(), ExtraDetails), (ldb::Slice)dev::ref(details.rlp()));
 
+		//将BlockLogBlooms放入extraBatch
 		BlockLogBlooms blb;
 		for (auto i: RLP(_receipts))
 			blb.blooms.push_back(TransactionReceipt(i.data()).bloom());
 		extrasBatch.Put(toSlice(_block.info.hash(), ExtraLogBlooms), (ldb::Slice)dev::ref(blb.rlp()));
 
+		//将回执放入extrasBatch中
 		extrasBatch.Put(toSlice(_block.info.hash(), ExtraReceipts), (ldb::Slice)_receipts);
 
 		_performanceLogger.onStageFinished("writing");
@@ -862,6 +868,9 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 			// Most of the time these two will be equal - only when we're doing a chain revert will they not be
 			if (common != last)
 			{
+				//发现分叉
+				ctrace << "common != last FORK FOUNDED!!! "<<" common = "<<common << " last = "<<last;
+
 				DEV_READ_GUARDED(x_lastBlockHash)
 					clearCachesDuringChainReversion(number(common) + 1);
 
@@ -956,6 +965,8 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 			catch (...) { //捕获到任何错误皆回滚
 				/// 切换分叉时，验证分叉上的块出现异常，切换会之前的分叉
 
+				ctrace << "CATCH FORK PROCESS ERROR !!! ROLL BACK TO ORIGINAL FORK";
+
 				// bloom 回滚到common块
 				DEV_READ_GUARDED(x_lastBlockHash)
 					clearCachesDuringChainReversion(number(common) + 1);
@@ -1033,37 +1044,37 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 	}
 	catch (dev::eth::ExceedIrreversibleBlock)
 	{
-		cwarn << "Exceed Irreversible Block.";
-		throw;
+		ctrace << "Exceed Irreversible Block!!!!!!!";
+		return ImportRoute{ h256s(), h256s(), std::vector<Transaction>() };
 	}
 	catch (dev::eth::ExceedRollbackImportBlock)
 	{
-		cwarn << "Exceed Rollback block chain.";
-		throw;
+		ctrace << "Exceed Rollback block chain!!!!!!!!";
+		return ImportRoute{ h256s(), h256s(), std::vector<Transaction>() };
 	}
 	catch (...)
 	{
-		cwarn << "Unknown exception when import block";
-		throw;
+		ctrace << "Unknown exception when import block!!!!!!!!!!";
+		return ImportRoute{ h256s(), h256s(), std::vector<Transaction>() };
 	}
 
 	ldb::Status o = m_blocksDB->Write(m_writeOptions, &blocksBatch);
 	if (!o.ok())
 	{
-		cwarn << "Error writing to blockchain database: " << o.ToString();
+		ctrace << "Error writing to blockchain database: " << o.ToString();
 		WriteBatchNoter n;
 		blocksBatch.Iterate(&n);
-		cwarn << "Fail writing to blockchain database. Bombing out.";
+		ctrace << "Fail writing to blockchain database. Bombing out.";
 		exit(-1);
 	}
 
 	o = m_extrasDB->Write(m_writeOptions, &extrasBatch);
 	if (!o.ok())
 	{
-		cwarn << "Error writing to extras database: " << o.ToString();
+		ctrace << "Error writing to extras database: " << o.ToString();
 		WriteBatchNoter n;
 		extrasBatch.Iterate(&n);
-		cwarn << "Fail writing to extras database. Bombing out.";
+		ctrace << "Fail writing to extras database. Bombing out.";
 		exit(-1);
 	}
 	
@@ -1266,12 +1277,12 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
 
 	unsigned fn = fromDetails.number;
 	unsigned tn = toDetails.number;
-	h256s ret;
+	h256s route;
 	h256 from = _from;
 	while (fn > tn)
 	{
 		if (_pre)
-			ret.push_back(from);
+			route.push_back(from);
 		from = details(from).parent;
 		fn--;
 	}
@@ -1303,7 +1314,7 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
 		}
 
 		if (_pre && (from != to || _common))
-			ret.push_back(from);
+			route.push_back(from);
 		if (_post && (from != to || (!_pre && _common)))
 			back.push_back(to);
 
@@ -1316,11 +1327,11 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
 		if (!to)
 			assert(to);
 	}
-	ret.reserve(ret.size() + back.size());
-	unsigned i = ret.size() - (int)(_common && !ret.empty() && !back.empty());
+	route.reserve(route.size() + back.size());
+	unsigned i = route.size() - (int)(_common && !route.empty() && !back.empty());
 	for (auto it = back.rbegin(); it != back.rend(); ++it)
-		ret.push_back(*it);
-	return make_tuple(ret, from, i);
+		route.push_back(*it);
+	return make_tuple(route, from, i);
 }
 
 void BlockChain::noteUsed(h256 const& _h, unsigned _extra) const
