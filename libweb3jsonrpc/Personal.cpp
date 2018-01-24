@@ -130,7 +130,7 @@ Json::Value Personal::personal_getProducer()
 			subRes["url"] = voteInfo.getURL();
 			subRes["receivedVote"] = to_string(voteInfo.getReceivedVotedNumber());
 
-			res[to_string(i + 1)] = subRes;
+			res[to_string(i)] = subRes;
 		}
 
 		return res;
