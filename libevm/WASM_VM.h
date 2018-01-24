@@ -51,26 +51,14 @@ namespace eth
 	class WASM_CORE
 	{
 	public:
-		WASM_CORE();
-		~WASM_CORE();
-
-		void init();
-		void destory();
-
+		static WASM_CORE* getInstance();
+		static void destoryInstance();
 		bytes run(const std::string& string, const char* functionName, uint64_t applyFunction, const bytes& args, ExtVMFace& _ext, bool isCreation);
 
-		static Runtime::MemoryInstance* getMemory() { return current_memory; }
-
-		static ExtVMFace* getExt() { return current_ext; }
-
-		static bytes getParameter() { return current_parameter; }
-
-		static u256 u256_temp;
-		//static void setMemoryEnd(int end) { mem_end = end; };
-
-		//static int getMemoryEnd() { return mem_end; };
-
-		static void ResetTime() {
+		Runtime::MemoryInstance* getMemory() { return current_memory; }
+		ExtVMFace* getExt() { return current_ext; }
+		bytes getParameter() { return current_parameter; }
+		void ResetTime() {
 			execute_time.restart();
 		}
 		static bool IsExecuteExceed()
@@ -79,23 +67,24 @@ namespace eth
 			//return execute_time.duration().count() > 1000000000;
 		}
 
-		static ModuleState *current_state;
-		static wasm_memory *current_memory_management;
+		ModuleState *current_state;
+		wasm_memory *current_memory_management;
 
-		static Runtime::ModuleInstance *current_module;
-		static Runtime::MemoryInstance *current_memory;
-		static std::map<Address, ModuleState> module_cache;
+		Runtime::ModuleInstance *current_module;
+		Runtime::MemoryInstance *current_memory;
+		std::map<Address, ModuleState> module_cache;
 	private:
+		WASM_CORE();
+		~WASM_CORE();
 
-		static void LoadModuleState(Address const& _address, const std::string& _string);
-
-		//static Runtime::MemoryInstance* current_memory;
-		static ExtVMFace* current_ext;
-		static bytes current_parameter;
+		void init();
+		void destory();
+		static WASM_CORE* s_core;
+		void LoadModuleState(Address const& _address, const std::string& _string);
+		ExtVMFace* current_ext;
+		bytes current_parameter;
 		//static int mem_end;
-		static Timer execute_time;
-
-
+		Timer execute_time;
 	};
 
 
@@ -125,45 +114,18 @@ namespace eth
 	public:
 		//virtual bytesConstRef exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, bool isCreation) override final;
 		virtual owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, bool isCreation = false) override final;
-		virtual void clearCodeCache(Address const& _address)override
-		{
-			if (WASM_CORE::module_cache.count(_address))
-			{
-				auto const& moduleState = WASM_CORE::module_cache[_address];
-				if (moduleState.module)
-				{
-					delete moduleState.module;
-				}
-				//if (moduleState.instance)
-				//{
-				//	delete moduleState.instance;
-				//}
-				WASM_CORE::module_cache.erase(_address);
-			}
-		}
-
+		virtual void clearCodeCache(Address const& _address)override final;
 		static void AddUsedGas(u256 useGase)
 		{
 			if (*m_io_gas < useGase)
 				throw WASMOutOfGas();
 			*m_io_gas -= useGase;
 		}
-		static void ClearAllCacheCode();
-
 
 	private:
 		bytesConstRef m_bytes = bytesConstRef();
-		//bytes m_return_r;
-		static WASM_CORE* m_core;
-
-		//by dz
 		static u256* m_io_gas;
-		//by dz end
 	};
-
-
-
-
 }
 }
 
