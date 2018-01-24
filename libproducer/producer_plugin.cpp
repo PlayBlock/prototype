@@ -135,7 +135,7 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 	// which would result in allowing a later block to have a timestamp
 	// less than or equal to the previous block
 	//
-	assert(now > chain.head_block_time());
+	asserts(now > chain.head_block_time());
 
 	types::AccountName scheduled_producer = chain.get_scheduled_producer(slot);
 	ctrace << "scheduled_producer: " << scheduled_producer;

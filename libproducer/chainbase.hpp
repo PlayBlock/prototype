@@ -28,7 +28,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include "libdevcore/Log.h"
-
+#include "libdevcore/Assertions.h"
 #ifndef CHAINBASE_NUM_RW_LOCKS
    #define CHAINBASE_NUM_RW_LOCKS 10
 #endif
@@ -409,7 +409,7 @@ namespace chainbase {
                   continue;
                }
                // del+upd -> N/A
-               assert( prev_state.removed_values.find(item.second.id) == prev_state.removed_values.end() );
+               asserts( prev_state.removed_values.find(item.second.id) == prev_state.removed_values.end() );
                // nop+upd(was=Y) -> upd(was=Y), type B
                prev_state.old_values.emplace( std::move(item) );
             }
@@ -436,7 +436,7 @@ namespace chainbase {
                   continue;
                }
                // del + del -> N/A
-               assert( prev_state.removed_values.find( obj.second.id ) == prev_state.removed_values.end() );
+               asserts( prev_state.removed_values.find( obj.second.id ) == prev_state.removed_values.end() );
                // nop + del(was=Y) -> del(was=Y)
                prev_state.removed_values.emplace( std::move(obj) ); //[obj.second->id] = std::move(obj.second);
             }
@@ -787,8 +787,8 @@ namespace chainbase {
             CHAINBASE_REQUIRE_READ_LOCK("get_index", typename MultiIndexType::value_type);
             typedef generic_index<MultiIndexType> index_type;
             typedef index_type*                   index_type_ptr;
-            assert( _index_map.size() > index_type::value_type::type_id );
-            assert( _index_map[index_type::value_type::type_id] );
+			asserts( _index_map.size() > index_type::value_type::type_id );
+			asserts(_index_map[index_type::value_type::type_id] != nullptr);
             return *index_type_ptr( _index_map[index_type::value_type::type_id]->get() );
          }
 
@@ -798,8 +798,8 @@ namespace chainbase {
             CHAINBASE_REQUIRE_READ_LOCK("get_index", typename MultiIndexType::value_type);
             typedef generic_index<MultiIndexType> index_type;
             typedef index_type*                   index_type_ptr;
-            assert( _index_map.size() > index_type::value_type::type_id );
-            assert( _index_map[index_type::value_type::type_id] );
+			asserts( _index_map.size() > index_type::value_type::type_id );
+			asserts(_index_map[index_type::value_type::type_id] != nullptr);
             return index_type_ptr( _index_map[index_type::value_type::type_id]->get() )->indicies().template get<ByIndex>();
          }
 
@@ -809,8 +809,8 @@ namespace chainbase {
             CHAINBASE_REQUIRE_WRITE_LOCK("get_mutable_index", typename MultiIndexType::value_type);
             typedef generic_index<MultiIndexType> index_type;
             typedef index_type*                   index_type_ptr;
-            assert( _index_map.size() > index_type::value_type::type_id );
-            assert( _index_map[index_type::value_type::type_id] );
+			asserts( _index_map.size() > index_type::value_type::type_id );
+			asserts(_index_map[index_type::value_type::type_id] != nullptr);
             return *index_type_ptr( _index_map[index_type::value_type::type_id]->get() );
          }
 

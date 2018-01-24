@@ -630,7 +630,7 @@ void chain_controller::update_global_dynamic_data(const BlockHeader& b) {
 	const dynamic_global_property_object& _dgp = _db.get<dynamic_global_property_object>();
 
 	uint32_t missed_blocks = head_block_num() == 0 ? 1 : get_slot_at_time(fc::time_point_sec(b.timestamp().convert_to<uint32_t>()));
-	assert(missed_blocks != 0);
+	asserts(missed_blocks != 0);
 	missed_blocks--;
 
 	//   if (missed_blocks)
