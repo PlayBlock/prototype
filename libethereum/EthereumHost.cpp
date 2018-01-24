@@ -213,6 +213,7 @@ public:
 			<< "max: " << _maxHeaders
 			<< "skip: " << _skip << (_reverse ? "reverse" : "") << ")";
 
+			ctrace << "n = " << n << " lastBlock = " << m_chain.number();
 			if (!_reverse)
 			{
 				auto lastBlock = m_chain.number();
@@ -232,9 +233,12 @@ public:
 			}
 			else if (n <= std::numeric_limits<unsigned>::max())
 				blockHash = m_chain.numberHash(static_cast<unsigned>(n));
-			else
+			else { 
 				blockHash = {};
+			}
 		}
+
+		ctrace << "blockHash = " << blockHash;
 
 		auto nextHash = [this](h256 _h, unsigned _step)
 		{
@@ -281,6 +285,8 @@ public:
 
 		for (unsigned i = 0; i < hashes.size() && rlp.size() < c_maxPayload; ++i)
 			rlp += m_chain.headerData(hashes[_reverse ? i : hashes.size() - 1 - i]);
+
+		ctrace << "itemCount = " << itemCount;
 
 		return make_pair(rlp, itemCount);
 	}
