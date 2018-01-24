@@ -20,9 +20,10 @@
  */
 
 #include "Log.h"
-
+#include "CommonIO.h"
 #include <string>
 #include <iostream>
+#include <time.h>
 #include <thread>
 #ifdef __APPLE__
 #include <pthread.h>
@@ -227,10 +228,53 @@ std::string UTF8_To_string(const std::string & str)
 void dev::debugOut(std::string const& _s)
 {
 	Guard l(x_logOut); 
+#pragma region LogToFile
+	static string lastFileName;
+	auto now = std::chrono::system_clock::now();
+	auto ticks = std::chrono::system_clock::to_time_t(now);
+	auto local_time = std::localtime(&ticks);
+
+	std::ostringstream oss1;
+	oss1 << std::put_time(local_time, "%F");
+	std::string date = oss1.str();
+	
+	if (lastFileName.find(date) == string::npos)
+	{
+
+		std::ostringstream oss2;
+		oss2 << std::put_time(local_time, "%T");
+		std::string time = oss2.str();
+
+		string filePath(boost::filesystem::current_path().string());
+		//lastFileName = filePath + "\\log_date" + date +"time"+time +".txt";
+		lastFileName = "log_date" + date + "time" + time + ".txt";
+		std::cout << lastFileName << std::endl;
+
+		for (char& c : lastFileName)
+		{
+			if (c == ':')
+			{
+				c = '-';
+			}
+		}
+	}
+
+
+#pragma endregion
 
 #ifdef WIN32 
+
+	ofstream out(lastFileName, ios::app);
+
+	out << UTF8_To_string(_s).c_str() << endl;
+	out.close();
+
 	cerr << UTF8_To_string(_s).c_str() << endl;
 #else
+	ofstream out(lastFileName, ios::app);
+
+	out << _s.c_str() << endl;
+	out.close();
 	cerr << _s.c_str() << endl;
 #endif
 
