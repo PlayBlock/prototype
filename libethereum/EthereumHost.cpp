@@ -213,7 +213,7 @@ public:
 			<< "max: " << _maxHeaders
 			<< "skip: " << _skip << (_reverse ? "reverse" : "") << ")";
 
-			ctrace << "n = " << n << " lastBlock = " << m_chain.number();
+			ctrace << "n = " << n << " lastBlock = " << m_chain.number()<<" numHeadersToSend = "<<numHeadersToSend;
 			if (!_reverse)
 			{
 				auto lastBlock = m_chain.number();
@@ -227,8 +227,10 @@ public:
 						numHeadersToSend = (lastBlock - static_cast<unsigned>(n)) / step + 1;
 						top = n + step * (numHeadersToSend - 1);
 					}
+					ctrace << "top =" << top << " lastBlock =" << lastBlock;
 					assert(top <= lastBlock && "invalid top block calculated");
 					blockHash = m_chain.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
+					ctrace << "blockHash = m_chain.numberHash blockHash = " << blockHash;
 				}
 			}
 			else if (n <= std::numeric_limits<unsigned>::max())
