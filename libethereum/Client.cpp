@@ -608,7 +608,22 @@ void Client::onChainChanged(ImportRoute const& _ir)
 	}
 	onNewBlocks(_ir.liveBlocks, changeds);
 	if (!isMajorSyncing())
+	{
 		resyncStateFromChain();
+	}
+	else
+	{
+		if (auto h = m_host.lock())
+		{
+			SyncState state = h->status().state;
+			//state != SyncState::Idle || h->bq().items().first > 10;
+			ctrace << "state" << (int)SyncState::Idle;
+			ctrace << "h->bq().items()"<<h->bq().items().first;
+		}
+
+		ctrace << "isMajorSyncing so do not resync";
+	}
+	
 	noteChanged(changeds);
 }
 
