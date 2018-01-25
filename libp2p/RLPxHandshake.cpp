@@ -32,8 +32,8 @@ void RLPXHandshake::writeAuth()
 {
 	clog(NetP2PConnect) << "p2p.connect.egress sending auth to " << m_socket->remoteEndpoint();
 	m_auth.resize(Signature::size + h256::size + Public::size + h256::size + 1);
-	bytesRef sig(&m_auth[0], Signature::size);
-	bytesRef hepubk(&m_auth[Signature::size], h256::size);
+	bytesRef sig(&m_auth[h256::size], Signature::size);
+	bytesRef hepubk(&m_auth[0], h256::size);
 	bytesRef pubk(&m_auth[Signature::size + h256::size], Public::size);
 	bytesRef nonce(&m_auth[Signature::size + h256::size + Public::size], h256::size);
 	
@@ -46,6 +46,7 @@ void RLPXHandshake::writeAuth()
 	m_nonce.ref().copyTo(nonce);
 	m_auth[m_auth.size() - 1] = 0x0;
 	encryptECIES(m_remote, &m_auth, m_authCipher);
+	m_authCipher.resize(307);
 
 	auto self(shared_from_this());
 	ba::async_write(m_socket->ref(), ba::buffer(m_authCipher), [this, self](boost::system::error_code ec, std::size_t)
@@ -114,24 +115,29 @@ void RLPXHandshake::readAuth()
 	auto self(shared_from_this());
 	ba::async_read(m_socket->ref(), ba::buffer(m_authCipher, 307), [this, self](boost::system::error_code ec, std::size_t)
 	{
+
 		if (ec)
 			transition(ec);
 		else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_authCipher), m_auth))
 		{
 			bytesConstRef data(&m_auth);
-			Signature sig(data.cropped(0, Signature::size));
 			Public pubk(data.cropped(Signature::size + h256::size, Public::size));
+			Signature sig(data.cropped(h256::size, Signature::size));
+			
 			h256 nonce(data.cropped(Signature::size + h256::size + Public::size, h256::size));
 			setAuthValues(sig, pubk, nonce, 4);
 			transition();
 		}
-		else
-			readAuthEIP8();
+//		else
+//			readAuthEIP8();
 	});
 }
 
 void RLPXHandshake::readAuthEIP8()
 {
+	m_nextState = Error;
+	transition();
+
 	assert(m_authCipher.size() == 307);
 	uint16_t size(m_authCipher[0]<<8 | m_authCipher[1]);
 	clog(NetP2PConnect) << "p2p.connect.ingress receiving " << size << "bytes EIP-8 auth from " << m_socket->remoteEndpoint();
