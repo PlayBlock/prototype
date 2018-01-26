@@ -29,13 +29,12 @@ public:
 	virtual Json::Value personal_listAccounts() override;
 	virtual Json::Value personal_getVote(std::string const& _address) override;
 	virtual Json::Value personal_getProducer() override;
+	virtual std::string personal_setConfigFile(Json::Value const& _config) override;
 
 private:
 	dev::eth::KeyManager& m_keyManager;
 	dev::eth::AccountHolder& m_accountHolder;
 	dev::eth::Interface& m_eth;
-
-	eth::Interface* client() { return &m_eth; }
 };
 
 }

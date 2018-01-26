@@ -6,6 +6,9 @@
 #include <libethereum/Client.h>
 
 #include "Personal.h"
+#include <utils/json_spirit/json_spirit_value.h>
+#include <utils/json_spirit/json_spirit_reader_template.h>
+#include <utils/json_spirit/json_spirit_writer_template.h>
 
 using namespace std;
 using namespace dev;
@@ -67,7 +70,7 @@ Json::Value Personal::personal_getVote(std::string const& _address)
 	try
 	{
 		string _blockNumber = "latest";
-		State _state = client()->getState(jsToBlockNumber(_blockNumber));
+		State _state = m_eth.getState(jsToBlockNumber(_blockNumber));
 		map<Address, VoteInfo> voteMap = VoteInfo::getVoteInfoMap(_state);
 
 		Address voteAddress = Address(_address);
@@ -111,7 +114,7 @@ Json::Value Personal::personal_getProducer()
 	try
 	{
 		string _blockNumber = "latest";
-		State _state = client()->getState(jsToBlockNumber(_blockNumber));
+		State _state = m_eth.getState(jsToBlockNumber(_blockNumber));
 		map<Address, uint64_t> producerMap = VoteInfo::getProducerMap(_state);
 		map<Address, VoteInfo> voteMap = VoteInfo::getVoteInfoMap(_state);
 
@@ -138,5 +141,126 @@ Json::Value Personal::personal_getProducer()
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+enum Type
+{
+	Dpos,
+	Pow,
+};
+
+string Personal::personal_setConfigFile(Json::Value const& _config)
+{
+	Address address;
+	string password;
+	Type type;
+	Secret secret;
+	try
+	{
+		if (_config["address"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack address field!"));
+		if (_config["password"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack password field!"));
+		if (_config["type"].empty())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Lack type field!"));
+
+		string _address = _config["address"].asString();
+		address = Address(_address);
+
+		password = _config["password"].asString();
+
+		string _type = _config["type"].asString();
+		if (_type.compare(string("dpos")) == 0)
+		{
+			type = Type::Dpos;
+		}
+		else if (_type.compare(string("pow")) == 0)
+		{
+			type = Type::Pow;
+		}
+		else
+		{
+			BOOST_THROW_EXCEPTION(JsonRpcException("Type error!(""dpos"", ""pow"" only)"));
+		}
+	}
+	catch (JsonRpcException&)
+	{
+		throw;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+
+	try
+	{
+		secret = m_keyManager.secret(address, [&]() { return password; });
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Invalid password or account."));
+	}
+
+	try
+	{
+		string filePath(boost::filesystem::current_path().string());
+		string s = contentsString(filePath + "/config.json");
+		json_spirit::mValue v;
+		json_spirit::read_string(s, v);
+		json_spirit::mObject& json_config = v.get_obj();
+
+		/// privateKeys
+		if (!json_config.count("privateKeys"))
+		{
+			json_spirit::mObject key;
+			key["0x" + address.hex()] = toHex(secret.ref());
+			json_config["privateKeys"] = key;
+		}
+		else
+		{
+			json_spirit::mObject& privateKeys = json_config["privateKeys"].get_obj();
+			privateKeys["0x" + address.hex()] = toHex(secret.ref());
+		}
+
+		/// params
+		if (!json_config.count("params"))
+		{
+			BOOST_THROW_EXCEPTION(JsonRpcException("Config file no ""params"" field!"));
+		}
+		else
+		{
+			json_spirit::mObject& params = json_config["params"].get_obj();
+			/// producerAccounts
+			if (!params.count("producerAccounts"))
+			{
+				json_spirit::mArray producerAccounts;
+				producerAccounts.push_back("0x" + address.hex());
+				params["producerAccounts"] = producerAccounts;
+			}
+			else
+			{
+				json_spirit::mArray& producerAccounts = params["producerAccounts"].get_array();
+				auto res = find(producerAccounts.begin(), producerAccounts.end(), "0x" + address.hex());
+				if (res == producerAccounts.end())
+				{
+					producerAccounts.push_back("0x" + address.hex());
+				}
+			}
+
+			///powWorker
+			if (type == Type::Pow)
+			{
+				params["powWorker"] = "0x" + address.hex();
+			}
+		}
+
+		writeFile(filePath + "/config.json", asBytes(json_spirit::write_string(v, true)));
+
+		return "Success!";
+	}
+	catch (const std::exception&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("File IO error."));
 	}
 }

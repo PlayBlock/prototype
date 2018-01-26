@@ -21,6 +21,7 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("personal_listAccounts", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_ARRAY,  NULL), &dev::rpc::PersonalFace::personal_listAccountsI);
 					this->bindAndAddMethod(jsonrpc::Procedure("personal_getVote", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1", jsonrpc::JSON_STRING, NULL), &dev::rpc::PersonalFace::personal_getVoteI);
 					this->bindAndAddMethod(jsonrpc::Procedure("personal_getProducer", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, NULL), &dev::rpc::PersonalFace::personal_getProducerI);
+					this->bindAndAddMethod(jsonrpc::Procedure("personal_setConfigFile", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1", jsonrpc::JSON_OBJECT, NULL), &dev::rpc::PersonalFace::personal_setConfigFileI);
                 }
 
                 inline virtual void personal_newAccountI(const Json::Value &request, Json::Value &response)
@@ -54,6 +55,10 @@ namespace dev {
 					(void)request;
 					response = this->personal_getProducer();
 				}
+				inline virtual void personal_setConfigFileI(const Json::Value &request, Json::Value &response)
+				{
+					response = this->personal_setConfigFile(request[0u]);
+				}
                 virtual std::string personal_newAccount(const std::string& param1) = 0;
                 virtual bool personal_unlockAccount(const std::string& param1, const std::string& param2, int param3) = 0;
                 virtual std::string personal_signAndSendTransaction(const Json::Value& param1, const std::string& param2) = 0;
@@ -61,6 +66,7 @@ namespace dev {
                 virtual Json::Value personal_listAccounts() = 0;
 				virtual Json::Value personal_getVote(const std::string& param1) = 0;
 				virtual Json::Value personal_getProducer() = 0;
+				virtual std::string personal_setConfigFile(const Json::Value& param1) = 0;
         };
 
     }
