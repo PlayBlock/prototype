@@ -421,7 +421,7 @@ public:
 				cout << "  Address: " << a.hex() << endl;
 				if (m_showSecret)
 				{
-					Secret s = keyManager(true).secret(a);
+					Secret s = keyManager(true).secret(a, [&]() { return getPassword("Enter passphrase for key " + i + ": "); });
 					cout << "  Secret: " << (m_showSecret ? toHex(s.ref()) : (toHex(s.ref().cropped(0, 8)) + "...")) << endl;
 				}
 			}
