@@ -509,7 +509,7 @@ void Client::onDeadBlocks(h256s const& _blocks, h256Hash& io_changed)
 		for (auto const& t: bc().transactions(h))
 		{
 			clog(ClientTrace) << "Resubmitting dead-block transaction " << Transaction(t, CheckTransaction::None);
-			ctrace << "Resubmitting dead-block transaction " << Transaction(t, CheckTransaction::None);
+			//ctrace << "Resubmitting dead-block transaction " << Transaction(t, CheckTransaction::None);
 			m_tq.import(t, IfDropped::Retry);
 		}
 	}

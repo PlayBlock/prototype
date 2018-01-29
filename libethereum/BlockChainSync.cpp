@@ -449,6 +449,21 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 		clog(NetAllDetail) << "Peer does not have the blocks requested";
 		_peer->addRating(-1);
 	}
+
+	h256s itemHashes;
+	vector<unsigned> itemNums;
+	for (unsigned i = 0; i < itemCount; i++)
+	{
+		BlockHeader info(_r[i].data(), HeaderData);  
+		itemNums.push_back(static_cast<unsigned>(info.number()));
+		itemHashes.push_back(info.hash());
+	}
+
+
+	clog(NetMessageSummary) << "Header Nums:" << itemNums;
+	clog(NetMessageSummary) << "Header Hashes:" << itemHashes;
+
+
 	for (unsigned i = 0; i < itemCount; i++)
 	{//对于每一个header
 
@@ -842,22 +857,26 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
 	unsigned knowns = 0;
 	unsigned unknowns = 0;
 	unsigned maxHeight = 0;
+	 
 	for (auto const& p: _hashes)
 	{
-		h256 const& h = p.first;
+		h256 const& h = p.first; 
 		_peer->addRating(1);
 		DEV_GUARDED(_peer->x_knownBlocks)
 			_peer->m_knownBlocks.insert(h);
 		auto status = host().bq().blockStatus(h);
-		if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(h))
+		if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(h)) {
+			ctrace << "---" << h<<" known";
 			knowns++;
+		}
 		else if (status == QueueStatus::Bad)
-		{
-			cwarn << "block hash bad!" << h << ". Bailing...";
+		{ 
+			ctrace << "block hash bad!" << h << ". Bailing...";
 			return;
 		}
 		else if (status == QueueStatus::Unknown)
 		{
+			ctrace << "---" << h << " unknown";
 			unknowns++;
 			if (p.second > maxHeight)
 			{
