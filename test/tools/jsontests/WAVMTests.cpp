@@ -1272,6 +1272,55 @@ namespace dev {
 
 		}
 
+		BOOST_AUTO_TEST_CASE(ctGame)
+		{
+			WASM_CORE::destoryInstance();
+			std::string gameHex = loadData("game.wasm");
+
+			DposTestClient client;
+
+			BOOST_REQUIRE(client.get_accounts().size() >= 3);
+			Account& account = client.get_accounts()[0];
+			Account& account2 = client.get_accounts()[1];
+			Account& account3 = client.get_accounts()[2];
+
+			string gasLimit = "0x1f71b2";
+			string gasPrice = "0x04a817c800";
+			string value = "0x0";
+
+
+			Address m_newAddress = newAddress(account);  //Contract Address.
+			string s_address = m_newAddress.hex();
+			client.sendTransaction(gasLimit, gasPrice, "", value, "0x" + gameHex, account);  //Create contract.
+			client.produce_blocks();
+
+			u256 balance = client.balance(Address(account.address));
+			bytes contractCode = client.code(Address(s_address));  //Get contract address.
+			string s_contractCode = toHex(contractCode);
+			BOOST_REQUIRE(s_contractCode.compare(gameHex) == 0);  //Check contract code.
+			u256 res1 = client.storage(m_newAddress, u256(1));  //Get contract storage.
+			BOOST_REQUIRE(res1 != u256(0));
+
+			//调用合约方法1
+			string buy = "0000000000007215";
+			client.sendTransaction(gasLimit, gasPrice, s_address, "0x64", buy + account3.address.substr(2), account2);  //Call contract code.
+			client.produce_blocks();
+
+			u256 balance1 = client.balance(Address(account.address));
+			u256 balance2 = client.balance(Address(account2.address));
+			u256 balance3 = client.balance(Address(account3.address));
+			u256 cost_1 = balance1 - balance;
+			u256 cost_2 = u256(1000000000000000000) - balance2;
+			u256 cost_3 = balance3 - u256(1000000000000000000);
+			BOOST_REQUIRE_EQUAL(cost_1, u256(10));
+			BOOST_REQUIRE_EQUAL(cost_3, u256(90));
+			cout << "cost_2: " << cost_2 << endl;
+			cout << "cost_2 - u256(100): " << cost_2 - u256(100) << endl;
+			//BOOST_REQUIRE(cost_call < u256(2060722) * u256(20000000000));
+			//string s_call = cost_call.str();
+			//cout << "s_call: " << s_call << endl;
+		}
+
 		BOOST_AUTO_TEST_SUITE_END()
 
 	}

@@ -206,7 +206,7 @@ string Personal::personal_setConfigFile(std::string const& _address, std::string
 	try
 	{
 		string filePath(boost::filesystem::current_path().string());
-		string s = contentsString(filePath + "/config.json");
+		string s = contentsString(filePath + "/eth/config.json");
 		json_spirit::mValue v;
 		json_spirit::read_string(s, v);
 		json_spirit::mObject& json_config = v.get_obj();
@@ -256,7 +256,7 @@ string Personal::personal_setConfigFile(std::string const& _address, std::string
 			}
 		}
 
-		writeFile(filePath + "/config.json", asBytes(json_spirit::write_string(v, true)));
+		writeFile(filePath + "/eth/config.json", asBytes(json_spirit::write_string(v, true)));
 
 		return "Success!";
 	}
