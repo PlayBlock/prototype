@@ -1050,7 +1050,10 @@ int main(int argc, char** argv)
 		c->setGasPricer(gasPricer);
 		DEV_IGNORE_EXCEPTIONS(asEthashClient(c)->setShouldPrecomputeDAG(m.shouldPrecompute()));
 		c->setSealer(m.minerType());
-		c->setAuthor(author);
+		if (chainParams.accountNames.size() != 0)
+			c->setAuthor(*(chainParams.accountNames.begin()));
+		else
+			c->setAuthor(author);
 		if (networkID != NoNetworkID)
 			c->setNetworkId(networkID);
 	}
