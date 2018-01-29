@@ -1303,7 +1303,7 @@ namespace dev {
 
 			//调用合约方法1
 			string buy = "0000000000007215";
-			client.sendTransaction(gasLimit, gasPrice, s_address, "0x64", buy + account3.address.substr(2), account2);  //Call contract code.
+			client.sendTransaction("25204", gasPrice, s_address, "0x64", buy + account3.address.substr(2), account2);  //Call contract code.
 			client.produce_blocks();
 
 			u256 balance1 = client.balance(Address(account.address));
