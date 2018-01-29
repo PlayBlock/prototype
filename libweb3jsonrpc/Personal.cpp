@@ -150,7 +150,7 @@ enum Type
 	Pow,
 };
 
-string Personal::personal_setConfigFile(Json::Value const& _config)
+string Personal::personal_setConfigFile(std::string const& _address, std::string const& _password)
 {
 	Address address;
 	string password;
@@ -158,31 +158,32 @@ string Personal::personal_setConfigFile(Json::Value const& _config)
 	Secret secret;
 	try
 	{
-		if (_config["address"].empty())
-			BOOST_THROW_EXCEPTION(JsonRpcException("Lack address field!"));
-		if (_config["password"].empty())
-			BOOST_THROW_EXCEPTION(JsonRpcException("Lack password field!"));
-		if (_config["type"].empty())
-			BOOST_THROW_EXCEPTION(JsonRpcException("Lack type field!"));
-
-		string _address = _config["address"].asString();
+		//if (_config["address"].empty())
+		//	BOOST_THROW_EXCEPTION(JsonRpcException("Lack address field!"));
+		//if (_config["password"].empty())
+		//	BOOST_THROW_EXCEPTION(JsonRpcException("Lack password field!"));
+		//if (_config["type"].empty())
+		//	BOOST_THROW_EXCEPTION(JsonRpcException("Lack type field!"));
+		//
+		//string _address = _config["address"].asString();
 		address = Address(_address);
 
-		password = _config["password"].asString();
+		password = _password;
 
-		string _type = _config["type"].asString();
-		if (_type.compare(string("dpos")) == 0)
-		{
-			type = Type::Dpos;
-		}
-		else if (_type.compare(string("pow")) == 0)
-		{
-			type = Type::Pow;
-		}
-		else
-		{
-			BOOST_THROW_EXCEPTION(JsonRpcException("Type error!(""dpos"", ""pow"" only)"));
-		}
+		type = Type::Dpos;
+		//string _type = _config["type"].asString();
+		//if (_type.compare(string("dpos")) == 0)
+		//{
+		//	type = Type::Dpos;
+		//}
+		//else if (_type.compare(string("pow")) == 0)
+		//{
+		//	type = Type::Pow;
+		//}
+		//else
+		//{
+		//	BOOST_THROW_EXCEPTION(JsonRpcException("Type error!(""dpos"", ""pow"" only)"));
+		//}
 	}
 	catch (JsonRpcException&)
 	{

@@ -5,5 +5,7 @@
 { "name": "personal_sendTransaction", "params": [{}, ""], "returns": "" },
 { "name": "personal_listAccounts", "params": [], "returns": [] },
 { "name": "personal_getVote", "params": [""], "returns": [] },
-{ "name": "personal_getProducer", "params": [], "returns": [] }
+{ "name": "personal_getProducer", "params": [], "returns": [] },
+{ "name": "personal_setConfigFile", "params": ["", ""], "returns": "" },
+
 ]

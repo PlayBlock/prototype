@@ -29,7 +29,7 @@ public:
 	virtual Json::Value personal_listAccounts() override;
 	virtual Json::Value personal_getVote(std::string const& _address) override;
 	virtual Json::Value personal_getProducer() override;
-	virtual std::string personal_setConfigFile(Json::Value const& _config) override;
+	virtual std::string personal_setConfigFile(std::string const& _address, std::string const& _password) override;
 
 private:
 	dev::eth::KeyManager& m_keyManager;
