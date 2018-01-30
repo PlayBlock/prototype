@@ -31,7 +31,7 @@ namespace block_production_condition {
 
 class producer_plugin {
 public:
-	producer_plugin(const dev::eth::BlockChain& bc);
+	producer_plugin( dev::eth::BlockChain& bc);
 	~producer_plugin() {
 		//_chain.reset();
 		//_db.reset();

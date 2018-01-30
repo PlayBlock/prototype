@@ -326,6 +326,8 @@ public:
 	void setProducer(std::shared_ptr<class producer_plugin>& p) { m_producer_plugin = p; };
 	const boost::filesystem::path& dbPath()const { return m_dbPath; }
 
+	State& queryBlockStateCache(const h256& _h, OverlayDB const& _stateDB); 
+
 private:
 	static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
 
@@ -390,6 +392,10 @@ private:
 	mutable BlockHashHash m_blockHashes;
 	mutable SharedMutex x_blocksBlooms;
 	mutable BlocksBloomsHash m_blocksBlooms;
+
+	//缓存区块状态，用来加速查询POW结果及Vote
+	mutable SharedMutex x_blockStates;
+	mutable std::unordered_map<h256, State*> m_blockStates;
 
 	using CacheID = std::pair<h256, unsigned>;
 	mutable Mutex x_cacheUsage;

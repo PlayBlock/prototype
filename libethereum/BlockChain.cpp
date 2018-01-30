@@ -129,6 +129,8 @@ class WriteBatchNoter: public ldb::WriteBatch::Handler
 	virtual void Put(ldb::Slice const& _key, ldb::Slice const& _value) { cnote << "Put" << toHex(bytesConstRef(_key)) << "=>" << toHex(bytesConstRef(_value)); }
 	virtual void Delete(ldb::Slice const& _key) { cnote << "Delete" << toHex(bytesConstRef(_key)); }
 };
+
+
 }
 
 namespace
@@ -727,7 +729,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 		td = pd.totalDifficulty + tdIncrease;
 
-		performanceLogger.onStageFinished("enactment"); 
+		performanceLogger.onStageFinished("enactment");  
 
 		//根据当前新块，提取新块里的所有pow_op供后面更新全局数据库使用
 		//m_producer_plugin->get_chain_controller().update_pow_perblock(s);
@@ -1264,6 +1266,29 @@ void BlockChain::rewind(unsigned _newHead)
 	}
 }
 
+
+dev::eth::State& eth::BlockChain::queryBlockStateCache(const h256& _h, OverlayDB const& _stateDB)
+{
+	DEV_READ_GUARDED(x_blockStates){
+		if (m_blockStates.count(_h)) //未查到HashBlock
+			return *(m_blockStates[_h]); 
+	}
+
+	DEV_WRITE_GUARDED(x_blockStates) {
+		dev::eth::State* pBlockState = new State(Invalid256, _stateDB, BaseState::PreExisting);
+		pBlockState->noteAccountStartNonce(chainParams().accountStartNonce);
+		BlockHeader header = info(_h);
+		pBlockState->setRoot(header.stateRoot());
+		m_blockStates[_h] = pBlockState;
+	}
+
+	DEV_READ_GUARDED(x_blockStates)
+		return *(m_blockStates[_h]);
+}
+
+
+
+
 tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const& _to, bool _common, bool _pre, bool _post, bool _consider_irreversible) const
 {
 	if (!_from || !_to)
@@ -1468,11 +1493,36 @@ void BlockChain::checkConsistency()
 void BlockChain::clearCachesDuringChainReversion(unsigned _firstInvalid)
 {
 	unsigned end = m_lastBlockNumber + 1;
-	DEV_WRITE_GUARDED(x_blockHashes)
-		for (auto i = _firstInvalid; i < end; ++i)
+
+	h256s delHashes;
+
+	DEV_WRITE_GUARDED(x_blockHashes) {
+		for (auto i = _firstInvalid; i < end; ++i) {
+			if (m_blockHashes.count(i)) {
+				delHashes.push_back(m_blockHashes.at(i).value);
+			}
 			m_blockHashes.erase(i);
+		}
+	} 
+
 	DEV_WRITE_GUARDED(x_transactionAddresses)
 		m_transactionAddresses.clear();	// TODO: could perhaps delete them individually?
+
+	DEV_WRITE_GUARDED(x_blockStates) { //清理掉不再需要的BlockState
+		for (int i = 0; i < delHashes.size(); i++)
+		{
+			if (m_blockStates.count(delHashes[i])) 
+			{
+				if (m_blockStates[delHashes[i]])
+				{
+					delete m_blockStates[delHashes[i]];
+					m_blockStates[delHashes[i]] = NULL;
+				}
+				m_blockStates.erase(delHashes[i]);
+			} 
+		}
+		delHashes.clear();
+	}
 
 	// If we are reverting previous blocks, we need to clear their blooms (in particular, to
 	// rebuild any higher level blooms that they contributed to).

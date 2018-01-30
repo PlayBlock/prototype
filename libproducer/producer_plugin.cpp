@@ -8,7 +8,7 @@
 
 using namespace dev::eth;
 
-producer_plugin::producer_plugin(const dev::eth::BlockChain& bc):
+producer_plugin::producer_plugin( dev::eth::BlockChain& bc):
 	_io_server(std::make_shared<boost::asio::io_service>()),
 	_timer(*_io_server)
 {

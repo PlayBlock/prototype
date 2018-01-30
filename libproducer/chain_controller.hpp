@@ -16,7 +16,7 @@ namespace dev { namespace eth { namespace chain {
 class chain_controller {
 public:
 
-	chain_controller(const dev::eth::BlockChain& bc, chainbase::database& db);
+	chain_controller( dev::eth::BlockChain& bc, chainbase::database& db);
 
 	chain_controller(chain_controller&&) = default;
 	~chain_controller();
@@ -88,13 +88,12 @@ private:
 
 private:
 	chainbase::database& _db;
-	const BlockChain& _bc;
+	BlockChain& _bc;
 	const OverlayDB* _stateDB;
 	std::unordered_map<Address, uint64_t> _all_votes;
 
 	//用来誊写从当前块获取得所有pow命令，每次接到新块会更新
-	std::unordered_map<Address, POW_Operation> _temp_pow_ops;
-
+	std::unordered_map<Address, POW_Operation> _temp_pow_ops; 
 
 	fc::time_point_sec   _hardfork_times[config::ETI_HardforkNum + 1];
 	hardfork_version     _hardfork_versions[config::ETI_HardforkNum + 1];

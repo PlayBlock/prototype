@@ -127,7 +127,7 @@ public:
 	bool addBlock(TestBlock const& _block);
 	vector<TestBlock> syncUncles(vector<TestBlock> const& _uncles);
 	TestBlock const& topBlock() { return m_lastBlock; }
-	BlockChain const& getInterface() const { return *m_blockChain;}
+	BlockChain & getInterface() const { return *m_blockChain;}
 	BlockChain& interfaceUnsafe() const { return *m_blockChain;}
 	TestBlock const& testGenesis() const { return m_genesisBlock; }
 
