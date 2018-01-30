@@ -866,7 +866,7 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
 			_peer->m_knownBlocks.insert(h);
 		auto status = host().bq().blockStatus(h);
 		if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(h)) {
-			ctrace << "---" << h<<" known";
+			ctrace << "---" <<(unsigned)p.second <<":"<< h<<" known";
 			knowns++;
 		}
 		else if (status == QueueStatus::Bad)
@@ -876,7 +876,7 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
 		}
 		else if (status == QueueStatus::Unknown)
 		{
-			ctrace << "---" << h << " unknown";
+			ctrace << "---" << (unsigned)p.second <<":"<< h << " unknown";
 			unknowns++;
 			if (p.second > maxHeight)
 			{
