@@ -202,6 +202,10 @@ Json::Value toJson(dev::eth::LocalisedTransactionReceipt const& _t)
 	res["gasUsed"] = toJS(_t.gasUsed());
 	res["contractAddress"] = toJS(_t.contractAddress());
 	res["logs"] = dev::toJson(_t.localisedLogs());
+	if (_t.hasStatusCode())
+		res["res"] = _t.statusCode() ;
+	else
+		res["res"] = "none";
 	return res;
 }
 
