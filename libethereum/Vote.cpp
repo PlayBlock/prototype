@@ -532,7 +532,7 @@ ETH_REGISTER_PRECOMPILED(candidateRegister)(bytesConstRef _in, Address const& _a
 	int nameLen = pos;
 	int urlLen = _in.size() - pos - 1;
 
-	if (nameLen > VoteInfo::NameMaxSize || nameLen <= 0 || urlLen > VoteInfo::URLMaxSize || urlLen <= 0)
+	if (nameLen > VoteInfo::NameMaxSize || nameLen < VoteInfo::NameMinSize || urlLen > VoteInfo::URLMaxSize || urlLen < VoteInfo::URLMinSize)
 	{
 		return make_pair(true, bytes());
 	}
