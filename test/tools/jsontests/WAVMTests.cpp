@@ -1412,7 +1412,6 @@ namespace dev {
 			client.produce_blocks();
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("send") + account3.address.substr(2) + account2.address.substr(2) + "0123", account);  //错误转移没有的装备，无变化
 			client.produce_blocks();
-			client.produce_blocks();
 
 			u256 address_2_u256;
 			addressToU256(Address(account2.address), address_2_u256);
@@ -1469,6 +1468,81 @@ namespace dev {
 			storage = client.storage(m_newAddress, address_0_u256);
 			h256 storage_h256_temp2 = (h256)storage;
 			BOOST_REQUIRE_EQUAL(storage_h256_temp1, storage_h256_temp2);
+
+			//合约创建者 调用合约方法prize
+			string prize_data = name2hex("prize");
+			prize_data += account3.address.substr(2);
+			h256 temp_h256 = (h256)u256(8267);
+			prize_data += temp_h256.hex();
+			byte temp_byte = 0;
+			for (int i = 0; i < 29; i++)
+			{
+				prize_data += toHex(string(1, temp_byte));
+				prize_data += toHex(string(1, temp_byte));
+				temp_byte++;
+			}
+
+			u256 balance4 = client.balance(Address(account3.address));
+			client.sendTransaction(gasLimit, gasPrice, s_address, "10000", "", account);  //增加奖池金额
+			client.produce_blocks();
+			client.sendTransaction(gasLimit, gasPrice, s_address, "", prize_data, account);  //转盘，发奖+发装备
+			client.produce_blocks();
+
+			storage = client.storage(m_newAddress, address_3_u256);
+			storage_h256 = (h256)storage;
+			BOOST_REQUIRE_EQUAL(storage_h256[0], 0);
+			BOOST_REQUIRE_EQUAL(storage_h256[1], 1);
+			BOOST_REQUIRE_EQUAL(storage_h256[2], 36);
+			BOOST_REQUIRE_EQUAL(storage_h256[10], 10);
+			BOOST_REQUIRE_EQUAL(storage_h256[30], 0);
+			BOOST_REQUIRE_EQUAL(storage_h256[31], 176);
+
+			u256 balance5 = client.balance(Address(account3.address));
+			u256 prize_value = balance5 - balance4;
+			BOOST_REQUIRE_EQUAL(prize_value, u256(8267));
+			BOOST_REQUIRE_EQUAL(client.balance(m_newAddress), u256(1733));
+
+			//合约创建者 调用合约方法prize 2
+			prize_data = name2hex("prize");
+			prize_data += account3.address.substr(2);
+			temp_h256 = (h256)u256(0);
+			prize_data += temp_h256.hex();
+			for (int i = 0; i < 5; i++)
+			{
+				prize_data += "0102";
+			}
+			prize_data += "02ee";  //错误的装备数量
+			for (int i = 6; i < 29; i++)
+			{
+				prize_data += "0000";
+			}
+
+			client.sendTransaction(gasLimit, gasPrice, s_address, "", prize_data, account);  //转盘，发奖+发装备
+			client.produce_blocks();
+
+			storage = client.storage(m_newAddress, address_3_u256);
+			storage_h256 = (h256)storage;
+			BOOST_REQUIRE_EQUAL(storage_h256[0], 0);
+			BOOST_REQUIRE_EQUAL(storage_h256[1], 11);
+			BOOST_REQUIRE_EQUAL(storage_h256[2], 36);  //数量超过最大上限，无变化
+			u256 balance6 = client.balance(Address(account3.address));
+			prize_value = balance5 - balance6;
+			BOOST_REQUIRE_EQUAL(prize_value, u256(0));
+			BOOST_REQUIRE_EQUAL(client.balance(m_newAddress), u256(1733));
+
+			//非合约创建者 调用合约方法prize 无效 存储无变化
+			client.sendTransaction(gasLimit, gasPrice, s_address, "", prize_data, account2);
+			client.produce_blocks();
+
+			storage = client.storage(m_newAddress, address_3_u256);
+			storage_h256 = (h256)storage;
+			BOOST_REQUIRE_EQUAL(storage_h256[0], 0);
+			BOOST_REQUIRE_EQUAL(storage_h256[1], 11);
+			BOOST_REQUIRE_EQUAL(storage_h256[2], 36);
+			u256 balance7 = client.balance(Address(account3.address));
+			prize_value = balance6 - balance7;
+			BOOST_REQUIRE_EQUAL(prize_value, u256(0));
+			BOOST_REQUIRE_EQUAL(client.balance(m_newAddress), u256(1733));
 		}
 
 		BOOST_AUTO_TEST_SUITE_END()
