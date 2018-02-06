@@ -534,6 +534,9 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 	// All ok with the block generally. Play back the transactions now...
 	unsigned i = 0;
+#if BenchMarkFlag
+	ctrace << "_block.transactions.size(): " << _block.transactions.size();
+#endif
 	DEV_TIMED_ABOVE("txExec", 500)
 		for (Transaction const& tr: _block.transactions)
 		{
