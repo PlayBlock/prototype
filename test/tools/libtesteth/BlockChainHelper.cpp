@@ -274,6 +274,11 @@ void TestBlock::dposMine(TestBlockChain const& _bc, fc::time_point_sec when, con
 
 		size_t transactionsOnImport = m_transactionQueue.topTransactions(1024).size();
 		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
+		//确保所有交易都同步到块中
+		block.sync(blockchain, m_transactionQueue, gp);
+		block.sync(blockchain, m_transactionQueue, gp);
+		block.sync(blockchain, m_transactionQueue, gp);
+		block.sync(blockchain, m_transactionQueue, gp);
 
 		if (transactionsOnImport >  m_transactionQueue.topTransactions(1024).size())
 			cnote << "Dropped invalid Transactions when mining!";
