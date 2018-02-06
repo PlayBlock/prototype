@@ -539,6 +539,8 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	ctrace << "_block.transactions.size(): " << _block.transactions.size();
 	Timer _exeTransaction;
 	double serielizetime = 0.0;
+	BenchMark::MainTime = 0.0;
+	BenchMark::SerielizeTime = 0.0;
 #endif
 	DEV_TIMED_ABOVE("txExec", 500)
 		for (Transaction const& tr: _block.transactions)
@@ -571,6 +573,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 #if BenchMarkFlag
 	clog(BenchMarkChannel) << "all transactions time: " << _exeTransaction.elapsed() << "serielize time:" << serielizetime;
+	clog(BenchMarkChannel) << "Main execute time: " << BenchMark::MainTime << "Serielize time:" << BenchMark::SerielizeTime;
 #endif
 
 
@@ -634,8 +637,12 @@ ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const
 	// transaction as possible.
 	uncommitToSeal();
 
+
 	std::pair<ExecutionResult, TransactionReceipt> resultReceipt = m_state.execute(EnvInfo(info(), _lh, gasUsed()), *m_sealEngine, _t, _p, _onOp);
 
+#if BenchMarkFlag
+	Timer stimer;
+#endif
 	if (_p == Permanence::Committed)
 	{
 		// Add to the user-originated transactions that we've executed.
@@ -643,6 +650,10 @@ ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const
 		m_receipts.push_back(resultReceipt.second);
 		m_transactionSet.insert(_t.sha3());
 	}
+
+#if BenchMarkFlag
+	BenchMark::SerielizeTime += stimer.elapsed();
+#endif
 
 	return resultReceipt.first;
 }

@@ -26,6 +26,7 @@
 #include <libdevcore/Assertions.h>
 #include <libdevcore/TrieHash.h>
 #include <libevm/VMFactory.h>
+#include <libethereum/BenchMark.h>
 #include "BlockChain.h"
 #include "Block.h"
 #include "Defaults.h"
@@ -560,7 +561,15 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	e.setResultRecipient(res);
 
 	u256 const startGasUsed = _envInfo.gasUsed();
+
+
+#if BenchMarkFlag
+	Timer timer;
+#endif
 	bool const statusCode = executeTransaction(e, _t, onOp);
+#if BenchMarkFlag
+	BenchMark::MainTime += timer.elapsed();
+#endif
 
 	bool removeEmptyAccounts = false;
 	switch (_p)

@@ -23,7 +23,7 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/Common.h>
 
-#define BenchMarkFlag 0
+#define BenchMarkFlag 1
 namespace dev
 {
 namespace eth
@@ -52,6 +52,8 @@ public:
 	int ContractCreate;
 	Timer timer;
 
+	static double MainTime;
+	static double SerielizeTime;
 };
 
 }

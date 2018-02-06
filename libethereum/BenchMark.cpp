@@ -28,6 +28,9 @@ const char* BenchMarkChannel::name() { return EthGreen "BenchMark"; }
 
 BenchMark* BenchMark::_current = nullptr;
 
+double BenchMark::MainTime = 0.0;
+double BenchMark::SerielizeTime = 0.0;
+
 BenchMark::BenchMark(std::string _name)
 {
 	Name = _name;
