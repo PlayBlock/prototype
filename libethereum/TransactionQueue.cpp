@@ -173,9 +173,9 @@ ImportResult TransactionQueue::manageImport_WITH_LOCK(h256 const& _h, Transactio
 		while (m_current.size() > m_limit)
 		{
 #if BenchMarkFlag
-			clog(BenchMarkChannel) << "Dropping out of bounds transaction: " << m_current.size();
+			//clog(BenchMarkChannel) << "Dropping out of bounds transaction: " << m_current.size();
 #endif
-			clog(TransactionQueueTraceChannel) << "Dropping out of bounds transaction" << _h;
+			//clog(TransactionQueueTraceChannel) << "Dropping out of bounds transaction" << _h;
 			remove_WITH_LOCK(m_current.rbegin()->transaction.sha3());
 		}
 

@@ -40,7 +40,7 @@ void BenchMark::makeCurrent(BenchMark* current)
 void BenchMark::showSummary(double passTime)
 {
 	
-	clog(BenchMarkChannel) << "Count: "<< _current->Name<< " Transfer  : " << _current->Transfer << " WrongDeal : " << _current->WrongDeal<< " ContractCall  : " << _current->ContractCall<< " ContractCreate: " << _current->ContractCreate << " Speed: " << " Transfer      : " << _current->Transfer/ passTime << " WrongDeal     : " << _current->WrongDeal/ passTime << " ContractCall  : " << _current->ContractCall/ passTime<< " ContractCreate: " << _current->ContractCreate/ passTime;
+	//clog(BenchMarkChannel) << "Count: "<< _current->Name<< " Transfer  : " << _current->Transfer << " WrongDeal : " << _current->WrongDeal<< " ContractCall  : " << _current->ContractCall<< " ContractCreate: " << _current->ContractCreate << " Speed: " << " Transfer      : " << _current->Transfer/ passTime << " WrongDeal     : " << _current->WrongDeal/ passTime << " ContractCall  : " << _current->ContractCall/ passTime<< " ContractCreate: " << _current->ContractCreate/ passTime;
 }
 void BenchMark::IncreaseInvalidDeal()
 {

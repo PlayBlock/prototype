@@ -988,7 +988,7 @@ void Client::doWork(bool _doWait)
 	//ctrace << "WorkTime total:" << totaltime.elapsed();
 	if (m_doRealWork)
 	{
-		clog(BenchMarkChannel) << "A real work loop: " << totaltime.elapsed() << " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4;
+		//clog(BenchMarkChannel) << "A real work loop: " << totaltime.elapsed() << " step1: " << step1 << " step2: " << step2 << " step3: " << step3 << " step4: " << step4;
 	}
 
 #endif
