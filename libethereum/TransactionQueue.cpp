@@ -105,7 +105,7 @@ ImportResult TransactionQueue::import(Transaction const& _transaction, IfDropped
 Transactions TransactionQueue::topTransactions(unsigned _limit, h256Hash const& _avoid) const
 {
 #if BenchMarkFlag
-	clog(BenchMarkChannel) << "TransactionQueue::topTransactions m_current: " << m_current.size();
+	//clog(BenchMarkChannel) << "TransactionQueue::topTransactions m_current: " << m_current.size();
 #endif
 
 	ReadGuard l(m_lock);
