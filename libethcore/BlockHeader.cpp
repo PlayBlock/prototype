@@ -26,6 +26,7 @@
 #include <libdevcore/MemoryDB.h>
 #include <libdevcore/TrieHash.h>
 #include <libethcore/Common.h>
+
 #include "Exceptions.h"
 #include "BlockHeader.h"
 using namespace std;
@@ -307,6 +308,11 @@ void BlockHeader::verify(Strictness _s, BlockHeader const& _parent, bytesConstRe
 			cdebug << "Contents:";
 			for (auto const& t: txs)
 				cdebug << toHex(t);
+
+			if (txs.size() > c_maxBlockTransaction)
+			{
+				BOOST_THROW_EXCEPTION(BlockTransactions() << RequirementError((bigint)c_maxBlockTransaction,(bigint)(txs.size())));
+			}
 
 			BOOST_THROW_EXCEPTION(InvalidTransactionsRoot() << Hash256RequirementError(expectedRoot, m_transactionsRoot));
 		}

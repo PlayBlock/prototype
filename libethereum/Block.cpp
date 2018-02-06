@@ -44,7 +44,7 @@ namespace fs = boost::filesystem;
 
 #define ETH_TIMED_ENACTMENTS 1
 
-static const unsigned c_maxSyncTransactions = 10240;
+//static const unsigned c_maxSyncTransactions = 10240;
 
 const char* BlockSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
 const char* BlockDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
@@ -329,8 +329,9 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 	// TRANSACTIONS
 	pair<TransactionReceipts, bool> ret;
 
-	auto ts = _tq.topTransactions(c_maxSyncTransactions, m_transactionSet);
-	ret.second = (ts.size() == c_maxSyncTransactions);	// say there's more to the caller if we hit the limit
+	unsigned topTxtNum = c_maxBlockTransaction - m_transactionSet.size();
+	auto ts = _tq.topTransactions(topTxtNum, m_transactionSet);
+	ret.second = (ts.size() == topTxtNum);	// say there's more to the caller if we hit the limit
 
 	assert(_bc.currentHash() == m_currentBlock.parentHash());
 	auto deadline =  chrono::steady_clock::now() + chrono::milliseconds(msTimeout);
@@ -506,7 +507,7 @@ u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 {
 #if BenchMarkFlag
-	//ctrace << "Block Enact transactions: "<< _block.transactions.size() << "number  :"<<_block.info.number();
+	ctrace << "Block Enact transactions: "<< _block.transactions.size() << "number  :"<<_block.info.number();
 #endif
 	
 	noteChain(_bc);

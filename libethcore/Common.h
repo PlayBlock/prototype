@@ -92,7 +92,7 @@ static const h256 PendingBlockHash = h256(0);
 #define ETI_TRANSACTIONS_PER_BLOCK 10240	//块中最大交易数
 #define ETI_BLOCKGASLIMIT (ETI_TRANSACTIONS_PER_BLOCK * ETI_GAS_PER_TRANSACTION) 
 static const u256 DefaultBlockGasLimit = ETI_BLOCKGASLIMIT;
-
+static const unsigned c_maxBlockTransaction = 10240;
 
 
 enum class RelativeBlock: BlockNumber

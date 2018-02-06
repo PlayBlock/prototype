@@ -47,6 +47,9 @@ DEV_SIMPLE_EXCEPTION(NotEnoughAvailableSpace);
 DEV_SIMPLE_EXCEPTION(NotEnoughCash);
 DEV_SIMPLE_EXCEPTION(GasPriceTooLow);
 DEV_SIMPLE_EXCEPTION(BlockGasLimitReached);
+//addtional restriction:transaction num<10240
+DEV_SIMPLE_EXCEPTION(BlockTransactions);
+
 DEV_SIMPLE_EXCEPTION(FeeTooSmall);
 DEV_SIMPLE_EXCEPTION(TooMuchGasUsed);
 DEV_SIMPLE_EXCEPTION(ExtraDataTooBig);
