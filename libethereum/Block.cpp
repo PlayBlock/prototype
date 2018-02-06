@@ -538,6 +538,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 #if BenchMarkFlag
 	ctrace << "_block.transactions.size(): " << _block.transactions.size();
 	Timer _exeTransaction;
+	double serielizetime = 0.0;
 #endif
 	DEV_TIMED_ABOVE("txExec", 500)
 		for (Transaction const& tr: _block.transactions)
@@ -555,15 +556,21 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 				ex << errinfo_transactionIndex(i);
 				throw;
 			}
-
+#if BenchMarkFlag
+			Timer times;
+#endif
 			RLPStream receiptRLP;
 			m_receipts.back().streamRLP(receiptRLP);
 			receipts.push_back(receiptRLP.out());
 			++i;
+
+#if BenchMarkFlag
+			serielizetime += times.elapsed();
+#endif
 		}
 
 #if BenchMarkFlag
-	clog(BenchMarkChannel) << "import transactions time: " << _exeTransaction.elapsed();
+	clog(BenchMarkChannel) << "all transactions time: " << _exeTransaction.elapsed() << "serielize time:" << serielizetime;
 #endif
 
 
