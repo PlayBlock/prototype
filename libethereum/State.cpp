@@ -593,6 +593,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 			{
 				if (BenchMark::lastTxtInBlock)
 				{
+					clog(BenchMarkChannel) << "lastTxtInBlock so call commit=====";
 					commit(State::CommitBehaviour::RemoveEmptyAccounts);
 				}
 			}
