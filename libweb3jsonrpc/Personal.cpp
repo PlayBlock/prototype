@@ -198,7 +198,10 @@ string Personal::personal_setConfigFile(std::string const& _address, std::string
 
 	try
 	{
-		secret = m_keyManager.secret(address, [&]() { return password; });
+		secret = m_keyManager.secret(address, [&]() { return password; }, false);
+
+		if (secret == Secret())
+			BOOST_THROW_EXCEPTION(JsonRpcException("Invalid password or account."));
 	}
 	catch (...)
 	{
