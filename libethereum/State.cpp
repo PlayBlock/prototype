@@ -587,24 +587,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 			//BenchMark::record_2 += timer.elapsed();
 			timer.restart();
 #endif
-
-#if BenchMarkFlag
-			if (BenchMark::importBlock)
-			{
-				if (BenchMark::lastTxtInBlock)
-				{
-					clog(BenchMarkChannel) << "lastTxtInBlock so call commit=====";
-					commit(State::CommitBehaviour::RemoveEmptyAccounts);
-				}
-			}
-			else
-			{
-				commit(State::CommitBehaviour::RemoveEmptyAccounts);
-			}
-#else
-			commit(State::CommitBehaviour::RemoveEmptyAccounts);
-#endif
-			
+			commit(State::CommitBehaviour::RemoveEmptyAccounts);	
 #if BenchMarkFlag
 			BenchMark::record_3 += timer.elapsed();
 #endif

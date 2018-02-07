@@ -57,9 +57,6 @@ public:
 	static double record_1;
 	static double record_2;
 	static double record_3;
-
-	static bool lastTxtInBlock;
-	static bool importBlock;
 };
 
 }

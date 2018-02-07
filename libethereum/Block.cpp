@@ -543,24 +543,12 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	BenchMark::record_1 = 0.0;
 	BenchMark::record_2 = 0.0;
 	BenchMark::record_3 = 0.0;
-	BenchMark::importBlock = true;
-
 #endif
 	DEV_TIMED_ABOVE("txExec", 500)
 		for (Transaction const& tr: _block.transactions)
 		{
 			try
 			{
-#if BenchMarkFlag
-				if (i == _block.transactions.size() - 1)
-				{
-					BenchMark::lastTxtInBlock = true;
-				}
-				else 
-				{
-					BenchMark::lastTxtInBlock = false;
-				}
-#endif
 				LogOverride<ExecutiveWarnChannel> o(false);
 //				cnote << "Enacting transaction: " << tr.nonce() << tr.from() << state().transactionsFrom(tr.from()) << tr.value();
 				execute(_bc.lastBlockHashes(), tr);
@@ -579,9 +567,6 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 			++i;
 		}
 
-#if BenchMarkFlag
-	BenchMark::importBlock = false;
-#endif
 #if BenchMarkFlag
 	clog(BenchMarkChannel) << "Transactions time(Out of Loop): " << _exeTransaction.elapsed();
 	clog(BenchMarkChannel) << "Main execute time: " << BenchMark::MainTime << "Serielize In Execute:" << BenchMark::SerielizeTime;
