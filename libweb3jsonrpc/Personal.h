@@ -9,6 +9,7 @@ namespace eth
 class KeyManager;
 class AccountHolder;
 class Interface;
+struct ChainParams;
 }
 
 namespace rpc
