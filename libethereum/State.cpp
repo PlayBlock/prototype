@@ -554,7 +554,9 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 		onOp = Executive::simpleTrace(); // override tracer
 #endif
 
-
+#if BenchMarkFlag
+	Timer timer;
+#endif
 	// Create and initialize the executive. This will throw fairly cheaply and quickly if the
 	// transaction is bad in any way.
 	Executive e(*this, _envInfo, _sealEngine);
@@ -563,9 +565,16 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 
 	u256 const startGasUsed = _envInfo.gasUsed();
 
-
+#if BenchMarkFlag
+	BenchMark::record_1 += timer.elapsed();
+	timer.restart();
+#endif
 
 	bool const statusCode = executeTransaction(e, _t, onOp);
+#if BenchMarkFlag
+	BenchMark::record_2 += timer.elapsed();
+	timer.restart();
+#endif
 
 	bool removeEmptyAccounts = false;
 	switch (_p)
@@ -581,6 +590,10 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	}
 
 	TransactionReceipt const receipt = TransactionReceipt(statusCode, startGasUsed + e.gasUsed(), e.logs());
+	
+#if BenchMarkFlag
+	BenchMark::record_3 += timer.elapsed();
+#endif
 	return make_pair(res, receipt);
 }
 

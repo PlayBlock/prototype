@@ -540,6 +540,9 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	Timer _exeTransaction;
 	BenchMark::MainTime = 0.0;
 	BenchMark::SerielizeTime = 0.0;
+	BenchMark::record_1 = 0.0;
+	BenchMark::record_2 = 0.0;
+	BenchMark::record_3 = 0.0;
 #endif
 	DEV_TIMED_ABOVE("txExec", 500)
 		for (Transaction const& tr: _block.transactions)
@@ -567,6 +570,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 #if BenchMarkFlag
 	clog(BenchMarkChannel) << "Transactions time(Out of Loop): " << _exeTransaction.elapsed();
 	clog(BenchMarkChannel) << "Main execute time: " << BenchMark::MainTime << "Serielize In Execute:" << BenchMark::SerielizeTime;
+	clog(BenchMarkChannel) << "Execute_1: " << BenchMark::record_1 << " Execute_2:" << BenchMark::record_2 << " Execute_3:" << BenchMark::record_3;
 #endif
 
 
@@ -637,7 +641,7 @@ ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const
 
 #if BenchMarkFlag
 	BenchMark::MainTime += timer.elapsed();
-	Timer stimer;
+	timer.restart();
 #endif
 	if (_p == Permanence::Committed)
 	{
@@ -648,7 +652,7 @@ ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const
 	}
 
 #if BenchMarkFlag
-	BenchMark::SerielizeTime += stimer.elapsed();
+	BenchMark::SerielizeTime += timer.elapsed();
 #endif
 
 	return resultReceipt.first;

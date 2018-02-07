@@ -54,6 +54,9 @@ public:
 
 	static double MainTime;
 	static double SerielizeTime;
+	static double record_1;
+	static double record_2;
+	static double record_3;
 };
 
 }

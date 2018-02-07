@@ -31,6 +31,9 @@ BenchMark* BenchMark::_current = nullptr;
 double BenchMark::MainTime = 0.0;
 double BenchMark::SerielizeTime = 0.0;
 
+double BenchMark::record_1 = 0.0;
+double BenchMark::record_2 = 0.0;
+double BenchMark::record_3 = 0.0;
 BenchMark::BenchMark(std::string _name)
 {
 	Name = _name;
