@@ -587,7 +587,23 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 			BenchMark::record_2 += timer.elapsed();
 			timer.restart();
 #endif
+
+#if BenchMarkFlag
+			if (BenchMark::importBlock)
+			{
+				if (BenchMark::lastTxtInBlock)
+				{
+					commit(State::CommitBehaviour::RemoveEmptyAccounts);
+				}
+			}
+			else
+			{
+				commit(State::CommitBehaviour::RemoveEmptyAccounts);
+			}
+#else
 			commit(State::CommitBehaviour::RemoveEmptyAccounts);
+#endif
+			
 #if BenchMarkFlag
 			BenchMark::record_3 += timer.elapsed();
 #endif
