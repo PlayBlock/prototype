@@ -34,6 +34,8 @@ double BenchMark::SerielizeTime = 0.0;
 double BenchMark::record_1 = 0.0;
 double BenchMark::record_2 = 0.0;
 double BenchMark::record_3 = 0.0;
+bool BenchMark::lastTxtInBlock = false;
+bool BenchMark::importBlock = false;
 BenchMark::BenchMark(std::string _name)
 {
 	Name = _name;
