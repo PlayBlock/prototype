@@ -23,7 +23,7 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/Common.h>
 
-#define BenchMarkFlag 1
+#define BenchMarkFlag 0
 namespace dev
 {
 namespace eth
