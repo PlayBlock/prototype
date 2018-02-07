@@ -98,7 +98,7 @@ public:
 
 	/// for dpos
 	bool enableStaleProduction = false;
-	types::AccountNames accountNames;
+	types::AccountNames producerAccounts;
 	types::AccountName powWorker;
 
 	/// private keys for producer

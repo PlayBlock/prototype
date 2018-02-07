@@ -1050,8 +1050,8 @@ int main(int argc, char** argv)
 		c->setGasPricer(gasPricer);
 		DEV_IGNORE_EXCEPTIONS(asEthashClient(c)->setShouldPrecomputeDAG(m.shouldPrecompute()));
 		c->setSealer(m.minerType());
-		if (chainParams.accountNames.size() != 0)
-			c->setAuthor(*(chainParams.accountNames.begin()));
+		if (chainParams.producerAccounts.size() != 0)
+			c->setAuthor(*(chainParams.producerAccounts.begin()));
 		else
 			c->setAuthor(author);
 		if (networkID != NoNetworkID)
@@ -1127,7 +1127,7 @@ int main(int argc, char** argv)
 
 		jsonrpcIpcServer.reset(new FullServer(
 			ethFace, new rpc::Net(web3),
-			new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder, *web3.ethereum()),
+			new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder, *web3.ethereum(), vm["config"].as<string>(), chainParams),
 			new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get()),
 			new rpc::AdminNet(web3, *sessionManager.get()),
 			new rpc::Debug(*web3.ethereum()),

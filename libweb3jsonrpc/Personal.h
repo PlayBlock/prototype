@@ -17,7 +17,7 @@ namespace rpc
 class Personal: public dev::rpc::PersonalFace
 {
 public:
-	Personal(dev::eth::KeyManager& _keyManager, dev::eth::AccountHolder& _accountHolder, eth::Interface& _eth);
+	Personal(dev::eth::KeyManager& _keyManager, dev::eth::AccountHolder& _accountHolder, eth::Interface& _eth, std::string _configPath, dev::eth::ChainParams& _chainParams);
 	virtual RPCModules implementedModules() const override
 	{
 		return RPCModules{RPCModule{"personal", "1.0"}};
@@ -30,11 +30,14 @@ public:
 	virtual Json::Value personal_getVote(std::string const& _address) override;
 	virtual Json::Value personal_getProducer() override;
 	virtual std::string personal_setConfigFile(std::string const& _address, std::string const& _password) override;
+	virtual std::string personal_checkDpos(std::string const& _address) override;
 
 private:
 	dev::eth::KeyManager& m_keyManager;
 	dev::eth::AccountHolder& m_accountHolder;
 	dev::eth::Interface& m_eth;
+	std::string m_configPath;
+	dev::eth::ChainParams& m_chainParams;
 };
 
 }

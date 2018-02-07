@@ -136,7 +136,7 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	{
 		for (auto& a : params[c_producerAccounts].get_array())
 		{
-			cp.accountNames.insert(types::AccountName(a.get_str()));
+			cp.producerAccounts.insert(types::AccountName(a.get_str()));
 		}
 	}
 

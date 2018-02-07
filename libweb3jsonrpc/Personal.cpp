@@ -16,10 +16,12 @@ using namespace dev::rpc;
 using namespace dev::eth;
 using namespace jsonrpc;
 
-Personal::Personal(KeyManager& _keyManager, AccountHolder& _accountHolder, eth::Interface& _eth):
+Personal::Personal(KeyManager& _keyManager, AccountHolder& _accountHolder, eth::Interface& _eth, std::string _configPath, dev::eth::ChainParams& _chainParams):
 	m_keyManager(_keyManager),
 	m_accountHolder(_accountHolder),
-	m_eth(_eth)
+	m_eth(_eth),
+	m_configPath(_configPath),
+	m_chainParams(_chainParams)
 {
 }
 
@@ -205,8 +207,17 @@ string Personal::personal_setConfigFile(std::string const& _address, std::string
 
 	try
 	{
-		string filePath(boost::filesystem::current_path().string());
-		string s = contentsString(filePath + "/eth/config.json");
+		boost::filesystem::path _path(m_configPath);
+		if (_path.is_relative())
+		{
+			string filePath(boost::filesystem::current_path().string());
+			_path = boost::filesystem::path(filePath + "/" + m_configPath);
+		}
+		string s = contentsString(_path);
+		if (s.size() == 0)
+		{
+			BOOST_THROW_EXCEPTION(JsonRpcException("Config file doesn't exist!"));
+		}
 		json_spirit::mValue v;
 		json_spirit::read_string(s, v);
 		json_spirit::mObject& json_config = v.get_obj();
@@ -256,12 +267,37 @@ string Personal::personal_setConfigFile(std::string const& _address, std::string
 			}
 		}
 
-		writeFile(filePath + "/eth/config.json", asBytes(json_spirit::write_string(v, true)));
+		writeFile(_path, asBytes(json_spirit::write_string(v, true)));
 
 		return "Success!";
 	}
-	catch (const std::exception&)
+	catch (JsonRpcException&)
+	{
+		throw;
+	}
+	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException("File IO error."));
+	}
+}
+
+std::string Personal::personal_checkDpos(std::string const& _address)
+{
+	try
+	{
+		Address address(_address);
+		auto it = m_chainParams.producerAccounts.find(address);
+		if (it == m_chainParams.producerAccounts.end())
+			return string("False");
+
+		auto it2 = m_chainParams.privateKeys.find(address);
+		if (it2 == m_chainParams.privateKeys.end())
+			return string("False");
+
+		return string("True");
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }

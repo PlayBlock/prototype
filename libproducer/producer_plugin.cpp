@@ -22,7 +22,7 @@ producer_plugin::producer_plugin( dev::eth::BlockChain& bc):
 		_private_keys.insert(k);
 	}
 	_production_enabled = bc.chainParams().enableStaleProduction;
-	_producers = bc.chainParams().accountNames;
+	_producers = bc.chainParams().producerAccounts;
 }
 
 void producer_plugin::schedule_production_loop(int microsecond)
