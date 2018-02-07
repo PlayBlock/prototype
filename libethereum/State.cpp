@@ -583,17 +583,22 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 			m_cache.clear();
 			break;
 		case Permanence::Committed: 
+#if BenchMarkFlag
+			BenchMark::record_2 += timer.elapsed();
+			timer.restart();
+#endif
 			commit(State::CommitBehaviour::RemoveEmptyAccounts);
+#if BenchMarkFlag
+			BenchMark::record_3 += timer.elapsed();
+#endif
 			break;
 		case Permanence::Uncommitted:
 			break;
 	}
 
+
+
 	TransactionReceipt const receipt = TransactionReceipt(statusCode, startGasUsed + e.gasUsed(), e.logs());
-	
-#if BenchMarkFlag
-	BenchMark::record_3 += timer.elapsed();
-#endif
 	return make_pair(res, receipt);
 }
 
