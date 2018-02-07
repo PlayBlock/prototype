@@ -584,7 +584,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 			break;
 		case Permanence::Committed: 
 #if BenchMarkFlag
-			BenchMark::record_2 += timer.elapsed();
+			//BenchMark::record_2 += timer.elapsed();
 			timer.restart();
 #endif
 
