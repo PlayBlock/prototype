@@ -554,9 +554,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 		onOp = Executive::simpleTrace(); // override tracer
 #endif
 
-#if BenchMarkFlag
-	Timer timer;
-#endif
+
 	// Create and initialize the executive. This will throw fairly cheaply and quickly if the
 	// transaction is bad in any way.
 	Executive e(*this, _envInfo, _sealEngine);
@@ -568,9 +566,6 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 
 
 	bool const statusCode = executeTransaction(e, _t, onOp);
-#if BenchMarkFlag
-	BenchMark::MainTime += timer.elapsed();
-#endif
 
 	bool removeEmptyAccounts = false;
 	switch (_p)

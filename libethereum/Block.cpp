@@ -538,7 +538,6 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 #if BenchMarkFlag
 	ctrace << "_block.transactions.size(): " << _block.transactions.size();
 	Timer _exeTransaction;
-	double serielizetime = 0.0;
 	BenchMark::MainTime = 0.0;
 	BenchMark::SerielizeTime = 0.0;
 #endif
@@ -558,22 +557,16 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 				ex << errinfo_transactionIndex(i);
 				throw;
 			}
-#if BenchMarkFlag
-			Timer times;
-#endif
+
 			RLPStream receiptRLP;
 			m_receipts.back().streamRLP(receiptRLP);
 			receipts.push_back(receiptRLP.out());
 			++i;
-
-#if BenchMarkFlag
-			serielizetime += times.elapsed();
-#endif
 		}
 
 #if BenchMarkFlag
-	clog(BenchMarkChannel) << "all transactions time: " << _exeTransaction.elapsed() << "serielize time:" << serielizetime;
-	clog(BenchMarkChannel) << "Main execute time: " << BenchMark::MainTime << "Serielize time:" << BenchMark::SerielizeTime;
+	clog(BenchMarkChannel) << "Transactions time(Out of Loop): " << _exeTransaction.elapsed();
+	clog(BenchMarkChannel) << "Main execute time: " << BenchMark::MainTime << "Serielize In Execute:" << BenchMark::SerielizeTime;
 #endif
 
 
@@ -637,10 +630,13 @@ ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const
 	// transaction as possible.
 	uncommitToSeal();
 
-
+#if BenchMarkFlag
+	Timer timer;
+#endif
 	std::pair<ExecutionResult, TransactionReceipt> resultReceipt = m_state.execute(EnvInfo(info(), _lh, gasUsed()), *m_sealEngine, _t, _p, _onOp);
 
 #if BenchMarkFlag
+	BenchMark::MainTime += timer.elapsed();
 	Timer stimer;
 #endif
 	if (_p == Permanence::Committed)
