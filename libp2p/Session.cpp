@@ -86,6 +86,7 @@ void Session::addRating(int _r)
 	{
 		m_peer->m_rating += _r;
 		m_peer->m_score += _r;
+		ctrace << m_info.id << "| rating = " <<m_peer->m_rating;
 		if (_r >= 0)
 			m_peer->noteSessionGood();
 	}
