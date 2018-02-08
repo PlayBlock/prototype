@@ -622,6 +622,8 @@ BOOST_FIXTURE_TEST_SUITE(RandomCodeTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(rndCode)
 {
+	cout << "rndCode" << endl;
+
 	try
 	{
 		test::RandomCodeOptions options;
@@ -637,6 +639,8 @@ BOOST_AUTO_TEST_CASE(rndCode)
 
 BOOST_AUTO_TEST_CASE(rndStateTest)
 {
+	cout << "rndStateTest" << endl;
+
 	try
 	{
 		//Mac os bug is here

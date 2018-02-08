@@ -36,6 +36,8 @@ BOOST_FIXTURE_TEST_SUITE(AccountHolderTest, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(ProxyAccountUseCase)
 {
+	g_logVerbosity = 4;
+	cnote << "ProxyAccountUseCase";
 	FixedAccountHolder h = FixedAccountHolder(function<Interface*()>(), vector<KeyPair>());
 
 	BOOST_CHECK(h.allAccounts().empty());

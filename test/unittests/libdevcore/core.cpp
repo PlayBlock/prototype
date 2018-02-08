@@ -31,6 +31,9 @@ BOOST_FIXTURE_TEST_SUITE(CoreLibTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(toHex)
 {
+	dev::g_logVerbosity = 4;
+	cnote << "toHex";
+
 	dev::bytes b = dev::fromHex("f0e1d2c3b4a59687");
 	BOOST_CHECK_EQUAL(dev::toHex(b), "f0e1d2c3b4a59687");
 	BOOST_CHECK_EQUAL(dev::toHexPrefixed(b), "0xf0e1d2c3b4a59687");
@@ -42,13 +45,19 @@ BOOST_AUTO_TEST_CASE(toHex)
 
 BOOST_AUTO_TEST_CASE(toCompactHex)
 {
+	dev::g_logVerbosity = 4;
+	cnote << "toCompactHex";
+
 	dev::u256 i("0x123456789abcdef");
 	BOOST_CHECK_EQUAL(dev::toCompactHex(i), "0123456789abcdef");
 	BOOST_CHECK_EQUAL(dev::toCompactHexPrefixed(i), "0x0123456789abcdef");
 }
 
 BOOST_AUTO_TEST_CASE(byteRef)
-{	
+{
+	dev::g_logVerbosity = 4;
+	cnote << "byteRef";
+
 	cnote << "bytesRef copyTo and toString...";
 	dev::bytes originalSequence = dev::fromHex("0102030405060708091011121314151617181920212223242526272829303132");
 	dev::bytesRef out(&originalSequence.at(0), 32);
@@ -61,6 +70,9 @@ BOOST_AUTO_TEST_CASE(byteRef)
 
 BOOST_AUTO_TEST_CASE(isHex)
 {
+	dev::g_logVerbosity = 4;
+	cnote << "isHex";
+
 	BOOST_CHECK(dev::isHex("0x"));
 	BOOST_CHECK(dev::isHex("0xA"));
 	BOOST_CHECK(dev::isHex("0xAB"));

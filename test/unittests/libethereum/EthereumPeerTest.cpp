@@ -124,6 +124,8 @@ BOOST_FIXTURE_TEST_SUITE(EthereumPeerSuite, EthereumPeerTestFixture)
 
 BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeData)
 {
+	cout << "EthereumPeerSuite_requestNodeData" << endl;
+
 	h256 dataHash("0x949d991d685738352398dff73219ab19c62c06e6f8ce899fbae755d5127ed1ef");
 	peer.requestNodeData({ dataHash });
 
@@ -139,6 +141,8 @@ BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeData)
 
 BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataSeveralHashes)
 {
+	cout << "EthereumPeerSuite_requestNodeDataSeveralHashes" << endl;
+
 	h256 dataHash0("0x949d991d685738352398dff73219ab19c62c06e6f8ce899fbae755d5127ed1ef");
 	h256 dataHash1("0x0e4562a10381dec21b205ed72637e6b1b523bdd0e4d4d50af5cd23dd4500a217");
 	h256 dataHash2("0x53ab44f45948543775a4c405085b918e5e648db1201283bb54a59701afdaedf3");
@@ -154,6 +158,8 @@ BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataSeveralHashes)
 
 BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataAddsAskingNote)
 {
+	cout << "EthereumPeerSuite_requestNodeDataAddsAskingNote" << endl;
+
 	h256 dataHash("0x949d991d685738352398dff73219ab19c62c06e6f8ce899fbae755d5127ed1ef");
 	peer.requestNodeData({ h256("0x949d991d685738352398dff73219ab19c62c06e6f8ce899fbae755d5127ed1ef") });
 
@@ -163,6 +169,8 @@ BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataAddsAskingNote)
 
 BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataWithNoHashesSetsAskNoteToNothing)
 {
+	cout << "EthereumPeerSuite_requestNodeDataWithNoHashesSetsAskNoteToNothing" << endl;
+
 	peer.requestNodeData({});
 
 	BOOST_REQUIRE(session->m_notes.find("ask") != session->m_notes.end());
@@ -171,6 +179,8 @@ BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataWithNoHashesSetsAskNoteToN
 
 BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestReceipts)
 {
+	cout << "EthereumPeerSuite_requestReceipts" << endl;
+
 	h256 blockHash0("0x949d991d685738352398dff73219ab19c62c06e6f8ce899fbae755d5127ed1ef");
 	h256 blockHash1("0x0e4562a10381dec21b205ed72637e6b1b523bdd0e4d4d50af5cd23dd4500a217");
 	h256 blockHash2("0x53ab44f45948543775a4c405085b918e5e648db1201283bb54a59701afdaedf3");

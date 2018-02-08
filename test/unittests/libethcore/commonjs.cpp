@@ -33,6 +33,9 @@ BOOST_FIXTURE_TEST_SUITE(commonjs, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(jsToPublic)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.pub());
 	Public pub = dev::jsToPublic(s);
@@ -41,6 +44,9 @@ BOOST_AUTO_TEST_CASE(jsToPublic)
 
 BOOST_AUTO_TEST_CASE(jsToAddress)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToAddress";
+
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.address());
 	Address address = dev::jsToAddress(s);
@@ -49,6 +55,9 @@ BOOST_AUTO_TEST_CASE(jsToAddress)
 
 BOOST_AUTO_TEST_CASE(jsToSecret)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToSecret";
+
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.secret().makeInsecure());
 	Secret secret = dev::jsToSecret(s);

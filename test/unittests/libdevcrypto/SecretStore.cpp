@@ -40,6 +40,8 @@ BOOST_FIXTURE_TEST_SUITE(KeyStore, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(basic_tests)
 {
+	cout << "basic_tests" << endl;
+
 	fs::path testPath = test::getTestPath();
 
 	testPath /= fs::path("KeyStoreTests");
@@ -65,6 +67,8 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 
 BOOST_AUTO_TEST_CASE(import_key_from_file)
 {
+	cout << "import_key_from_file" << endl;
+
 	// Imports a key from an external file. Tests that the imported key is there
 	// and that the external file is not deleted.
 	TransientDirectory importDir;
@@ -108,6 +112,8 @@ BOOST_AUTO_TEST_CASE(import_key_from_file)
 
 BOOST_AUTO_TEST_CASE(import_secret)
 {
+	cout << "import_secret" << endl;
+
 	for (string const& password: {"foobar", ""})
 	{
 		TransientDirectory storeDir;
@@ -132,6 +138,8 @@ BOOST_AUTO_TEST_CASE(import_secret)
 
 BOOST_AUTO_TEST_CASE(import_secret_bytesConstRef)
 {
+	cout << "import_secret_bytesConstRef" << endl;
+
 	for (string const& password: {"foobar", ""})
 	{
 		TransientDirectory storeDir;
@@ -157,6 +165,8 @@ BOOST_AUTO_TEST_CASE(import_secret_bytesConstRef)
 
 BOOST_AUTO_TEST_CASE(wrong_password)
 {
+	cout << "wrong_password" << endl;
+
 	TransientDirectory storeDir;
 	SecretStore store(storeDir.path());
 	string password = "foobar";
@@ -182,6 +192,8 @@ BOOST_AUTO_TEST_CASE(wrong_password)
 
 BOOST_AUTO_TEST_CASE(recode)
 {
+	cout << "recode" << endl;
+
 	TransientDirectory storeDir;
 	SecretStore store(storeDir.path());
 	string password = "foobar";
@@ -218,6 +230,8 @@ BOOST_AUTO_TEST_CASE(recode)
 
 BOOST_AUTO_TEST_CASE(keyImport_PBKDF2SHA256, *utf::expected_failures(1))
 {
+	cout << "keyImport_PBKDF2SHA256" << endl;
+
 	// Imports a key from an external file. Tests that the imported key is there
 	// and that the external file is not deleted.
 	TransientDirectory importDir;
@@ -257,6 +271,8 @@ BOOST_AUTO_TEST_CASE(keyImport_PBKDF2SHA256, *utf::expected_failures(1))
 
 BOOST_AUTO_TEST_CASE(keyImport_Scrypt, *utf::expected_failures(1))
 {
+	cout << "keyImport_Scrypt" << endl;
+
 	// Imports a key from an external file. Tests that the imported key is there
 	// and that the external file is not deleted.
 	TransientDirectory importDir;
@@ -296,6 +312,8 @@ BOOST_AUTO_TEST_CASE(keyImport_Scrypt, *utf::expected_failures(1))
 
 BOOST_AUTO_TEST_CASE(keyImport__ScryptV2, *utf::expected_failures(2))
 {
+	cout << "keyImport__ScryptV2" << endl;
+
 	// Imports a key from an external file. Tests that the imported key is there
 	// and that the external file is not deleted.
 	TransientDirectory importDir;

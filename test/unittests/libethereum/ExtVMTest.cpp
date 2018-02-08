@@ -60,6 +60,8 @@ BOOST_FIXTURE_TEST_SUITE(ExtVmSuite, ExtVMTestFixture)
 
 BOOST_AUTO_TEST_CASE(BlockhashOutOfBoundsRetunsZero)
 {
+	cout << "BlockhashOutOfBoundsRetunsZero" << endl;
+
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.sync(blockchain);
 
@@ -73,6 +75,8 @@ BOOST_AUTO_TEST_CASE(BlockhashOutOfBoundsRetunsZero)
 
 BOOST_AUTO_TEST_CASE(BlockhashBeforeConstantinopleReliesOnLastHashes)
 {
+	cout << "BlockhashBeforeConstantinopleReliesOnLastHashes" << endl;
+
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.sync(blockchain);
 	
@@ -87,6 +91,8 @@ BOOST_AUTO_TEST_CASE(BlockhashBeforeConstantinopleReliesOnLastHashes)
 
 BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInConstantinople)
 {
+	cout << "BlockhashDoesntNeedLastHashesInConstantinople" << endl;
+
 	// BLOCKHASH starts to work through the call to a contract 256 block after Constantinople fork block
 	TestBlock testBlock;
 	for (int i = 0; i < 256; ++i)

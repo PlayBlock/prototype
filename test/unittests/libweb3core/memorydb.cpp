@@ -38,6 +38,8 @@ BOOST_FIXTURE_TEST_SUITE(memDB, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(kill)
 {
+	cout << "kill" << endl;
+
 	MemoryDB myDB;
 	BOOST_CHECK(myDB.get().empty());
 	bytes value = fromHex("43");
@@ -50,6 +52,8 @@ BOOST_AUTO_TEST_CASE(kill)
 
 BOOST_AUTO_TEST_CASE(purgeMainMem)
 {
+	cout << "purgeMainMem" << endl;
+
 	MemoryDB myDB;
 	BOOST_CHECK(myDB.get().empty());
 	bytes value = fromHex("43");
@@ -77,6 +81,8 @@ BOOST_AUTO_TEST_CASE(purgeMainMem)
 
 BOOST_AUTO_TEST_CASE(purgeMainMem_Refs)
 {
+	cout << "purgeMainMem_Refs" << endl;
+
 	MemoryDB myDB;
 	{
 		EnforceRefs enforceRefs(myDB, true);
@@ -133,6 +139,8 @@ BOOST_AUTO_TEST_CASE(purgeMainMem_Refs)
 
 BOOST_AUTO_TEST_CASE(purgeAuxMem)
 {
+	cout << "purgeAuxMem" << endl;
+
 	class AuxMemDB : public MemoryDB
 	{
 	public:
@@ -160,6 +168,8 @@ BOOST_AUTO_TEST_CASE(purgeAuxMem)
 
 BOOST_AUTO_TEST_CASE(copy)
 {
+	cout << "copy" << endl;
+
 	MemoryDB myDB;
 	BOOST_CHECK(myDB.get().empty());
 	bytes value = fromHex("43");
@@ -179,6 +189,8 @@ BOOST_AUTO_TEST_CASE(copy)
 
 BOOST_AUTO_TEST_CASE(lookUp)
 {
+	cout << "lookUp" << endl;
+
 	MemoryDB myDB;
 	BOOST_CHECK(myDB.get().empty());
 	bytes value = fromHex("43");
@@ -201,6 +213,8 @@ BOOST_AUTO_TEST_CASE(lookUp)
 
 BOOST_AUTO_TEST_CASE(stream)
 {
+	cout << "stream" << endl;
+
 	MemoryDB myDB;
 	BOOST_CHECK(myDB.get().empty());
 	bytes value = fromHex("43");

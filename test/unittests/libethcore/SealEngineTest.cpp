@@ -31,6 +31,8 @@ BOOST_FIXTURE_TEST_SUITE(SealEngineTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(UnsignedTransactionIsValidBeforeConstantinople)
 {
+	cout << "UnsignedTransactionIsValidBeforeConstantinople" << endl;
+
 	ChainOperationParams params; 
 
 	Ethash ethash;

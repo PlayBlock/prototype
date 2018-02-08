@@ -10,6 +10,8 @@ namespace dev {
 BOOST_FIXTURE_TEST_SUITE(PowTestsSuite, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(dtMakePowProducer)
 {
+	cout << "dtMakePowProducer" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -55,6 +57,8 @@ BOOST_AUTO_TEST_CASE(dtMakePowProducer)
 
 BOOST_AUTO_TEST_CASE(dtGetErrorSignature)
 {
+	cout << "dtGetErrorSignature" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -85,6 +89,8 @@ BOOST_AUTO_TEST_CASE(dtGetErrorSignature)
 }
 BOOST_AUTO_TEST_CASE(dtGetErrorTarget)
 {
+	cout << "dtGetErrorTarget" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -116,6 +122,8 @@ BOOST_AUTO_TEST_CASE(dtGetErrorTarget)
 
 BOOST_AUTO_TEST_CASE(dtGetErrorBlockid)
 {
+	cout << "dtGetErrorBlockid" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -150,6 +158,8 @@ BOOST_AUTO_TEST_CASE(dtGetErrorBlockid)
 //同时有N个节点计算出来target
 BOOST_AUTO_TEST_CASE(dtlowTarget)
 {
+	cout << "dtlowTarget" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	EthashCPUMiner::setNumInstances(1);
@@ -177,6 +187,8 @@ BOOST_AUTO_TEST_CASE(dtlowTarget)
 //pow计算过程中接收到新的块，停止计算
 BOOST_AUTO_TEST_CASE(dtHighTarget)
 {
+	cout << "dtHighTarget" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -201,6 +213,8 @@ BOOST_AUTO_TEST_CASE(dtHighTarget)
 //一个生产者计算出多个解
 BOOST_AUTO_TEST_CASE(dtGetTwoTarget)
 {
+	cout << "dtGetTwoTarget" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -237,6 +251,8 @@ BOOST_AUTO_TEST_CASE(dtGetTwoTarget)
 //判断pow被选中的时候，队列中减少对应的生产者
 BOOST_AUTO_TEST_CASE(dtPowWitness)
 {
+	cout << "dtPowWitness" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	EthashCPUMiner::setNumInstances(1);
@@ -286,6 +302,8 @@ BOOST_AUTO_TEST_CASE(dtPowWitness)
 //Pow计算的时候产生新块，
 BOOST_AUTO_TEST_CASE(dtPowingaddBlock)
 {
+	cout << "dtPowingaddBlock" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -324,6 +342,8 @@ BOOST_FIXTURE_TEST_SUITE(BlockTestsSuite, TestOutputHelperFixture)
 /*创世期的test，需要把创世期的块高度改成84*/
 BOOST_AUTO_TEST_CASE(dtMoreDposProducer)
 {
+	cout << "dtMoreDposProducer" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -363,6 +383,8 @@ BOOST_AUTO_TEST_CASE(dtMoreDposProducer)
 
 BOOST_AUTO_TEST_CASE(dtLittleDposProducer)
 {
+	cout << "dtLittleDposProducer" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -404,6 +426,8 @@ BOOST_AUTO_TEST_CASE(dtLittleDposProducer)
 
 BOOST_AUTO_TEST_CASE(dtMakePowProducer)
 {
+	cout << "dtMakePowProducer" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -449,6 +473,8 @@ BOOST_AUTO_TEST_CASE(dtMakePowProducer)
 
 BOOST_AUTO_TEST_CASE(dtMakeMorePowProducer)
 {
+	cout << "dtMakeMorePowProducer" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	EthashCPUMiner::setNumInstances(1);
@@ -505,6 +531,8 @@ BOOST_AUTO_TEST_CASE(dtMakeMorePowProducer)
 /*注意：测试时，通过控制makeProducerCount个数来控制注册的pow个数*/
 BOOST_AUTO_TEST_CASE(dtMakeLittlePowProducer)
 {
+	cout << "dtMakeLittlePowProducer" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	EthashCPUMiner::setNumInstances(1);
@@ -551,6 +579,8 @@ BOOST_AUTO_TEST_CASE(dtMakeLittlePowProducer)
 //测试的时候需要动态调整pow注册的个数
 BOOST_AUTO_TEST_CASE(dtCheckPowProducer)
 {
+	cout << "dtCheckPowProducer" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	EthashCPUMiner::setNumInstances(1);
@@ -620,6 +650,8 @@ BOOST_FIXTURE_TEST_SUITE(StableBlockTestsSuite, TestOutputHelperFixture)
 //无DPOS节点
 BOOST_AUTO_TEST_CASE(dtCheckPowProducers)
 {
+	cout << "dtCheckPowProducers" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	EthashCPUMiner::setNumInstances(1);
@@ -666,6 +698,8 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducers)
 //无POW节点
 BOOST_AUTO_TEST_CASE(dtNoPowProducers)
 {
+	cout << "dtNoPowProducers" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -705,6 +739,8 @@ BOOST_AUTO_TEST_CASE(dtNoPowProducers)
 //无POW节点、DPOS节点充足
 BOOST_AUTO_TEST_CASE(dtEnoughDposProducers)
 {
+	cout << "dtEnoughDposProducers" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	DposTestClient client;
@@ -745,6 +781,8 @@ BOOST_AUTO_TEST_CASE(dtEnoughDposProducers)
 
 BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 {
+	cout << "dtRaceSpeedTest" << endl;
+
 	//g_logVerbosity = 14;
 	//创建生产者
 	EthashCPUMiner::setNumInstances(1);
@@ -805,6 +843,8 @@ BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 
 BOOST_AUTO_TEST_CASE(dtVoteChangeTest)
 {
+	cout << "dtVoteChangeTest" << endl;
+
 	//g_logVerbosity = 13;
 	//创建生产者
 	EthashCPUMiner::setNumInstances(1);
@@ -891,6 +931,8 @@ BOOST_AUTO_TEST_CASE(dtVoteChangeTest)
 
 BOOST_AUTO_TEST_CASE(dtMakeBlockETHTest)
 {
+	cout << "dtMakeBlockETHTest" << endl;
+
 	//1.创建一个client
 	//g_logVerbosity = 13;
 	//创建生产者

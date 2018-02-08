@@ -48,10 +48,13 @@ BOOST_AUTO_TEST_CASE(bStructures)
 }
 #endif
 
-BOOST_FIXTURE_TEST_SUITE(FrontierBlockSuite, FrontierNoProofTestFixture)
+BOOST_FIXTURE_TEST_SUITE(FrontierBlockSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(bStates)
 {
+	g_logVerbosity = 4;
+	cnote << "bStates";
+
 	TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());
 	TestBlock const& genesisBlock = testBlockchain.testGenesis();
 	OverlayDB const& genesisDB = genesisBlock.state().db();
@@ -107,6 +110,9 @@ BOOST_AUTO_TEST_CASE(bStates)
 
 BOOST_AUTO_TEST_CASE(bCopyOperator)
 {
+	g_logVerbosity = 4;
+	cnote << "bCopyOperator";
+
 	TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());
 	TestBlock const& genesisBlock = testBlockchain.testGenesis();
 
@@ -146,6 +152,9 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_CASE(bGasPricer)
 {
+	g_logVerbosity = 4;
+	cnote << "bGasPricer";
+
 	TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock(63000));
 	TestBlock const& genesisBlock = testBlockchain.testGenesis();
 	OverlayDB const& genesisDB = genesisBlock.state().db();
@@ -231,6 +240,9 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 
 BOOST_AUTO_TEST_CASE(bGetReceiptOverflow)
 {
+	g_logVerbosity = 4;
+	cnote << "bGetReceiptOverflow";
+
 	TestBlockChain bc;
 	TestBlock const& genesisBlock = bc.testGenesis();
 	OverlayDB const& genesisDB = genesisBlock.state().db();
@@ -275,6 +287,9 @@ BOOST_FIXTURE_TEST_SUITE(ConstantinopleBlockSuite, ConstantinopleTransitionTestF
 
 BOOST_AUTO_TEST_CASE(bBlockhashContractIsCreated)
 {
+	g_logVerbosity = 4;
+	cnote << "bBlockhashContractIsCreated";
+
 	Block block = blockchain.genesisBlock(genesisDB);
 	BOOST_CHECK(!block.state().addressHasCode(Address(0xf0)));
 
@@ -284,6 +299,9 @@ BOOST_AUTO_TEST_CASE(bBlockhashContractIsCreated)
 
 BOOST_AUTO_TEST_CASE(bBlockhashContractIsUpdated)
 {
+	g_logVerbosity = 4;
+	cnote << "bBlockhashContractIsUpdated";
+
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.sync(blockchain, block1hash); // sync to the beginning of block 2
 

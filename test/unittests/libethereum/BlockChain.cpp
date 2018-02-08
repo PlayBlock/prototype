@@ -33,10 +33,13 @@ using namespace dev::eth;
 using namespace dev::test;
 namespace utf = boost::unit_test;
 
-BOOST_FIXTURE_TEST_SUITE(BlockChainFrontierSuite, FrontierNoProofTestFixture)
+BOOST_FIXTURE_TEST_SUITE(BlockChainFrontierSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(output)
 {
+	g_logVerbosity = 4;
+	cnote << "output";
+
 	BOOST_WARN(string(BlockChainDebug::name()) == string(EthBlue "☍" EthWhite " ◇"));
 	BOOST_WARN(string(BlockChainWarn::name()) == string(EthBlue "☍" EthOnRed EthBlackBold " ✘"));
 	BOOST_WARN(string(BlockChainNote::name()) == string(EthBlue "☍" EthBlue " ℹ"));
@@ -57,6 +60,9 @@ BOOST_AUTO_TEST_CASE(output)
 
 BOOST_AUTO_TEST_CASE(opendb)
 {
+	g_logVerbosity = 4;
+	cnote << "opendb";
+
 	TestBlock genesis = TestBlockChain::defaultGenesisBlock();
 	TransientDirectory tempDirBlockchain;
 	ChainParams p(genesisInfo(eth::Network::TransitionnetTest), genesis.bytes(), genesis.accountMap());
@@ -67,6 +73,9 @@ BOOST_AUTO_TEST_CASE(opendb)
 
 BOOST_AUTO_TEST_CASE(Mining_1_mineBlockWithTransaction)
 {
+	g_logVerbosity = 4;
+	cnote << "Mining_1_mineBlockWithTransaction";
+
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	TestTransaction tr = TestTransaction::defaultTransaction(1); //nonce = 1
 	TestBlock block;
@@ -78,6 +87,9 @@ BOOST_AUTO_TEST_CASE(Mining_1_mineBlockWithTransaction)
 
 BOOST_AUTO_TEST_CASE(Mining_2_mineUncles)
 {
+	g_logVerbosity = 4;
+	cnote << "Mining_2_mineUncles";
+
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	TestTransaction tr = TestTransaction::defaultTransaction(1); //nonce = 1
 	TestBlock block;
@@ -183,6 +195,9 @@ See https://github.com/ethereum/cpp-ethereum/issues/3059.
 
 BOOST_AUTO_TEST_CASE(insertWithoutParent)
 {
+	g_logVerbosity = 4;
+	cnote << "insertWithoutParent";
+
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	TestTransaction tr = TestTransaction::defaultTransaction();
 	TestBlock block;
@@ -204,10 +219,13 @@ BOOST_AUTO_TEST_CASE(insertWithoutParent)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(BlockChainMainNetworkSuite, MainNetworkNoProofTestFixture)
+BOOST_FIXTURE_TEST_SUITE(BlockChainMainNetworkSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 {
+	g_logVerbosity = 4;
+	cnote << "Mining_5_BlockFutureTime";
+
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 
 	TestBlock uncleBlock;
@@ -244,6 +262,9 @@ void onBad(Exception& _ex)
 
 BOOST_AUTO_TEST_CASE(attemptImport)
 {
+	g_logVerbosity = 4;
+	cnote << "attemptImport";
+
 	//UnknownParent
 	//Success
 	//AlreadyKnown
@@ -276,6 +297,9 @@ BOOST_AUTO_TEST_CASE(attemptImport)
 
 BOOST_AUTO_TEST_CASE(insert)
 {
+	g_logVerbosity = 4;
+	cnote << "insert";
+
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	TestTransaction tr = TestTransaction::defaultTransaction();
 	TestBlock block;
@@ -306,6 +330,9 @@ BOOST_AUTO_TEST_CASE(insert)
 
 BOOST_AUTO_TEST_CASE(insertException)
 {
+	g_logVerbosity = 4;
+	cnote << "insertException";
+
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	BlockChain& bcRef = bc.interfaceUnsafe();
 
@@ -321,6 +348,9 @@ BOOST_AUTO_TEST_CASE(insertException)
 
 BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
 {
+	g_logVerbosity = 4;
+	cnote << "rescue";
+
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 
 	{
@@ -358,6 +388,9 @@ BOOST_FIXTURE_TEST_SUITE(BlockChainSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(updateStats)
 {
+	g_logVerbosity = 4;
+	cnote << "updateStats";
+
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	BlockChain& bcRef = bc.interfaceUnsafe();
 
@@ -392,6 +425,9 @@ BOOST_AUTO_TEST_CASE(updateStats)
 
 BOOST_AUTO_TEST_CASE(invalidJsonThrows)
 {
+	g_logVerbosity = 4;
+	cnote << "invalidJsonThrows";
+
 	h256 emptyStateRoot;
 	/* Below, a comma is missing between fields. */
 	BOOST_CHECK_THROW(ChainParams("{ \"sealEngine\" : \"unknown\" \"accountStartNonce\" : \"3\" }", emptyStateRoot), json_spirit::Error_position);
@@ -399,6 +435,9 @@ BOOST_AUTO_TEST_CASE(invalidJsonThrows)
 
 BOOST_AUTO_TEST_CASE(unknownFieldThrows)
 {
+	g_logVerbosity = 4;
+	cnote << "unknownFieldThrows";
+
 	h256 emptyStateRoot;
 	/* Below, an unknown field is passed. */
 	BOOST_CHECK_THROW(ChainParams("{ \"usuallyNotThere\" : \"unknown\" }", emptyStateRoot), UnknownField);

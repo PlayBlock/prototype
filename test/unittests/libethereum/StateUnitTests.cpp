@@ -36,11 +36,15 @@ BOOST_FIXTURE_TEST_SUITE(StateUnitTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
+	cout << "Basic" << endl;
+
 	Block s(Block::Null);
 }
 
 BOOST_AUTO_TEST_CASE(LoadAccountCode)
 {
+	cout << "LoadAccountCode" << endl;
+
 	Address addr{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
 	State s{0};
 	s.createContract(addr);

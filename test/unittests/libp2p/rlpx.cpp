@@ -51,6 +51,8 @@ BOOST_FIXTURE_TEST_SUITE(rlpx, RLPXTestFixture)
 
 BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 {
+	cout << "test_secrets_cpp_vectors" << endl;
+
 	KeyPair init(Secret(sha3("initiator")));
 	KeyPair initR(Secret(sha3("initiator-random")));
 	h256 initNonce(sha3("initiator-nonce"));
@@ -186,6 +188,8 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 
 BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 {
+	cout << "test_secrets_from_go" << endl;
+
 	KeyPair init(Secret(fromHex("0x5e173f6ac3c669587538e7727cf19b782a4f2fda07c1eaa662c593e5e85e3051")));
 	KeyPair initR(Secret(fromHex("0x19c2185f4f40634926ebed3af09070ca9e029f2edd5fae6253074896205f5f6c")));
 	h256 initNonce(fromHex("0xcd26fecb93657d1cd9e9eaf4f8be720b56dd1d39f190c4e1c6b7ec66f077bb11"));
@@ -376,6 +380,8 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 
 BOOST_AUTO_TEST_CASE(ecies_interop_test_primitives)
 {
+	cout << "ecies_interop_test_primitives" << endl;
+
 	CryptoPP::SHA256 sha256ctx;
 	bytes emptyExpected(fromHex("0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
 	bytes empty;

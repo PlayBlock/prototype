@@ -151,6 +151,9 @@ void syncStateTrie(bytesConstRef _block, OverlayDB const& _dbSource, OverlayDB& 
 
 BOOST_AUTO_TEST_CASE(bcBasicInsert)
 {
+	g_logVerbosity = 4;
+	cnote << "bcBasicInsert";
+
 	BasicAuthority::init();
 	BasicAuthority::init();
 

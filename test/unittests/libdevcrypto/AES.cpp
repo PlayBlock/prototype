@@ -33,6 +33,8 @@ BOOST_FIXTURE_TEST_SUITE(AES, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(AesDecrypt)
 {
+	//std::cout << "g_logVerbosity: " << g_logVerbosity << endl;
+	g_logVerbosity = 4;
 	cnote << "AesDecrypt";
 	bytes seed = fromHex("2dbaead416c20cfd00c2fc9f1788ff9f965a2000799c96a624767cb0e1e90d2d7191efdd92349226742fdc73d1d87e2d597536c4641098b9a89836c94f58a2ab4c525c27c4cb848b3e22ea245b2bc5c8c7beaa900b0c479253fc96fce7ffc621");
 	KeyPair kp(sha3Secure(aesDecrypt(&seed, "test")));

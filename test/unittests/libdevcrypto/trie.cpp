@@ -47,6 +47,8 @@ BOOST_FIXTURE_TEST_SUITE(Trie, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(fat_trie)
 {
+	cout << "fat_trie" << endl;
+
 	h256 r;
 	MemoryDB fm;
 	{
@@ -67,6 +69,8 @@ BOOST_AUTO_TEST_CASE(fat_trie)
 
 BOOST_AUTO_TEST_CASE(hex_encoded_securetrie_test)
 {
+	cout << "hex_encoded_securetrie_test" << endl;
+
 	fs::path const testPath = test::getTestPath() / fs::path("TrieTests");
 
 	cnote << "Testing Secure Trie...";
@@ -132,6 +136,8 @@ BOOST_AUTO_TEST_CASE(hex_encoded_securetrie_test)
 
 BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 {
+	cout << "trie_test_anyorder" << endl;
+
 	fs::path const testPath = test::getTestPath() / fs::path("TrieTests");
 
 	cnote << "Testing Trie...";
@@ -197,6 +203,8 @@ BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 
 BOOST_AUTO_TEST_CASE(trie_tests_ordered)
 {
+	cout << "trie_tests_ordered" << endl;
+
 	fs::path const testPath = test::getTestPath() / fs::path("TrieTests");
 
 	cnote << "Testing Trie...";
@@ -297,6 +305,8 @@ bytes stringMapRlp256(StringMap const& _s)
 
 BOOST_AUTO_TEST_CASE(moreTrieTests)
 {
+	cout << "moreTrieTests" << endl;
+
 	cnote << "Testing Trie more...";
 	// More tests...
 	{
@@ -444,6 +454,8 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 
 BOOST_AUTO_TEST_CASE(trieLowerBound)
 {
+	cout << "trieLowerBound" << endl;
+
 	cnote << "Stress-testing Trie.lower_bound...";
 	if (0)
 	{
@@ -490,6 +502,8 @@ BOOST_AUTO_TEST_CASE(trieLowerBound)
 
 BOOST_AUTO_TEST_CASE(trieStess)
 {
+	cout << "trieStess" << endl;
+
 	cnote << "Stress-testing Trie...";
 	{
 		MemoryDB m;
@@ -602,6 +616,8 @@ template<typename Trie> void perfTestTrie(char const* _name)
 
 BOOST_AUTO_TEST_CASE(triePerf)
 {
+	cout << "triePerf" << endl;
+
 	if (test::Options::get().all)
 	{
 		perfTestTrie<SpecificTrieDB<GenericTrieDB<MemoryDB>, h256>>("GenericTrieDB");

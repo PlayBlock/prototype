@@ -159,6 +159,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(requestTimeout)
 {
+	cout << "requestTimeout" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test network/net/requestTimeout. --nonetwork flag is set.\n";
@@ -198,6 +200,8 @@ BOOST_AUTO_TEST_CASE(requestTimeout)
 
 BOOST_AUTO_TEST_CASE(isIPAddressType)
 {
+	cout << "isIPAddressType" << endl;
+
 	string wildcard = "0.0.0.0";
 	BOOST_REQUIRE(bi::address::from_string(wildcard).is_unspecified());
 	
@@ -232,6 +236,8 @@ BOOST_AUTO_TEST_CASE(isIPAddressType)
 
 BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 {
+	cout << "neighboursPacketLength" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test network/net/neighboursPacketLength. --nonetwork flag is set.\n";
@@ -263,6 +269,8 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 
 BOOST_AUTO_TEST_CASE(neighboursPacket)
 {
+	cout << "neighboursPacket" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test network/net/neighboursPacket. --nonetwork flag is set.\n";
@@ -296,6 +304,8 @@ BOOST_AUTO_TEST_CASE(neighboursPacket)
 
 BOOST_AUTO_TEST_CASE(test_findnode_neighbours)
 {
+	cout << "test_findnode_neighbours" << endl;
+
 	// Executing findNode should result in a list which is serialized
 	// into Neighbours packet. Neighbours packet should then be deserialized
 	// into the same list of nearest nodes.
@@ -303,6 +313,8 @@ BOOST_AUTO_TEST_CASE(test_findnode_neighbours)
 
 BOOST_AUTO_TEST_CASE(kademlia)
 {
+	cout << "kademlia" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test network/net/kademlia. --nonetwork flag is set.\n";
@@ -324,6 +336,8 @@ BOOST_AUTO_TEST_CASE(kademlia)
 
 BOOST_AUTO_TEST_CASE(udpOnce)
 {
+	cout << "udpOnce" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test network/net/udpOnce. --nonetwork flag is set.\n";
@@ -385,6 +399,8 @@ BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(unspecifiedNode)
 {
+	cout << "unspecifiedNode" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test network/net/unspecifiedNode. --nonetwork flag is set.\n";
@@ -404,6 +420,8 @@ BOOST_AUTO_TEST_CASE(unspecifiedNode)
 
 BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
 {
+	cout << "nodeTableReturnsUnspecifiedNode" << endl;
+
 	if (test::Options::get().nonetwork)
 		return;
 

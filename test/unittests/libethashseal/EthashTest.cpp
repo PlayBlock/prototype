@@ -31,6 +31,8 @@ BOOST_FIXTURE_TEST_SUITE(EthashTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
 {
+	cout << "calculateDifficultyByzantiumWithoutUncles" << endl;
+
 	ChainOperationParams params; 
 
 	Ethash ethash;
@@ -52,6 +54,8 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
 
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
 {
+	cout << "calculateDifficultyByzantiumWithUncles" << endl;
+
 	ChainOperationParams params; 
 	Ethash ethash;
 	ethash.setChainParams(params);
@@ -73,6 +77,8 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
 
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
 {
+	cout << "calculateDifficultyByzantiumMaxAdjustment" << endl;
+
 	ChainOperationParams params; 
 
 	Ethash ethash;

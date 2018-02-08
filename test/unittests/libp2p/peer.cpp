@@ -65,6 +65,8 @@ BOOST_FIXTURE_TEST_SUITE(p2p, P2PPeerFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
+	cout << "host" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test libp2p/p2p/host. --nonetwork flag is set.\n";
@@ -129,6 +131,8 @@ BOOST_AUTO_TEST_CASE(host)
 
 BOOST_AUTO_TEST_CASE(networkConfig)
 {
+	cout << "networkConfig" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test libp2p/p2p/networkConfig. --nonetwork flag is set.\n";
@@ -144,6 +148,8 @@ BOOST_AUTO_TEST_CASE(networkConfig)
 
 BOOST_AUTO_TEST_CASE(saveNodes)
 {
+	cout << "saveNodes" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test libp2p/p2p/saveNodes. --nonetwork flag is set.\n";
@@ -216,6 +222,8 @@ BOOST_FIXTURE_TEST_SUITE(p2pPeer, P2PPeerFixture)
 
 BOOST_AUTO_TEST_CASE(requirePeer)
 {
+	cout << "requirePeer" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test libp2p/p2pPeer/requirePeer. --nonetwork flag is set.\n";
@@ -296,6 +304,8 @@ BOOST_FIXTURE_TEST_SUITE(peerTypes, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(emptySharedPeer)
 {
+	cout << "emptySharedPeer" << endl;
+
 	if (test::Options::get().nonetwork)
 	{
 		clog << "Skipping test libp2p/peerTypes/emptySharedPeer. --nonetwork flag is set.\n";

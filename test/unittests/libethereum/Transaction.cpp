@@ -33,12 +33,16 @@ BOOST_FIXTURE_TEST_SUITE(libethereum, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(TransactionGasRequired)
 {
+	cout << "TransactionGasRequired" << endl;
+
 	Transaction tr(fromHex("0xf86d800182521c94095e7baea6a6c7c4c2dfeb977efac326af552d870a8e0358ac39584bc98a7c979f984b031ba048b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353a0efffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"), CheckTransaction::None);
 	BOOST_CHECK_EQUAL(tr.baseGasRequired(FrontierSchedule), 21952);
 }
 
 BOOST_AUTO_TEST_CASE(ExecutionResultOutput)
 {
+	cout << "ExecutionResultOutput" << endl;
+
 	std::stringstream buffer;
 	ExecutionResult exRes;
 
@@ -52,6 +56,8 @@ BOOST_AUTO_TEST_CASE(ExecutionResultOutput)
 
 BOOST_AUTO_TEST_CASE(transactionExceptionOutput)
 {
+	cout << "transactionExceptionOutput" << endl;
+
 	std::stringstream buffer;
 	buffer << TransactionException::BadInstruction;
 	BOOST_CHECK_MESSAGE(buffer.str() == "BadInstruction", "Error output TransactionException::BadInstruction");
@@ -120,6 +126,8 @@ BOOST_AUTO_TEST_CASE(transactionExceptionOutput)
 
 BOOST_AUTO_TEST_CASE(toTransactionExceptionConvert)
 {
+	cout << "toTransactionExceptionConvert" << endl;
+
 	RLPException rlpEx("exception");//toTransactionException(*(dynamic_cast<Exception*>
 	BOOST_CHECK_MESSAGE(toTransactionException(rlpEx) == TransactionException::BadRLP, "RLPException !=> TransactionException");
 	OutOfGasIntrinsic oogEx;
@@ -150,7 +158,10 @@ BOOST_AUTO_TEST_CASE(toTransactionExceptionConvert)
 
 BOOST_AUTO_TEST_CASE(blockVerifyZeroTransaction)
 {
-	TestBlockChain::s_sealEngineNetwork = eth::Network::ByzantiumTest;
+	cout << "blockVerifyZeroTransaction" << endl;
+
+	//TestBlockChain::s_sealEngineNetwork = eth::Network::ByzantiumTest;
+	TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
 	TestBlock genesis = TestBlockChain::defaultGenesisBlock();
 	TestBlockChain bc(genesis);
 
@@ -168,6 +179,8 @@ BOOST_AUTO_TEST_CASE(blockVerifyZeroTransaction)
 
 BOOST_AUTO_TEST_CASE(GettingSenderForUnsignedTransactionThrows)
 {
+	cout << "GettingSenderForUnsignedTransactionThrows" << endl;
+
 	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
 	BOOST_CHECK(!tx.hasSignature());
 
@@ -176,12 +189,16 @@ BOOST_AUTO_TEST_CASE(GettingSenderForUnsignedTransactionThrows)
 
 BOOST_AUTO_TEST_CASE(GettingSignatureForUnsignedTransactionThrows)
 {
+	cout << "GettingSignatureForUnsignedTransactionThrows" << endl;
+
 	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
 	BOOST_REQUIRE_THROW(tx.signature(), TransactionIsUnsigned);
 }
 
 BOOST_AUTO_TEST_CASE(StreamRLPWithSignatureForUnsignedTransactionThrows)
 {
+	cout << "StreamRLPWithSignatureForUnsignedTransactionThrows" << endl;
+
 	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
 	RLPStream s;
 	BOOST_REQUIRE_THROW(tx.streamRLP(s, IncludeSignature::WithSignature, false), TransactionIsUnsigned);
@@ -189,6 +206,8 @@ BOOST_AUTO_TEST_CASE(StreamRLPWithSignatureForUnsignedTransactionThrows)
 
 BOOST_AUTO_TEST_CASE(CheckLowSForUnsignedTransactionThrows)
 {
+	cout << "CheckLowSForUnsignedTransactionThrows" << endl;
+
 	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
 	BOOST_REQUIRE_THROW(tx.checkLowS(), TransactionIsUnsigned);
 }

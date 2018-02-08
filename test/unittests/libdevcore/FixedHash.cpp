@@ -36,6 +36,8 @@ BOOST_FIXTURE_TEST_SUITE(FixedHashTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(FixedHashComparisons)
 {
+	cout << "FixedHashComparisons" << endl;
+
 	FixedHash<4> h1(sha3("abcd"));
 	FixedHash<4> h2(sha3("abcd"));
 	FixedHash<4> h3(sha3("aadd"));
@@ -54,6 +56,8 @@ BOOST_AUTO_TEST_CASE(FixedHashComparisons)
 
 BOOST_AUTO_TEST_CASE(FixedHashXOR)
 {
+	cout << "FixedHashXOR" << endl;
+
 	FixedHash<2> h1("0xAAAA");
 	FixedHash<2> h2("0xBBBB");
 
@@ -64,6 +68,8 @@ BOOST_AUTO_TEST_CASE(FixedHashXOR)
 
 BOOST_AUTO_TEST_CASE(FixedHashOR)
 {
+	cout << "FixedHashOR" << endl;
+
 	FixedHash<4> h1("0xD3ADB33F");
 	FixedHash<4> h2("0xBAADF00D");
 	FixedHash<4> res("0xFBADF33F");
@@ -75,6 +81,8 @@ BOOST_AUTO_TEST_CASE(FixedHashOR)
 
 BOOST_AUTO_TEST_CASE(FixedHashAND)
 {
+	cout << "FixedHashAND" << endl;
+
 	FixedHash<4> h1("0xD3ADB33F");
 	FixedHash<4> h2("0xBAADF00D");
 	FixedHash<4> h3("0x92aDB00D");
@@ -86,6 +94,8 @@ BOOST_AUTO_TEST_CASE(FixedHashAND)
 
 BOOST_AUTO_TEST_CASE(FixedHashInvert)
 {
+	cout << "FixedHashInvert" << endl;
+
 	FixedHash<4> h1("0xD3ADB33F");
 	FixedHash<4> h2("0x2C524CC0");
 
@@ -94,6 +104,8 @@ BOOST_AUTO_TEST_CASE(FixedHashInvert)
 
 BOOST_AUTO_TEST_CASE(FixedHashContains)
 {
+	cout << "FixedHashContains" << endl;
+
 	FixedHash<4> h1("0xD3ADB331");
 	FixedHash<4> h2("0x0000B331");
 	FixedHash<4> h3("0x0000000C");
@@ -129,6 +141,8 @@ void incrementSingleIteration(unsigned seed)
 
 BOOST_AUTO_TEST_CASE(FixedHashIncrement)
 {
+	cout << "FixedHashIncrement" << endl;
+
 	incrementSingleIteration(0);
 	incrementSingleIteration(1);
 	incrementSingleIteration(0xBAD);

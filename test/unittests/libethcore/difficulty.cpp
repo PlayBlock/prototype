@@ -143,6 +143,9 @@ BOOST_AUTO_TEST_SUITE(DifficultyTests)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 {
+	g_logVerbosity = 4;
+	cnote << "difficultyTestsFrontier";
+
 	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyFrontier.json");
 
 	Ethash sealEngine;
@@ -156,6 +159,9 @@ BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsRopsten)
 {
+	g_logVerbosity = 4;
+	cnote << "difficultyTestsRopsten";
+
 	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyRopsten.json");
 
 	Ethash sealEngine;
@@ -169,6 +175,9 @@ BOOST_AUTO_TEST_CASE(difficultyTestsRopsten)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 {
+	g_logVerbosity = 4;
+	cnote << "difficultyTestsHomestead";
+
 	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyHomestead.json");
 
 	Ethash sealEngine;
@@ -182,6 +191,9 @@ BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 
 BOOST_AUTO_TEST_CASE(difficultyByzantium)
 {
+	g_logVerbosity = 4;
+	cnote << "difficultyByzantium";
+
 	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyByzantium.json");
 
 	Ethash sealEngine;
@@ -195,6 +207,9 @@ BOOST_AUTO_TEST_CASE(difficultyByzantium)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
 {
+	g_logVerbosity = 4;
+	cnote << "difficultyTestsMainNetwork";
+
 	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyMainNetwork.json");
 
 	Ethash sealEngine;
@@ -208,6 +223,9 @@ BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 {
+	g_logVerbosity = 4;
+	cnote << "difficultyTestsCustomMainNetwork";
+
 	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyCustomMainNetwork.json");
 
 	Ethash sealEngine;
@@ -275,6 +293,9 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 
 BOOST_AUTO_TEST_CASE(basicDifficultyTest)
 {
+	g_logVerbosity = 4;
+	cnote << "basicDifficultyTest";
+
 	fs::path const testPath = test::getTestPath() / fs::path("BasicTests/difficulty.json");
 
 	Ethash sealEngine;

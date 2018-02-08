@@ -36,6 +36,8 @@ BOOST_FIXTURE_TEST_SUITE(RangeMaskTest, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(constructor)
 {
+	cout << "constructor" << endl;
+
 	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	for (RM r: {RM(), RM(1, 10), RM(Range(2, 10))})
@@ -52,6 +54,8 @@ BOOST_AUTO_TEST_CASE(constructor)
 
 BOOST_AUTO_TEST_CASE(simple_unions)
 {
+	cout << "simple_unions" << endl;
+
 	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	RM m(Range(0, 2000));
@@ -73,6 +77,8 @@ BOOST_AUTO_TEST_CASE(simple_unions)
 
 BOOST_AUTO_TEST_CASE(empty_union)
 {
+	cout << "empty_union" << endl;
+
 	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	RM m(Range(0, 2000));
@@ -92,6 +98,8 @@ BOOST_AUTO_TEST_CASE(empty_union)
 
 BOOST_AUTO_TEST_CASE(overlapping_unions)
 {
+	cout << "overlapping_unions" << endl;
+
 	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	RM m(Range(0, 2000));
@@ -115,6 +123,8 @@ BOOST_AUTO_TEST_CASE(overlapping_unions)
 
 BOOST_AUTO_TEST_CASE(complement)
 {
+	cout << "complement" << endl;
+
 	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	RM m(Range(0, 2000));
@@ -132,6 +142,8 @@ BOOST_AUTO_TEST_CASE(complement)
 
 BOOST_AUTO_TEST_CASE(iterator)
 {
+	cout << "iterator" << endl;
+
 	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	RM m(Range(0, 2000));

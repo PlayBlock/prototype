@@ -33,6 +33,8 @@ BOOST_FIXTURE_TEST_SUITE(TransactionQueueSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(TransactionEIP86)
 {
+	cout << "TransactionEIP86" << endl;
+
 	dev::eth::TransactionQueue txq;
 	Address to = Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	RLPStream streamRLP;
@@ -47,6 +49,8 @@ BOOST_AUTO_TEST_CASE(TransactionEIP86)
 
 BOOST_AUTO_TEST_CASE(tqMaxNonce)
 {
+	cout << "tqMaxNonce" << endl;
+
 	dev::eth::TransactionQueue txq;
 
 	// from a94f5374fce5edbc8e2a8697c15331677e6ebf0b
@@ -77,6 +81,8 @@ BOOST_AUTO_TEST_CASE(tqMaxNonce)
 
 BOOST_AUTO_TEST_CASE(tqPriority)
 {
+	cout << "tqPriority" << endl;
+
 	dev::eth::TransactionQueue txq;
 
 	const u256 gasCostCheap =  10 * szabo;
@@ -131,6 +137,8 @@ BOOST_AUTO_TEST_CASE(tqPriority)
 
 BOOST_AUTO_TEST_CASE(tqFuture)
 {
+	cout << "tqFuture" << endl;
+
 	dev::eth::TransactionQueue txq;
 
 	// from a94f5374fce5edbc8e2a8697c15331677e6ebf0b
@@ -162,6 +170,8 @@ BOOST_AUTO_TEST_CASE(tqFuture)
 
 BOOST_AUTO_TEST_CASE(tqLimits)
 {
+	cout << "tqLimits" << endl;
+
 	dev::eth::TransactionQueue txq(3, 3);
 	const u256 gasCostMed =  20 * szabo;
 	const u256 gas = 25000;
@@ -186,12 +196,16 @@ BOOST_AUTO_TEST_CASE(tqLimits)
 
 BOOST_AUTO_TEST_CASE(tqOutput)
 {
+	cout << "tqOutput" << endl;
+
 	BOOST_REQUIRE(string(TransactionQueueChannel().name()) == string(EthCyan "┉┅▶"));
 }
 
 
 BOOST_AUTO_TEST_CASE(tqImport)
 {
+	cout << "tqImport" << endl;
+
 	TestTransaction testTransaction = TestTransaction::defaultTransaction();
 	TransactionQueue tq;
 	h256Hash known = tq.knownTransactions();
@@ -235,6 +249,8 @@ BOOST_AUTO_TEST_CASE(tqImport)
 
 BOOST_AUTO_TEST_CASE(tqDrop)
 {
+	cout << "tqDrop" << endl;
+
 	TransactionQueue tq;
 	TestTransaction testTransaction = TestTransaction::defaultTransaction();
 	tq.dropGood(testTransaction.transaction());
@@ -246,6 +262,8 @@ BOOST_AUTO_TEST_CASE(tqDrop)
 
 BOOST_AUTO_TEST_CASE(tqLimit)
 {
+	cout << "tqLimit" << endl;
+
 	TransactionQueue tq(5, 3);
 	Address from;
 	for (size_t i = 1; i < 7; i++)
@@ -284,6 +302,8 @@ BOOST_AUTO_TEST_CASE(tqLimit)
 
 BOOST_AUTO_TEST_CASE(tqEqueue)
 {
+	cout << "tqEqueue" << endl;
+
 	TransactionQueue tq;
 	TestTransaction testTransaction = TestTransaction::defaultTransaction();
 

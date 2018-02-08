@@ -43,6 +43,9 @@ BOOST_FIXTURE_TEST_SUITE(DashimotoTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(basic_test)
 {
+	g_logVerbosity = 4;
+	cnote << "basic_test";
+
 	fs::path const testPath = test::getTestPath() / fs::path("PoWTests");;
 
 	cnote << "Testing Proof of Work...";

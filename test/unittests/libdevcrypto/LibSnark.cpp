@@ -20,6 +20,7 @@
 #include <libdevcrypto/LibSnark.h>
 #include <libdevcore/CommonIO.h>
 #include <boost/test/unit_test.hpp>
+#include <libdevcore/Log.h>
 
 using namespace std;
 using namespace dev;
@@ -72,6 +73,8 @@ bytes addG1(bytes const& _x, bytes const& _y)
 
 BOOST_AUTO_TEST_CASE(ecadd)
 {
+	cout << "ecadd" << endl;
+
 	// "0 + 0 == 0"
 	bytes input(0x20 * 4, 0);
 	bytes expectation(0x20 * 2, 0);
@@ -87,6 +90,8 @@ BOOST_AUTO_TEST_CASE(ecadd)
 
 BOOST_AUTO_TEST_CASE(fieldPointInvalid)
 {
+	cout << "fieldPointInvalid" << endl;
+
 	u256 const pMod{"21888242871839275222246405745257275088696311157297823662689037894645226208583"};
 
 	bytes input = toBigEndian(pMod);
@@ -108,6 +113,8 @@ BOOST_AUTO_TEST_CASE(fieldPointInvalid)
 
 BOOST_AUTO_TEST_CASE(invalid)
 {
+	cout << "invalid" << endl;
+
 	bytes x =
 		toBigEndian(u256("6851077925310461602867742977619883934042581405263014789956638244065803308498")) +
 		toBigEndian(u256("10336382210592135525880811046708757754106524561907815205241508542912494488506"));
@@ -125,6 +132,8 @@ BOOST_AUTO_TEST_CASE(invalid)
 
 BOOST_AUTO_TEST_CASE(ecmul_add)
 {
+	cout << "ecmul_add" << endl;
+
 	bytes x =
 		toBigEndian(u256("6851077925310461602867742977619883934042581405263014789956638244065803308498")) +
 		toBigEndian(u256("10336382210592135525880811046708757754106524561907815205241508542912494488506"));
@@ -139,6 +148,8 @@ BOOST_AUTO_TEST_CASE(ecmul_add)
 
 BOOST_AUTO_TEST_CASE(pairing)
 {
+	cout << "pairing" << endl;
+
 	// This verifies a full zkSNARK proof. Let's see if this hocus-pocus actually works...
 	struct VK {
 		bytes A;
@@ -322,6 +333,8 @@ BOOST_AUTO_TEST_CASE(pairing)
 
 BOOST_AUTO_TEST_CASE(pairingNullInput)
 {
+	cout << "pairingNullInput" << endl;
+
 	// TODO: Maybe the empty input should also be considered invalid?
 	auto r = pairingprod_helper({});
 	BOOST_CHECK(r.first);
@@ -336,6 +349,8 @@ BOOST_AUTO_TEST_CASE(pairingNullInput)
 
 BOOST_AUTO_TEST_CASE(generateRandomPoints)
 {
+	cout << "generateRandomPoints" << endl;
+
 	bytes trivialPt = toBigEndian(u256(1)) + toBigEndian(u256(2));
 
 	bool success = false;
@@ -396,6 +411,8 @@ BOOST_AUTO_TEST_CASE(generateRandomPoints)
 
 BOOST_AUTO_TEST_CASE(benchECADD)
 {
+	cout << "benchECADD" << endl;
+
 	bytes v = fromHex("18b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f37266");
 	bytes w = fromHex("07c2b7f58a84bd6145f00c9c2bc0bb1a187f20ff2c92963a88019e7c6a014eed06614e20c147e940f2d70da3f74c9a17df361706a4485c742bd6788478fa17d7");
 
@@ -415,6 +432,8 @@ BOOST_AUTO_TEST_CASE(benchECADD)
 
 BOOST_AUTO_TEST_CASE(benchECMULRand)
 {
+	cout << "benchECMULRand" << endl;
+
 	bytes v = fromHex("1fa111cf23c269b75957c715b762ef37074d341c280d113707ff342211b794571db10707e7cb4ba3c851f6bbb43399701da0c7675ca0f9cfc595774fd055b2fb");
 	u256 k = 1;
 
@@ -433,6 +452,8 @@ BOOST_AUTO_TEST_CASE(benchECMULRand)
 
 BOOST_AUTO_TEST_CASE(benchECMULWorstCase1)
 {
+	cout << "benchECMULWorstCase1" << endl;
+
 	bytes v = fromHex("1fa111cf23c269b75957c715b762ef37074d341c280d113707ff342211b794571db10707e7cb4ba3c851f6bbb43399701da0c7675ca0f9cfc595774fd055b2fb");
 	u256 const k{"21888242871839275222246405745257275088696311157297823662689037894645226208582"};
 
@@ -450,6 +471,8 @@ BOOST_AUTO_TEST_CASE(benchECMULWorstCase1)
 
 BOOST_AUTO_TEST_CASE(benchECMULWorstCase2)
 {
+	cout << "benchECMULWorstCase2" << endl;
+
 	bytes v = fromHex("1fa111cf23c269b75957c715b762ef37074d341c280d113707ff342211b794571db10707e7cb4ba3c851f6bbb43399701da0c7675ca0f9cfc595774fd055b2fb");
 	u256 const k{"10944121435919637611123202872628637544348155578648911831344518947322613104291"};
 
@@ -467,6 +490,8 @@ BOOST_AUTO_TEST_CASE(benchECMULWorstCase2)
 
 BOOST_AUTO_TEST_CASE(benchECMULIdentity)
 {
+	cout << "benchECMULIdentity" << endl;
+
 	bytes const w = fromHex("1fa111cf23c269b75957c715b762ef37074d341c280d113707ff342211b794571db10707e7cb4ba3c851f6bbb43399701da0c7675ca0f9cfc595774fd055b2fb");
 	u256 const k = 1;
 	bytes v = w;

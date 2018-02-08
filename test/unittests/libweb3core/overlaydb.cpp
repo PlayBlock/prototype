@@ -33,6 +33,8 @@ BOOST_FIXTURE_TEST_SUITE(OverlayDBTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(basicUsage)
 {
+	cout << "basicUsage" << endl;
+
 	ldb::Options o;
 	o.max_open_files = 256;
 	o.create_if_missing = true;
@@ -69,6 +71,8 @@ BOOST_AUTO_TEST_CASE(basicUsage)
 
 BOOST_AUTO_TEST_CASE(auxMem)
 {
+	cout << "auxMem" << endl;
+
 	ldb::Options o;
 	o.max_open_files = 256;
 	o.create_if_missing = true;
@@ -110,6 +114,8 @@ BOOST_AUTO_TEST_CASE(auxMem)
 
 BOOST_AUTO_TEST_CASE(rollback)
 {
+	cout << "rollback" << endl;
+
 	ldb::Options o;
 	o.max_open_files = 256;
 	o.create_if_missing = true;

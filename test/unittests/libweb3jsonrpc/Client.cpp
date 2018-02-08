@@ -51,6 +51,9 @@ BOOST_FIXTURE_TEST_SUITE(ClientTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(Personal)
 {
+	g_logVerbosity = 4;
+	cnote << "Personal";
+
 	TransientDirectory tempDir;
 	boost::filesystem::create_directories(tempDir.path() + "/keys");
 

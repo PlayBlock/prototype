@@ -190,6 +190,8 @@ BOOST_FIXTURE_TEST_SUITE(SnapshotImporterSuite, SnapshotImporterTestFixture)
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importChecksManifestVersion)
 {
+	std::cout << "SnapshotImporterSuite_importChecksManifestVersion" << std::endl;
+
 	RLPStream s(6);
 	s << 3;
 	s.appendList(0);
@@ -202,6 +204,8 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importChecksManifestVersion)
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importNonsplittedAccount)
 {
+	std::cout << "SnapshotImporterSuite_importNonsplittedAccount" << std::endl;
+
 	h256 stateChunk = sha3("123");
 	snapshotStorage.manifest = createManifest(2, {stateChunk}, {}, h256{}, 0, h256{});
 
@@ -224,6 +228,8 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importNonsplittedAccount)
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importSplittedAccount)
 {
+	std::cout << "SnapshotImporterSuite_importSplittedAccount" << std::endl;
+
 	h256 stateChunk1 = sha3("123");
 	h256 stateChunk2 = sha3("789");
 	snapshotStorage.manifest = createManifest(2, {stateChunk1, stateChunk2}, {}, h256{}, 0, h256{});
@@ -257,6 +263,8 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importSplittedAccount)
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountWithCode)
 {
+	std::cout << "SnapshotImporterSuite_importAccountWithCode" << std::endl;
+
 	h256 stateChunk = sha3("123");
 	snapshotStorage.manifest = createManifest(2, {stateChunk}, {}, h256{}, 0, h256{});
 
@@ -281,6 +289,8 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountWithCode)
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountsWithEqualCode)
 {
+	std::cout << "SnapshotImporterSuite_importAccountsWithEqualCode" << std::endl;
+
 	h256 stateChunk = sha3("123");
 	snapshotStorage.manifest = createManifest(2, {stateChunk}, {}, h256{}, 0, h256{});
 
@@ -309,6 +319,8 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountsWithEqualCode)
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_commitStateOnceEveryChunk)
 {
+	std::cout << "SnapshotImporterSuite_commitStateOnceEveryChunk" << std::endl;
+
 	h256 stateChunk1 = sha3("123");
 	h256 stateChunk2 = sha3("789");
 	snapshotStorage.manifest = createManifest(2, {stateChunk1, stateChunk2}, {}, h256{}, 0, h256{});
@@ -332,6 +344,8 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_commitStateOnceEveryChunk)
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importEmptyBlock)
 {
+	std::cout << "SnapshotImporterSuite_importEmptyBlock" << std::endl;
+
 	h256 blockChunk = sha3("123");
 	snapshotStorage.manifest = createManifest(2, {}, {blockChunk}, h256{}, 0, h256{});
 
@@ -377,6 +391,8 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importEmptyBlock)
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importBlockWithTransactions)
 {
+	std::cout << "SnapshotImporterSuite_importBlockWithTransactions" << std::endl;
+
 	h256 blockChunk = sha3("123");
 	snapshotStorage.manifest = createManifest(2, {}, {blockChunk}, h256{}, 0, h256{});
 

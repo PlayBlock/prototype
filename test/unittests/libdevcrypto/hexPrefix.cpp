@@ -37,6 +37,7 @@ BOOST_FIXTURE_TEST_SUITE(Basic, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(hexPrefix_test)
 {
+	cout << "hexPrefix_test" << endl;
 
 	fs::path testPath = test::getTestPath();
 	testPath /= fs::path("BasicTests");
@@ -61,6 +62,8 @@ BOOST_AUTO_TEST_CASE(hexPrefix_test)
 
 BOOST_AUTO_TEST_CASE(base64)
 {
+	cout << "base64" << endl;
+
 	static char const* const s_tests[][2] =
 	{
 		{"", ""},

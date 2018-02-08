@@ -32,6 +32,9 @@ BOOST_FIXTURE_TEST_SUITE(CommonJSTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(test_toJS)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	h64 a("0xbaadf00ddeadbeef");
 	u64 b("0xffff0000bbbaaaa");
 	uint64_t c = 38990234243;
@@ -45,6 +48,9 @@ BOOST_AUTO_TEST_CASE(test_toJS)
 
 BOOST_AUTO_TEST_CASE(test_jsToBytes)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	bytes a = {0xff, 0xaa, 0xbb, 0xcc};
 	bytes b = {0x03, 0x89, 0x90, 0x23, 0x42, 0x43};
 	BOOST_CHECK(a == jsToBytes("0xffaabbcc"));
@@ -55,6 +61,9 @@ BOOST_AUTO_TEST_CASE(test_jsToBytes)
 
 BOOST_AUTO_TEST_CASE(test_padded)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	bytes a = {0xff, 0xaa};
 	BOOST_CHECK(bytes({0x00, 0x00, 0xff, 0xaa}) == padded(a, 4));
 	bytes b = {};
@@ -65,6 +74,9 @@ BOOST_AUTO_TEST_CASE(test_padded)
 
 BOOST_AUTO_TEST_CASE(test_paddedRight)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	bytes a = {0xff, 0xaa};
 	BOOST_CHECK(bytes({0xff, 0xaa, 0x00, 0x00}) == paddedRight(a, 4));
 	bytes b = {};
@@ -75,6 +87,9 @@ BOOST_AUTO_TEST_CASE(test_paddedRight)
 
 BOOST_AUTO_TEST_CASE(test_unpadded)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	bytes a = {0xff, 0xaa, 0x00, 0x00, 0x00};
 	BOOST_CHECK(bytes({0xff, 0xaa}) == unpadded(a));
 	bytes b = {0x00, 0x00};
@@ -85,6 +100,9 @@ BOOST_AUTO_TEST_CASE(test_unpadded)
 
 BOOST_AUTO_TEST_CASE(test_unpaddedLeft)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	bytes a = {0x00, 0x00, 0x00, 0xff, 0xaa};
 	BOOST_CHECK(bytes({0xff, 0xaa}) == unpadLeft(a));
 	bytes b = {0x00, 0x00};
@@ -95,6 +113,9 @@ BOOST_AUTO_TEST_CASE(test_unpaddedLeft)
 
 BOOST_AUTO_TEST_CASE(test_fromRaw)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	//non ascii characters means empty string
 	h256 a("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 	BOOST_CHECK("" == fromRaw(a));
@@ -106,6 +127,9 @@ BOOST_AUTO_TEST_CASE(test_fromRaw)
 
 BOOST_AUTO_TEST_CASE(test_jsToFixed)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	h256 a("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 	BOOST_CHECK(a == jsToFixed<32>("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
 	h256 b("0x000000000000000000000000000000000000000000000000000000740c54b42f");
@@ -115,6 +139,9 @@ BOOST_AUTO_TEST_CASE(test_jsToFixed)
 
 BOOST_AUTO_TEST_CASE(test_jsToInt)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	BOOST_CHECK(43832124 == jsToInt("43832124"));
 	BOOST_CHECK(1342356623 == jsToInt("0x5002bc8f"));
 	BOOST_CHECK(3483942 == jsToInt("015224446"));
@@ -129,6 +156,9 @@ BOOST_AUTO_TEST_CASE(test_jsToInt)
 
 BOOST_AUTO_TEST_CASE(test_jsToU256)
 {
+	g_logVerbosity = 4;
+	cnote << "jsToPublic";
+
 	BOOST_CHECK(u256("983298932490823474234") == jsToU256("983298932490823474234"));
 	BOOST_CHECK(u256() == jsToU256("NotAHexadecimalOrDecimal"));
 }

@@ -240,6 +240,8 @@ BOOST_FIXTURE_TEST_SUITE(RlpTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(EmptyArrayList)
 {
+	cout << "EmptyArrayList" << endl;
+
 	try
 	{
 		bytes payloadToDecode = fromHex("80");
@@ -262,16 +264,22 @@ BOOST_AUTO_TEST_CASE(EmptyArrayList)
 
 BOOST_AUTO_TEST_CASE(invalidRLPtest)
 {
+	cout << "invalidRLPtest" << endl;
+
 	runRlpTest("invalidRLPTest", "/RLPTests");
 }
 
 BOOST_AUTO_TEST_CASE(rlptest)
 {
+	cout << "rlptest" << endl;
+
 	runRlpTest("rlptest", "/RLPTests");
 }
 
 BOOST_AUTO_TEST_CASE(rlpRandom)
 {
+	cout << "rlpRandom" << endl;
+
 	fs::path testPath = dev::test::getTestPath();
 	testPath /= fs::path("RLPTests/RandomRLPTests");
 

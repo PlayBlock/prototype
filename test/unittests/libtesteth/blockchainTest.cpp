@@ -30,6 +30,9 @@ BOOST_FIXTURE_TEST_SUITE(BlockChainTestSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(fillingExpectationOnMultipleNetworks)
 {
+	g_logVerbosity = 4;
+	cnote << "fillingExpectationOnMultipleNetworks";
+
 	std::string const s = R"(
 		{
 			"BLOCKHASH_Bounds" : {
@@ -92,6 +95,9 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnMultipleNetworks)
 BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(fillingWithWrongExpectation, 2)
 BOOST_AUTO_TEST_CASE(fillingWithWrongExpectation)
 {
+	g_logVerbosity = 4;
+	cnote << "fillingWithWrongExpectation";
+
 	std::string const s = R"(
 		{
 			"BLOCKHASH_Bounds" : {

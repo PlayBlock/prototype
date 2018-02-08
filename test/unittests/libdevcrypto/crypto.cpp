@@ -78,12 +78,18 @@ static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP>& params()
 
 BOOST_AUTO_TEST_CASE(sha3general)
 {
+	g_logVerbosity = 4;
+	cnote << "sha3general";
+
 	BOOST_REQUIRE_EQUAL(sha3(""), h256("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
 	BOOST_REQUIRE_EQUAL(sha3("hello"), h256("1c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8"));
 }
 
 BOOST_AUTO_TEST_CASE(emptySHA3Types)
 {
+	g_logVerbosity = 4;
+	cnote << "emptySHA3Types";
+
 	h256 emptySHA3(fromHex("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
 	BOOST_REQUIRE_EQUAL(emptySHA3, EmptySHA3);
 
@@ -93,12 +99,18 @@ BOOST_AUTO_TEST_CASE(emptySHA3Types)
 
 BOOST_AUTO_TEST_CASE(pubkeyOfZero)
 {
+	g_logVerbosity = 4;
+	cnote << "pubkeyOfZero";
+
 	auto pub = toPublic({});
 	BOOST_REQUIRE_EQUAL(pub, Public{});
 }
 
 BOOST_AUTO_TEST_CASE(KeyPairMix)
 {
+	g_logVerbosity = 4;
+	cnote << "KeyPairMix";
+
 	KeyPair k = KeyPair::create();
 	BOOST_REQUIRE(!!k.secret());
 	BOOST_REQUIRE(!!k.pub());
@@ -108,6 +120,9 @@ BOOST_AUTO_TEST_CASE(KeyPairMix)
 
 BOOST_AUTO_TEST_CASE(keypairs)
 {
+	g_logVerbosity = 4;
+	cnote << "keypairs";
+
 	KeyPair p(Secret(fromHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));
 	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
 	BOOST_REQUIRE(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
@@ -123,6 +138,9 @@ BOOST_AUTO_TEST_CASE(keypairs)
 
 BOOST_AUTO_TEST_CASE(KeyPairVerifySecret)
 {
+	g_logVerbosity = 4;
+	cnote << "KeyPairVerifySecret";
+
 	auto keyPair = KeyPair::create();
 	auto* ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
 	BOOST_CHECK(secp256k1_ec_seckey_verify(ctx, keyPair.secret().data()));
@@ -131,6 +149,9 @@ BOOST_AUTO_TEST_CASE(KeyPairVerifySecret)
 
 BOOST_AUTO_TEST_CASE(SignAndRecover)
 {
+	g_logVerbosity = 4;
+	cnote << "SignAndRecover";
+
 	// This basic test that compares **fixed** results. Useful to test new
 	// implementations or changes to implementations.
 	auto sec = Secret{sha3("sec")};
@@ -146,6 +167,9 @@ BOOST_AUTO_TEST_CASE(SignAndRecover)
 
 BOOST_AUTO_TEST_CASE(SignAndRecoverLoop)
 {
+	g_logVerbosity = 4;
+	cnote << "SignAndRecoverLoop";
+
 	auto num = 13;
 	auto msg = h256::random();
 	while (--num)
@@ -161,6 +185,9 @@ BOOST_AUTO_TEST_CASE(SignAndRecoverLoop)
 
 BOOST_AUTO_TEST_CASE(cryptopp_patch)
 {
+	g_logVerbosity = 4;
+	cnote << "cryptopp_patch";
+
 	KeyPair k = KeyPair::create();
 	bytes io_text;
 	s_secp256k1->decrypt(k.secret(), io_text);
@@ -169,6 +196,9 @@ BOOST_AUTO_TEST_CASE(cryptopp_patch)
 
 BOOST_AUTO_TEST_CASE(verify_secert)
 {
+	g_logVerbosity = 4;
+	cnote << "verify_secert";
+
 	Secret empty;
 	KeyPair kNot(empty);
 	BOOST_REQUIRE(!kNot.address());
@@ -178,6 +208,9 @@ BOOST_AUTO_TEST_CASE(verify_secert)
 
 BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 {
+	g_logVerbosity = 4;
+	cnote << "common_encrypt_decrypt";
+
 	string message("Now is the time for all good persons to come to the aid of humanity.");
 	bytes m = asBytes(message);
 	bytesConstRef bcr(&m);
@@ -196,6 +229,9 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 
 BOOST_AUTO_TEST_CASE(sha3_norestart)
 {
+	g_logVerbosity = 4;
+	cnote << "sha3_norestart";
+
 	CryptoPP::Keccak_256 ctx;
 	bytes input(asBytes("test"));
 	ctx.Update(input.data(), 4);
@@ -227,6 +263,9 @@ BOOST_AUTO_TEST_CASE(sha3_norestart)
 
 BOOST_AUTO_TEST_CASE(ecies_kdf)
 {
+	g_logVerbosity = 4;
+	cnote << "ecies_kdf";
+
 	KeyPair local = KeyPair::create();
 	KeyPair remote = KeyPair::create();
 	// nonce
@@ -256,6 +295,9 @@ BOOST_AUTO_TEST_CASE(ecies_kdf)
 
 BOOST_AUTO_TEST_CASE(ecdh_agree_invalid_pubkey)
 {
+	g_logVerbosity = 4;
+	cnote << "ecdh_agree_invalid_pubkey";
+
 	KeyPair ok = KeyPair::create();
 	Public pubkey;
 	~pubkey;  // Create a pubkey of all 1s.
@@ -265,6 +307,9 @@ BOOST_AUTO_TEST_CASE(ecdh_agree_invalid_pubkey)
 
 BOOST_AUTO_TEST_CASE(ecdh_agree_invalid_seckey)
 {
+	g_logVerbosity = 4;
+	cnote << "ecdh_agree_invalid_seckey";
+
 	KeyPair ok = KeyPair::create();
 	Secret seckey;  // "Null" seckey is invalid.
 	BOOST_CHECK(!ecdh::agree(seckey, ok.pub(), seckey));
@@ -272,6 +317,9 @@ BOOST_AUTO_TEST_CASE(ecdh_agree_invalid_seckey)
 
 BOOST_AUTO_TEST_CASE(ecies_standard)
 {
+	g_logVerbosity = 4;
+	cnote << "ecies_standard";
+
 	KeyPair k = KeyPair::create();
 	
 	string message("Now is the time for all good persons to come to the aid of humanity.");
@@ -288,6 +336,9 @@ BOOST_AUTO_TEST_CASE(ecies_standard)
 
 BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 {
+	g_logVerbosity = 4;
+	cnote << "ecies_sharedMacData";
+
 	KeyPair k = KeyPair::create();
 
 	string message("Now is the time for all good persons to come to the aid of humanity.");
@@ -311,6 +362,9 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 {
+	g_logVerbosity = 4;
+	cnote << "ecies_eckeypair";
+
 	KeyPair k = KeyPair::create();
 
 	string message("Now is the time for all good persons to come to the aid of humanity.");
@@ -326,6 +380,9 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 
 BOOST_AUTO_TEST_CASE(ecdhCryptopp)
 {
+	g_logVerbosity = 4;
+	cnote << "ecdhCryptopp";
+
 	CryptoPP::ECDH<CryptoPP::ECP>::Domain dhLocal(curveOID());
 	CryptoPP::SecByteBlock privLocal(dhLocal.PrivateKeyLength());
 	CryptoPP::SecByteBlock pubLocal(dhLocal.PublicKeyLength());
@@ -374,6 +431,9 @@ BOOST_AUTO_TEST_CASE(ecdhCryptopp)
 
 BOOST_AUTO_TEST_CASE(ecdhe)
 {
+	g_logVerbosity = 4;
+	cnote << "ecdhe";
+
 	auto local = KeyPair::create();
 	auto remote = KeyPair::create();
 	BOOST_CHECK_NE(local.pub(), remote.pub());
@@ -393,6 +453,9 @@ BOOST_AUTO_TEST_CASE(ecdhe)
 
 BOOST_AUTO_TEST_CASE(ecdhAgree)
 {
+	g_logVerbosity = 4;
+	cnote << "ecdhAgree";
+
 	auto sec = Secret{sha3("ecdhAgree")};
 	auto pub = toPublic(sec);
 	Secret sharedSec;
@@ -404,6 +467,9 @@ BOOST_AUTO_TEST_CASE(ecdhAgree)
 
 BOOST_AUTO_TEST_CASE(handshakeNew)
 {
+	g_logVerbosity = 4;
+	cnote << "handshakeNew";
+
 	//	authInitiator -> E(remote-pubk, S(ecdhe-random, ecdh-shared-secret^nonce) || H(ecdhe-random-pubk) || pubk || nonce || 0x0)
 	//	authRecipient -> E(remote-pubk, ecdhe-random-pubk || nonce || 0x0)
 	
@@ -597,6 +663,9 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 
 BOOST_AUTO_TEST_CASE(ecies_aes128_ctr_unaligned)
 {
+	g_logVerbosity = 4;
+	cnote << "ecies_aes128_ctr_unaligned";
+
 	SecureFixedHash<16> encryptK(sha3("..."), h128::AlignLeft);
 	h256 egressMac(sha3("+++"));
 	// TESTING: send encrypt magic sequence
@@ -619,6 +688,9 @@ BOOST_AUTO_TEST_CASE(ecies_aes128_ctr_unaligned)
 
 BOOST_AUTO_TEST_CASE(ecies_aes128_ctr)
 {
+	g_logVerbosity = 4;
+	cnote << "ecies_aes128_ctr";
+
 	SecureFixedHash<16> k(sha3("0xAAAA"), h128::AlignLeft);
 	string m = "AAAAAAAAAAAAAAAA";
 	bytesConstRef msg((byte*)m.data(), m.size());
@@ -633,6 +705,9 @@ BOOST_AUTO_TEST_CASE(ecies_aes128_ctr)
 
 BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 {
+	g_logVerbosity = 4;
+	cnote << "cryptopp_aes128_ctr";
+
 	const int aesKeyLen = 16;
 	BOOST_REQUIRE(sizeof(char) == sizeof(byte));
 	
@@ -708,6 +783,9 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 
 BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 {
+	g_logVerbosity = 4;
+	cnote << "cryptopp_aes128_cbc";
+
 	const int aesKeyLen = 16;
 	BOOST_REQUIRE(sizeof(char) == sizeof(byte));
 
@@ -748,6 +826,9 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 
 BOOST_AUTO_TEST_CASE(recoverVgt3)
 {
+	g_logVerbosity = 4;
+	cnote << "recoverVgt3";
+
 	// base secret
 	Secret secret(sha3("privacy"));
 
@@ -798,6 +879,9 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 
 BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::label("perf"))
 {
+	g_logVerbosity = 4;
+	cnote << "PerfSHA256_32";
+
 	if (!test::Options::get().all)
 	{
 		ctrace << "Skipping test Crypto/devcrypto/PerfSHA256_32. Use --all to run it.\n";
@@ -813,6 +897,9 @@ BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::label("perf"))
 
 BOOST_AUTO_TEST_CASE(PerfSHA256_4000, *utf::label("perf"))
 {
+	g_logVerbosity = 4;
+	cnote << "PerfSHA256_4000";
+
 	if (!test::Options::get().all)
 	{
 		ctrace << "Skipping test Crypto/devcrypto/PerfSHA256_4000. Use --all to run it.\n";

@@ -36,6 +36,8 @@ BOOST_FIXTURE_TEST_SUITE(eip8, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(test_discovery_packets)
 {
+	cout << "test_discovery_packets" << endl;
+
 	bi::udp::endpoint ep;
 	bytes packet;
 
