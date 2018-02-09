@@ -764,7 +764,6 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
 				_state.insert(i.first, &s.out());
 
 #if BenchMarkFlag
-				Timer time3;
 				BenchMark::record_3 += time3.elapsed();
 #endif
 			}
