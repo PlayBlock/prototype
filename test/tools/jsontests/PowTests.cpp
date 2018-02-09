@@ -260,6 +260,9 @@ BOOST_AUTO_TEST_CASE(dtPowWitness)
 	int num = 0;
 	// pick an account
 	BOOST_REQUIRE(client.get_accounts().size() >= 1);
+	//先出三轮块结束创世期
+	client.produce_blocks(config::TotalProducersPerRound * 3);
+
 	auto& accounts = client.get_accounts();
 
 	//当前轮次没有pow，即：当前有一个accountname为空
@@ -357,12 +360,22 @@ BOOST_AUTO_TEST_CASE(dtMoreDposProducer)
 	BOOST_REQUIRE(VoteProducers.size() == 0);
 
 	//注册DPOS生产者
-	for (auto i : accounts)
+	for (auto &i : accounts)
 	{
 		client.make_producer(i);
+		client.mortgage_eth(i, 500000000000000000);
+	}
+	client.produce_blocks();
+	auto all_votes = client.get_votes();
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(accounts[0].address)].getHoldVoteNumber(), 50);
+	for (auto &i : accounts)
+	{
+		client.approve_producer(i, i, 30);
 	}
 	//创世期出块
-	client.produce_blocks(config::TotalProducersPerRound);
+	client.produce_blocks(config::TotalProducersPerRound-1);
+	all_votes = client.get_votes();
+	BOOST_REQUIRE_EQUAL(all_votes[types::AccountName(accounts[0].address)].getReceivedVotedNumber(), 30);
 
 	//当前全部都是DPOS生产者出块
 	VoteProducers = client.get_all_producers();
@@ -378,7 +391,7 @@ BOOST_AUTO_TEST_CASE(dtMoreDposProducer)
 				num++;
 		}
 	}
-	BOOST_REQUIRE(num == 0);
+	BOOST_REQUIRE_EQUAL(num,0);
 }
 
 BOOST_AUTO_TEST_CASE(dtLittleDposProducer)
@@ -500,32 +513,64 @@ BOOST_AUTO_TEST_CASE(dtMakeMorePowProducer)
 		client.make_pow_producer(i, setPowTest::none);
 	}
 	//创世期出块
-	client.produce_blocks(config::TotalProducersPerRound);
+	client.produce_blocks(config::TotalProducersPerRound-1);
 
-	//下轮次pow矿工成功加入生产块的轮次
-	currentProducers = client.get_active_producers();
-	num = 0;
-	for (auto pro : currentProducers)
+	if (client.get_dpo_witnesses() > config::TotalProducersPerRound)
 	{
-		for (auto i : accounts)
-			if (types::AccountName(i.address) == types::AccountName(pro))
-				num++;
+		client.produce_blocks();
+		//下轮次pow矿工成功加入生产块的轮次
+		currentProducers = client.get_active_producers();
+		num = 0;
+		for (auto pro : currentProducers)
+		{
+			for (auto i : accounts)
+				if (types::AccountName(i.address) == types::AccountName(pro))
+					num++;
+		}
+		BOOST_REQUIRE(num == currentProducers.size());
+		//第二轮出块，应该是剩余的个pow生产块
+		client.produce_blocks(config::TotalProducersPerRound);
+		//下轮次pow矿工成功加入生产块的轮次
+		currentProducers = client.get_active_producers();
+		num = 0;
+		for (auto pro : currentProducers)
+		{
+			for (auto i : accounts)
+				if (types::AccountName(i.address) == types::AccountName(pro))
+					num++;
+		}
+		//获取当前pow队列中的人
+		BOOST_REQUIRE_EQUAL(num, accounts.size() - config::TotalProducersPerRound -1);
 	}
-	BOOST_REQUIRE(num == currentProducers.size());
-
-	//第二轮出块，应该是剩余的个pow生产块
-	client.produce_blocks(config::TotalProducersPerRound);
-
-	//下轮次pow矿工成功加入生产块的轮次
-	currentProducers = client.get_active_producers();
-	num = 0;
-	for (auto pro : currentProducers)
+	else
 	{
-		for (auto i : accounts)
-			if (types::AccountName(i.address) == types::AccountName(pro))
-				num++;
+		client.produce_blocks();
+		//下轮次pow矿工成功加入生产块的轮次
+		currentProducers = client.get_active_producers();
+		num = 0;
+		for (auto pro : currentProducers)
+		{
+			for (auto i : accounts)
+				if (types::AccountName(i.address) == types::AccountName(pro))
+					num++;
+		}
+		BOOST_REQUIRE(num == currentProducers.size());
+		//第二轮出块，应该是剩余的个pow生产块
+		client.produce_blocks(config::TotalProducersPerRound);
+
+		//下轮次pow矿工成功加入生产块的轮次
+		currentProducers = client.get_active_producers();
+		num = 0;
+		for (auto pro : currentProducers)
+		{
+			for (auto i : accounts)
+				if (types::AccountName(i.address) == types::AccountName(pro))
+					num++;
+		}
+		client.produce_blocks(config::TotalProducersPerRound);
+		BOOST_REQUIRE_EQUAL(num, accounts.size() - currentProducers.size());
 	}
-	BOOST_REQUIRE(num == accounts.size()-currentProducers.size());
+	
 }
 
 /*注意：测试时，通过控制makeProducerCount个数来控制注册的pow个数*/
@@ -554,7 +599,7 @@ BOOST_AUTO_TEST_CASE(dtMakeLittlePowProducer)
 
 	//注册Pow生产者
 	int makeProducerCount = 10;
-	for (auto i =0;i <= makeProducerCount;i++)
+	for (auto i =0;i < makeProducerCount;i++)
 	{
 		client.make_pow_producer(accounts[i], setPowTest::none);
 	}
@@ -571,7 +616,7 @@ BOOST_AUTO_TEST_CASE(dtMakeLittlePowProducer)
 				num++;
 	}
 
-	BOOST_REQUIRE(num == makeProducerCount);
+	BOOST_REQUIRE_EQUAL(num , makeProducerCount);
 
 }
 
@@ -599,7 +644,8 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducer)
 				num++;
 	}
 	BOOST_REQUIRE(num == 0);
-
+	//先出两轮，使块高度达到63
+	client.produce_blocks(config::TotalProducersPerRound*2);
 	//注册Pow生产者
 	for (auto i : accounts)
 	{
@@ -620,7 +666,7 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducer)
 
 	BOOST_REQUIRE(num == currentProducers.size());
 
-	//第二轮出块，应该是剩余的个pow生产块
+	//稳定期出块，应该是剩余的个pow生产块
 	client.produce_blocks(config::TotalProducersPerRound);
 
 	//下轮次pow矿工成功加入生产块的轮次
@@ -633,7 +679,7 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducer)
 				num++;
 	}
 	//1)pow充足的情况下（动态调整）
-	BOOST_REQUIRE(num == config::POWProducersPerRound);
+	BOOST_REQUIRE_EQUAL(num , config::POWProducersPerRound);
 	//2)pow不充足的情况
 	//BOOST_REQUIRE(num == accounts.size()-config::TotalProducersPerRound);
 	//BOOST_REQUIRE(num > 0);
@@ -669,14 +715,15 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducers)
 			if (types::AccountName(i.address) == types::AccountName(pro))
 				num++;
 	}
-	BOOST_REQUIRE(num == 0);
-
+	BOOST_REQUIRE_EQUAL(num, 0);
+	//先出三轮块结束创世期
+	client.produce_blocks(config::TotalProducersPerRound*3);
 	//注册Pow生产者
 	for (auto i : accounts)
 	{
 		client.make_pow_producer(i, setPowTest::none);
 	}
-	//创世期出块
+	//
 	client.produce_blocks(config::TotalProducersPerRound);
 
 	//下轮次pow矿工成功加入生产块的轮次
@@ -689,7 +736,7 @@ BOOST_AUTO_TEST_CASE(dtCheckPowProducers)
 				num++;
 	}
 	//1)pow充足的情况下（动态调整）
-	BOOST_REQUIRE(num == config::POWProducersPerRound);
+	BOOST_REQUIRE_EQUAL(num ,config::POWProducersPerRound);
 	//2)pow不充足的情况
 	//BOOST_REQUIRE(num == accounts.size());
 	//BOOST_REQUIRE(num > 0);
@@ -789,6 +836,8 @@ BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 	DposTestClient client;
 
 	BOOST_REQUIRE(client.get_accounts().size() >= 1);
+	//先出三轮块结束创世期
+	client.produce_blocks(config::TotalProducersPerRound * 3);
 
 	auto& accounts = client.get_accounts();
 
@@ -836,9 +885,9 @@ BOOST_AUTO_TEST_CASE(dtRaceSpeedTest)
 
 	}
 
-	BOOST_REQUIRE(account_block[AccountName(accounts[16].address)] == 2);
-	BOOST_REQUIRE(account_block[AccountName(accounts[17].address)] == 3);
-	BOOST_REQUIRE(account_block[AccountName(accounts[18].address)] == 4);
+	BOOST_REQUIRE_EQUAL(account_block[AccountName(accounts[16].address)] , 2);
+	BOOST_REQUIRE_EQUAL(account_block[AccountName(accounts[17].address)] , 3);
+	BOOST_REQUIRE_EQUAL(account_block[AccountName(accounts[18].address)] , 4);
 }
 
 BOOST_AUTO_TEST_CASE(dtVoteChangeTest)
@@ -850,6 +899,8 @@ BOOST_AUTO_TEST_CASE(dtVoteChangeTest)
 	EthashCPUMiner::setNumInstances(1);
 	DposTestClient client;
 	BOOST_REQUIRE(client.get_accounts().size() >= 1);
+	//先出三轮块结束创世期
+	client.produce_blocks(config::TotalProducersPerRound * 3);
 
 	auto& accounts = client.get_accounts();
 
@@ -900,9 +951,9 @@ BOOST_AUTO_TEST_CASE(dtVoteChangeTest)
 		BOOST_CHECK_MESSAGE(account_block[AccountName(accounts[0].address)], 9);
 	}
 
-	BOOST_REQUIRE(account_block[AccountName(accounts[16].address)] == 2);
-	BOOST_REQUIRE(account_block[AccountName(accounts[17].address)] == 3);
-	BOOST_REQUIRE(account_block[AccountName(accounts[18].address)] == 4);
+	BOOST_REQUIRE_EQUAL(account_block[AccountName(accounts[16].address)] , 2);
+	BOOST_REQUIRE_EQUAL(account_block[AccountName(accounts[17].address)] , 3);
+	BOOST_REQUIRE_EQUAL(account_block[AccountName(accounts[18].address)] , 4);
 
 	//7.给虚拟赛跑的生产者增加投票信息使投票大于等于60票
     client.approve_producer(accounts[16], accounts[16],40);
@@ -925,8 +976,8 @@ BOOST_AUTO_TEST_CASE(dtVoteChangeTest)
 	BOOST_REQUIRE(account_block[AccountName(accounts[16].address)] == 5);
 	ctrace << "17 : " <<account_block[AccountName(accounts[17].address)];
 	ctrace << "18 : " << account_block[AccountName(accounts[18].address)];
-	//BOOST_REQUIRE(account_block[AccountName(accounts[17].address)] == 4);
-	//BOOST_REQUIRE(account_block[AccountName(accounts[18].address)] == 4);
+	BOOST_REQUIRE_MESSAGE(account_block[AccountName(accounts[17].address)], 4);
+	BOOST_REQUIRE_MESSAGE(account_block[AccountName(accounts[18].address)],4);
 }
 
 BOOST_AUTO_TEST_CASE(dtMakeBlockETHTest)

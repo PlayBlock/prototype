@@ -25,7 +25,7 @@ namespace config {
 	const static int BlocksPerDay = (24 * 60 * 60 / BlockIntervalSeconds);
 	//const static int StartMinerVotingBlock = BlocksPerDay;
 	//用于测试暂时改为一轮
-	const static int StartMinerVotingBlock = 21;
+	const static int StartMinerVotingBlock = 84;
 
 	//每轮DPOS Worker总数
 	const static int DPOSProducersPerRound = 17;

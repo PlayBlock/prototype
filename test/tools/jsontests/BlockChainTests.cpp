@@ -293,7 +293,7 @@ ETIProofOfWork::Solution make_pow_producer(ChainBranch* _chainName)
 
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 {
-	g_logVerbosity = 14;
+	//g_logVerbosity = 14;
 	json_spirit::mObject output;
 	string const& testName = TestOutputHelper::get().testName();
 	TestBlock genesisBlock(_input.at("genesisBlockHeader").get_obj(), _input.at("pre").get_obj());
@@ -505,6 +505,10 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		{
 			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
 		}
+		catch (dev::eth::ExceedRollbackImportBlock)
+		{
+			cnote << testName + "block import throw an exception: " << "import an ExceedRollbackImportBlock!";
+		}
 		catch (Exception const& _e)
 		{
 			cnote << testName + "block import throw an exception: " << diagnostic_information(_e);
@@ -603,6 +607,10 @@ void testBCTest(json_spirit::mObject const& _o)
 		{
 			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
 		}
+		catch (dev::eth::ExceedRollbackImportBlock)
+		{
+			cnote << testName + "2block import throw an exception: " << "import an irreversibleBlock!";
+		}
 		catch (Exception const& _e)
 		{
 			cnote << testName + "state sync or block import did throw an exception: " << diagnostic_information(_e);
@@ -669,6 +677,11 @@ void testBCTest(json_spirit::mObject const& _o)
 		catch (dev::eth::ExceedIrreversibleBlock)
 		{
 			cnote << testName + "block import throw an exception: " << "import an irreversibleBlock!";
+			break;
+		}
+		catch (dev::eth::ExceedRollbackImportBlock)
+		{
+			cnote << testName + "2block import throw an exception: " << "import an irreversibleBlock!";
 			break;
 		}
 		catch (Exception const& _e)
