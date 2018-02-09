@@ -554,9 +554,6 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 		onOp = Executive::simpleTrace(); // override tracer
 #endif
 
-#if BenchMarkFlag
-	Timer timer;
-#endif
 	// Create and initialize the executive. This will throw fairly cheaply and quickly if the
 	// transaction is bad in any way.
 	Executive e(*this, _envInfo, _sealEngine);
@@ -566,13 +563,11 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	u256 const startGasUsed = _envInfo.gasUsed();
 
 #if BenchMarkFlag
-	BenchMark::record_1 += timer.elapsed();
-	timer.restart();
+	Timer timer;
 #endif
-
 	bool const statusCode = executeTransaction(e, _t, onOp);
 #if BenchMarkFlag
-	BenchMark::record_2 += timer.elapsed();
+	BenchMark::MainTime += timer.elapsed();
 	timer.restart();
 #endif
 
@@ -584,12 +579,11 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 			break;
 		case Permanence::Committed: 
 #if BenchMarkFlag
-			//BenchMark::record_2 += timer.elapsed();
 			timer.restart();
 #endif
 			commit(State::CommitBehaviour::RemoveEmptyAccounts);	
 #if BenchMarkFlag
-			BenchMark::record_3 += timer.elapsed();
+			BenchMark::SerielizeTime += timer.elapsed();
 #endif
 			break;
 		case Permanence::Uncommitted:
@@ -714,9 +708,20 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
 		if (i.second.isDirty())
 		{
 			if (!i.second.isAlive())
+			{
+#if BenchMarkFlag
+				Timer time1;
+#endif
 				_state.remove(i.first);
+#if BenchMarkFlag
+				BenchMark::record_1 += time1.elapsed();
+#endif
+			}
 			else
 			{
+#if BenchMarkFlag
+				Timer time2;
+#endif
 				RLPStream s(4);
 				s << i.second.nonce() << i.second.balance();
 
@@ -736,6 +741,14 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
 					assert(storageDB.root());
 					s.append(storageDB.root());
 				}
+#if BenchMarkFlag
+				BenchMark::record_2 += time2.elapsed();
+#endif
+
+
+#if BenchMarkFlag
+				Timer time3;
+#endif
 
 				if (i.second.hasNewCode())
 				{
@@ -749,6 +762,11 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
 					s << i.second.codeHash();
 
 				_state.insert(i.first, &s.out());
+
+#if BenchMarkFlag
+				Timer time3;
+				BenchMark::record_3 += time3.elapsed();
+#endif
 			}
 			ret.insert(i.first);
 		}

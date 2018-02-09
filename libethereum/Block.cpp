@@ -568,9 +568,9 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 		}
 
 #if BenchMarkFlag
-	clog(BenchMarkChannel) << "Transactions time(Out of Loop): " << _exeTransaction.elapsed();
-	clog(BenchMarkChannel) << "Main execute time: " << BenchMark::MainTime << "Serielize In Execute:" << BenchMark::SerielizeTime;
-	clog(BenchMarkChannel) << "Execute_1: " << BenchMark::record_1 << " Execute_2:" << BenchMark::record_2 << " Execute_3:" << BenchMark::record_3;
+	clog(BenchMarkChannel) << "Transactions Total Time(Out of Loop): " << _exeTransaction.elapsed();
+	clog(BenchMarkChannel) << "Execute Time: " << BenchMark::MainTime << "Commit Time:" << BenchMark::SerielizeTime;
+	clog(BenchMarkChannel) << "commit_1: " << BenchMark::record_1 << " commit_2:" << BenchMark::record_2 << " commit_3:" << BenchMark::record_3;
 #endif
 
 
