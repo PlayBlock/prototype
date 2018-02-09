@@ -633,16 +633,8 @@ ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const
 	// Uncommitting is a non-trivial operation - only do it once we've verified as much of the
 	// transaction as possible.
 	uncommitToSeal();
-
-#if BenchMarkFlag
-	Timer timer;
-#endif
 	std::pair<ExecutionResult, TransactionReceipt> resultReceipt = m_state.execute(EnvInfo(info(), _lh, gasUsed()), *m_sealEngine, _t, _p, _onOp);
 
-#if BenchMarkFlag
-	BenchMark::MainTime += timer.elapsed();
-	timer.restart();
-#endif
 	if (_p == Permanence::Committed)
 	{
 		// Add to the user-originated transactions that we've executed.
@@ -650,10 +642,6 @@ ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const
 		m_receipts.push_back(resultReceipt.second);
 		m_transactionSet.insert(_t.sha3());
 	}
-
-#if BenchMarkFlag
-	BenchMark::SerielizeTime += timer.elapsed();
-#endif
 
 	return resultReceipt.first;
 }

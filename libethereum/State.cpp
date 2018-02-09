@@ -709,19 +709,10 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
 		{
 			if (!i.second.isAlive())
 			{
-#if BenchMarkFlag
-				Timer time1;
-#endif
 				_state.remove(i.first);
-#if BenchMarkFlag
-				BenchMark::record_1 += time1.elapsed();
-#endif
 			}
 			else
 			{
-#if BenchMarkFlag
-				Timer time2;
-#endif
 				RLPStream s(4);
 				s << i.second.nonce() << i.second.balance();
 
@@ -741,14 +732,8 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
 					assert(storageDB.root());
 					s.append(storageDB.root());
 				}
-#if BenchMarkFlag
-				BenchMark::record_2 += time2.elapsed();
-#endif
 
 
-#if BenchMarkFlag
-				Timer time3;
-#endif
 
 				if (i.second.hasNewCode())
 				{
@@ -761,8 +746,10 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
 				else
 					s << i.second.codeHash();
 
+#if BenchMarkFlag
+				Timer time3;
+#endif
 				_state.insert(i.first, &s.out());
-
 #if BenchMarkFlag
 				BenchMark::record_3 += time3.elapsed();
 #endif
