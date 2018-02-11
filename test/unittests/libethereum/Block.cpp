@@ -25,6 +25,7 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <test/tools/libtesteth/JsonSpiritHeaders.h>
+#include <libproducer/producer_plugin.hpp>
 
 using namespace std;
 using namespace dev;
@@ -69,7 +70,20 @@ BOOST_AUTO_TEST_CASE(bStates)
 	TestTransaction transaction2 = TestTransaction::defaultTransaction(2);
 	testBlock.addTransaction(transaction2);
 
-	testBlock.mine(testBlockchain);
+	//创建生产者
+	std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(testBlockchain.getInterface());
+	p->get_chain_controller().setStateDB(testBlockchain.testGenesis().state().db());
+	testBlockchain.interfaceUnsafe().setProducer(p);
+	chain::chain_controller & _chain(p->get_chain_controller());
+	//生产块
+	auto slot = 1;
+	auto accountName = _chain.get_scheduled_producer(slot);
+	while (accountName == AccountName())
+		accountName = _chain.get_scheduled_producer(++slot);
+	auto pro = _chain.get_producer(accountName);
+	auto private_key = p->get_private_key(pro.owner);
+	testBlock.dposMine(testBlockchain, _chain.get_slot_time(slot), pro.owner, private_key);
+	//testBlock.mine(testBlockchain);
 	testBlockchain.addBlock(testBlock);
 
 	//Block2 is synced to latest blockchain block

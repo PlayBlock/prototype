@@ -675,8 +675,8 @@ json_spirit::mObject TestBlockChain::defaultGenesisBlockJson()
 	blockObj["extraData"] = "0x42";
 	blockObj["gasLimit"] = "3141592";
 	blockObj["gasUsed"] = "0";
-	blockObj["mixHash"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-	blockObj["nonce"] = "0x0102030405060708";
+	//blockObj["mixHash"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+	//blockObj["nonce"] = "0x0102030405060708";
 	blockObj["number"] = "0";
 	blockObj["parentHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
 	blockObj["receiptTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
@@ -684,6 +684,12 @@ json_spirit::mObject TestBlockChain::defaultGenesisBlockJson()
 	blockObj["timestamp"] = "0x54c98c81";
 	blockObj["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 	blockObj["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+	blockObj["runningVersion"] = "0x00";
+	blockObj["hardforkVersion"] = "0x00";
+	blockObj["genesisTime"] = "0x00";
+	blockObj["r"] = "0x00";
+	blockObj["s"] = "0x00";
+	blockObj["v"] = "0x1b";
 	return blockObj;
 }
 
