@@ -615,10 +615,9 @@ void Client::onChainChanged(ImportRoute const& _ir)
 	{
 		if (auto h = m_host.lock())
 		{
-			SyncState state = h->status().state;
-			//state != SyncState::Idle || h->bq().items().first > 10;
-			ctrace << "state" << (int)SyncState::Idle;
-			ctrace << "h->bq().items()"<<h->bq().items().first;
+			SyncState state = h->status().state; 
+			ctrace << "state" << (int)state;
+			ctrace << "h->bq().items() readySet = " << h->bq().items().first << " unknownSet = " << h->bq().items().second;
 		}
 
 		ctrace << "isMajorSyncing so do not resync";
