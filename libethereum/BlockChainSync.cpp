@@ -326,8 +326,10 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 			m_lastImportedBlock = start;
 			m_lastImportedBlockHash = host().chain().numberHash(start);
 
-			if (start <= m_chainStartBlock + 1)
+			if (start <= m_chainStartBlock + 1) {
+				ctrace << "start("<<start<<") <= m_chainStartBlock("<<m_chainStartBlock<<") + 1 => m_haveCommonHeader = true";
 				m_haveCommonHeader = true; //reached chain start
+			}
 		}
 		if (m_haveCommonHeader)
 		{
@@ -490,6 +492,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 		auto status = host().bq().blockStatus(info.hash());
 		if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(info.hash()))
 		{//发现相同块
+			ctrace << "Block: " << info.hash() << "|" << blockNumber << " => m_haveCommonHeader = true";
 			m_haveCommonHeader = true;
 			m_lastImportedBlock = (unsigned)info.number();
 			m_lastImportedBlockHash = info.hash();
@@ -819,7 +822,8 @@ void BlockChainSync::restartSync()
 {
 	RecursiveGuard l(x_sync);
 	resetSync();
-	m_highestBlock = 0;
+	m_highestBlock = 0; 
+	ctrace << "restartSync => m_haveCommonHeader = false";
 	m_haveCommonHeader = false;
 	host().bq().clear();
 	m_startingBlock = host().chain().number();
