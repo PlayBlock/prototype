@@ -147,9 +147,8 @@ void EthereumPeer::requestBlockHeaders(unsigned _startNumber, unsigned _count, u
 	}
 	setAsking(Asking::BlockHeaders);
 	RLPStream s;
-	prep(s, GetBlockHeadersPacket, 4) << _startNumber << _count << _skip << (_reverse ? 1 : 0);
-	//clog(NetMessageDetail) << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "");
-	ctrace << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "");
+	prep(s, GetBlockHeadersPacket, 4) << _startNumber << _count << _skip << (_reverse ? 1 : 0); 
+	ctrace << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "") << " to: "<<this->id();
 	m_lastAskedHeaders = _count;
 	sealAndSend(s);
 }

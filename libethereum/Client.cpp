@@ -603,7 +603,7 @@ void Client::onChainChanged(ImportRoute const& _ir)
 	onDeadBlocks(_ir.deadBlocks, changeds);
 	for (auto const& t: _ir.goodTranactions)
 	{
-		clog(ClientTrace) << "Safely dropping transaction " << t.sha3();
+		//clog(ClientTrace) << "Safely dropping transaction " << t.sha3();
 		m_tq.dropGood(t);
 	}
 	onNewBlocks(_ir.liveBlocks, changeds);

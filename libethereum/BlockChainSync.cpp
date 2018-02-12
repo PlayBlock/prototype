@@ -228,7 +228,12 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 	else
 	{ 
 		_peer->setLlegal(true); 
-		syncPeer(_peer, true); 
+
+		auto status = host().bq().blockStatus(_peer->m_latestHash);
+		if (status == QueueStatus::Unknown) 
+		{//当peer的laststHash为未知时，采取向其request块头
+			syncPeer(_peer, true);
+		}
 	}
 
 	
@@ -448,7 +453,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	}
 	if (itemCount == 0)
 	{
-		clog(NetAllDetail) << "Peer does not have the blocks requested";
+		ctrace << "Peer does not have the blocks requested !";
 		_peer->addRating(-1);
 	}
 
@@ -461,10 +466,11 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 		itemHashes.push_back(info.hash());
 	}
 
-
-	clog(NetMessageSummary) << "Header Nums:" << itemNums;
-	clog(NetMessageSummary) << "Header Hashes:" << itemHashes;
-
+	if (itemNums.size() > 0) 
+	{
+		clog(NetMessageSummary) << "Header Nums:" << itemNums;
+		clog(NetMessageSummary) << "Header Hashes:" << itemHashes;
+	}
 
 	for (unsigned i = 0; i < itemCount; i++)
 	{//对于每一个header
@@ -572,22 +578,27 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 	RecursiveGuard l(x_sync);
 	DEV_INVARIANT_CHECK;
 	size_t itemCount = _r.itemCount();
-	clog(NetMessageSummary) << "BlocksBodies (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreBodies");
+	ctrace << "BlocksBodies (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreBodies");
+
 	clearPeerDownload(_peer);
 	if (m_state != SyncState::Blocks && m_state != SyncState::Waiting) {
-		clog(NetMessageSummary) << "Ignoring unexpected blocks";
+		ctrace << "Ignoring unexpected blocks";
 		return;
 	}
 	if (m_state == SyncState::Waiting)
 	{
-		clog(NetAllDetail) << "Ignored blocks while waiting";
+		ctrace << "Ignored blocks while waiting";
 		return;
 	}
 	if (itemCount == 0)
 	{
-		clog(NetAllDetail) << "Peer does not have the blocks requested";
+		ctrace << "Peer does not have the blocks requested";
 		_peer->addRating(-1);
 	}
+
+	//用于打印日志
+	std::vector<unsigned> bodies;
+
 	for (unsigned i = 0; i < itemCount; i++)
 	{
 		RLP body(_r[i]);
@@ -603,6 +614,9 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 			continue;
 		}
 		unsigned blockNumber = iter->second;
+
+		bodies.push_back(blockNumber);
+
 		if (haveItem(m_bodies, blockNumber))
 		{
 			clog(NetMessageSummary) << "Skipping already downloaded block body " << blockNumber;
@@ -611,6 +625,9 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 		m_headerIdToNumber.erase(id);
 		mergeInto(m_bodies, blockNumber, body.data().toBytes());
 	}
+
+	ctrace <<"BlockBodies: "<< bodies;
+
 	collectBlocks();
 	continueSync();
 }
@@ -672,6 +689,7 @@ void BlockChainSync::collectBlocks()
 		case ImportResult::UnknownParent:
 			if (headers.first + i > m_lastImportedBlock)
 			{
+				ctrace << "if ( headers.first + i > m_lastImportedBlock ) m_haveCommonHeader = false";
 				resetSync();
 				m_haveCommonHeader = false; // fork detected, search for common header again
 			}
@@ -833,6 +851,7 @@ void BlockChainSync::restartSync()
 
 void BlockChainSync::completeSync()
 {
+	ctrace << "completeSync!!!";
 	RecursiveGuard l(x_sync);
 	resetSync();
 	m_state = SyncState::Idle;

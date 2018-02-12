@@ -509,7 +509,7 @@ void EthereumHost::maintainTransactions()
 			RLPStream ts;
 			_p->prep(ts, TransactionsPacket, n).appendRaw(b, n);
 			_p->sealAndSend(ts);
-			clog(EthereumHostTrace) << "Sent" << n << "transactions to " << _p->session()->info().clientVersion;
+			//clog(EthereumHostTrace) << "Sent" << n << "transactions to " << _p->session()->info().clientVersion;
 		}
 		_p->m_requireTransactions = false;
 		return true;
@@ -524,6 +524,23 @@ void EthereumHost::foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)
 		{ return _left.first->rating() == _right.first->rating() ? _left.first->connectionTime() < _right.first->connectionTime() : _left.first->rating() > _right.first->rating(); };
 
 	std::sort(sessions.begin(), sessions.end(), sessionLess);
+
+	std::vector<p2p::NodeID> peerIDs;
+	std::vector<int> ratings;
+	
+	for (auto s : sessions)
+	{
+		std::shared_ptr<EthereumPeer> pPeer = 
+		capabilityFromSession<EthereumPeer>(*s.first);
+		peerIDs.push_back(pPeer->id());
+		ratings.push_back(s.first->rating());
+	}
+
+	ctrace << "==============>foreachPeer begin";
+	ctrace << "Sorted NodeIDs: " << peerIDs;
+	ctrace << "Sorted Ratings: " << ratings;
+	ctrace << "===============>foreachPeer end";
+
 	for (auto s: sessions)
 		if (!_f(capabilityFromSession<EthereumPeer>(*s.first)))
 			return;
