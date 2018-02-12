@@ -167,6 +167,7 @@ BlockChainSync::BlockChainSync(EthereumHost& _host):
 	m_bqRoomAvailable = host().bq().onRoomAvailable([this]()
 	{
 		RecursiveGuard l(x_sync);
+		ctrace << "onRoomAvaliable state = Blocks";
 		m_state = SyncState::Blocks;
 		continueSync();
 	});
@@ -260,7 +261,10 @@ void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
 	{
 		// start sync
 		if (m_state == SyncState::Idle || m_state == SyncState::NotSynced)
+		{
+			ctrace << "_peer->m_lastestHash = "<<_peer->m_latestHash<<" m_state = Blocks";
 			m_state = SyncState::Blocks;
+		}
 		_peer->requestBlockHeaders(_peer->m_latestHash, 1, 0, false);
 		_peer->m_requireTransactions = true;
 		return;
