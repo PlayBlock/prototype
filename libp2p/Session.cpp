@@ -335,6 +335,7 @@ void Session::doRead()
 	boost::asio::socket_base::send_buffer_size send_buf_size;
 	m_socket->ref().get_option(recv_buf_size);
 	m_socket->ref().get_option(send_buf_size);
+	
 	ctrace << "send_buf_size  = " << send_buf_size.value() << " recv_buf_size = " << recv_buf_size.value();
 
 	ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, h256::size), [this,self](boost::system::error_code ec, std::size_t length)

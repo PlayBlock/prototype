@@ -5,7 +5,8 @@ namespace dev
 namespace con
 {
 
-#if defined(_WIN32)
+//#if defined(_WIN32)
+#if true
 
 #define EthReset ""       // Text Reset
 

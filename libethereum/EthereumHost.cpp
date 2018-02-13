@@ -536,11 +536,6 @@ void EthereumHost::foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)
 		ratings.push_back(s.first->rating());
 	}
 
-	ctrace << "==============>foreachPeer begin";
-	ctrace << "Sorted NodeIDs: " << peerIDs;
-	ctrace << "Sorted Ratings: " << ratings;
-	ctrace << "===============>foreachPeer end";
-
 	for (auto s: sessions)
 		if (!_f(capabilityFromSession<EthereumPeer>(*s.first)))
 			return;
