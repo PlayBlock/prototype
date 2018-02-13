@@ -397,7 +397,9 @@ Json::Value Eth::eth_getBlockByNumber(string const& _blockNumber, bool _includeT
 {
 	try
 	{
-		BlockNumber h = jsToBlockNumber(_blockNumber);
+		BlockNumber h = jsToBlockNumber(_blockNumber); 
+
+		ctrace << "eth_getBlockByNumber " << "num = " << h;
 		if (!client()->isKnown(h))
 			return Json::Value(Json::nullValue);
 
