@@ -85,6 +85,7 @@ void BlockQueue::clear()
 	m_unknownSet.clear();
 	m_unknown.clear();
 	m_future.clear();
+	m_futureSet.clear();
 	m_difficulty = 0;
 	m_drainingDifficulty = 0;
 }
@@ -225,6 +226,7 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 	if (bi.timestamp() > utcTime() && !_isOurs)
 	{
 		m_future.insert(static_cast<time_t>(bi.timestamp()), h, _block.toBytes());
+		m_futureSet.insert(h);
 		char buf[24];
 		time_t bit = static_cast<time_t>(bi.timestamp());
 		if (strftime(buf, 24, "%X", localtime(&bit)) == 0)
@@ -378,8 +380,11 @@ void BlockQueue::tick()
 	}
 	cblockq << "Importing" << todo.size() << "past-future blocks.";
 
-	for (auto const& b: todo)
+	for (auto const& b : todo) {
+		h256 h = BlockHeader::headerHashFromBlock(&b.second);
+		m_futureSet.erase(h);
 		import(&b.second);
+	}
 }
 
 BlockQueueStatus BlockQueue::status() const
@@ -401,7 +406,9 @@ QueueStatus BlockQueue::blockStatus(h256 const& _h) const
 		m_unknownSet.count(_h) ?
 			QueueStatus::UnknownParent :
 		m_knownBad.count(_h) ?
-			QueueStatus::Bad :
+			QueueStatus::Bad : 
+		m_futureSet.count(_h) ?
+			QueueStatus::Future :
 			QueueStatus::Unknown;
 }
 

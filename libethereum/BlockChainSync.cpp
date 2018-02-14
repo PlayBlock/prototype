@@ -901,6 +901,10 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
 			ctrace << "block hash bad!" << h << ". Bailing...";
 			return;
 		}
+		else if (status == QueueStatus::Future) { //此处若为Future，则认为已知
+			ctrace << "have same future!";
+			knowns++;
+		}
 		else if (status == QueueStatus::Unknown)
 		{
 			ctrace << "---" << (unsigned)p.second <<":"<< h << " unknown";

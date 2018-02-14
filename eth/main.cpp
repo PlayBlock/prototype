@@ -432,7 +432,7 @@ int main(int argc, char** argv)
 		}
 
 		vector<string> each;
-		boost::split(each, peerset, boost::is_any_of("\t "));
+		boost::split(each, peerset, boost::is_any_of(","));
 		for (auto const& p: each)
 		{
 			string type;

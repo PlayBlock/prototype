@@ -237,11 +237,11 @@ void Session::write()
 	}
 	auto self(shared_from_this());
 	 
-	boost::asio::socket_base::receive_buffer_size recv_buf_size;
-	boost::asio::socket_base::send_buffer_size send_buf_size;
-	m_socket->ref().get_option(recv_buf_size);
-	m_socket->ref().get_option(send_buf_size);
-	ctrace << "async_write bufsize = " << out->size() << " send_buf_size  = " << send_buf_size.value() << " recv_buf_size = " << recv_buf_size.value();
+	//boost::asio::socket_base::receive_buffer_size recv_buf_size;
+	//boost::asio::socket_base::send_buffer_size send_buf_size;
+	//m_socket->ref().get_option(recv_buf_size);
+	//m_socket->ref().get_option(send_buf_size);
+	//ctrace << "async_write bufsize = " << out->size() << " send_buf_size  = " << send_buf_size.value() << " recv_buf_size = " << recv_buf_size.value();
 	ba::async_write(m_socket->ref(), ba::buffer(*out), [this, self](boost::system::error_code ec, std::size_t /*length*/)
 	{
 		ThreadContext tc(info().id.abridged());
@@ -336,7 +336,7 @@ void Session::doRead()
 	m_socket->ref().get_option(recv_buf_size);
 	m_socket->ref().get_option(send_buf_size);
 	
-	ctrace << "send_buf_size  = " << send_buf_size.value() << " recv_buf_size = " << recv_buf_size.value();
+	//ctrace << "send_buf_size  = " << send_buf_size.value() << " recv_buf_size = " << recv_buf_size.value();
 
 	ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, h256::size), [this,self](boost::system::error_code ec, std::size_t length)
 	{
@@ -368,13 +368,13 @@ void Session::doRead()
 			return;
 		}
 
-		ctrace << "hLength = " << hLength << " hPadding = " << hPadding;
+		//ctrace << "hLength = " << hLength << " hPadding = " << hPadding;
 		/// read padded frame and mac
 		auto tlen = hLength + hPadding + h128::size;
 		m_data.resize(tlen);
 		ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, tlen), [this, self, hLength, hProtocolId, tlen](boost::system::error_code ec, std::size_t length)
 		{ 
-			ctrace << "async_read length = "<<length;
+			//ctrace << "async_read length = "<<length;
 
 			ThreadContext tc(info().id.abridged());
 			ThreadContext tc2(info().clientVersion);

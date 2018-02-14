@@ -61,7 +61,8 @@ enum class QueueStatus
 	Importing,
 	UnknownParent,
 	Bad,
-	Unknown
+	Unknown,
+	Future
 };
 
 std::ostream& operator<< (std::ostream& os, QueueStatus const& obj);
@@ -310,6 +311,7 @@ private:
 	h256Hash m_unknownSet;												///< Set of all blocks whose parents are not ready/in-chain.
 	SizedBlockMap<h256> m_unknown;										///< For blocks that have an unknown parent; we map their parent hash to the block stuff, and insert once the block appears.
 	h256Hash m_knownBad;												///< Set of blocks that we know will never be valid.
+	h256Hash m_futureSet;
 	SizedBlockMap<time_t> m_future;										///< Set of blocks that are not yet valid. Ordered by timestamp
 	Signal<> m_onReady;													///< Called when a subsequent call to import blocks will return a non-empty container. Be nice and exit fast.
 	Signal<> m_onRoomAvailable;											///< Called when space for new blocks becomes availabe after a drain. Be nice and exit fast.
