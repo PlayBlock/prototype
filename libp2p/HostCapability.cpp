@@ -27,18 +27,21 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> HostCapabilityFace::peerSessions() const
+std::vector<std::pair<std::shared_ptr<SessionFace>, PeerSortObject>> HostCapabilityFace::peerSessions() const
 {
 	return peerSessions(version());
 }
 
-std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> HostCapabilityFace::peerSessions(u256 const& _version) const
+std::vector<std::pair<std::shared_ptr<SessionFace>, PeerSortObject>> HostCapabilityFace::peerSessions(u256 const& _version) const
 {
 	RecursiveGuard l(m_host->x_sessions);
-	std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> ret;
+	std::vector<std::pair<std::shared_ptr<SessionFace>, PeerSortObject>> ret;
 	for (auto const& i: m_host->m_sessions)
 		if (std::shared_ptr<SessionFace> s = i.second.lock())
-			if (s->capabilities().count(std::make_pair(name(), _version)))
-				ret.push_back(make_pair(s,s->peer()));
+			if (s->capabilities().count(std::make_pair(name(), _version))) {
+				//此处将second定义为PeerSortObject，因为在多线程环境下如果在排序中直接使用Session
+				//会导致中途评分及连接时间变化，把排序搞烂
+				ret.push_back(make_pair(s, PeerSortObject(s->peer()->id, s->rating(),s->connectionTime()) ));
+			}
 	return ret;
 }

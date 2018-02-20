@@ -98,6 +98,27 @@ protected:
 	/// Used by isOffline() and (todo) for peer to emit session information.
 	std::weak_ptr<Session> m_session;
 };
+
+//用于记录根据Peer进行排序的信息
+class PeerSortObject
+{
+	public: 
+		PeerSortObject(const NodeID& _id , const int _rating, const std::chrono::steady_clock::time_point& _connectTime) 
+			:m_id(_id),m_rating(_rating), m_connectTime(_connectTime){}
+
+		PeerSortObject(const PeerSortObject& _obj)
+			:m_id(id()),m_rating(_obj.rating()),m_connectTime(_obj.connectTime()){}
+
+		NodeID id() const { return m_id; }
+		int rating() const { return m_rating; }
+		std::chrono::steady_clock::time_point connectTime() const { return m_connectTime; }
+
+	private:
+		NodeID m_id;
+		int m_rating;
+		std::chrono::steady_clock::time_point m_connectTime;
+};
+
 using Peers = std::vector<Peer>;
 
 }

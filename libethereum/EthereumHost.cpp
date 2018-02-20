@@ -520,8 +520,8 @@ void EthereumHost::foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)
 {
 	//order peers by protocol, rating, connection age
 	auto sessions = peerSessions();
-	auto sessionLess = [](std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _left, std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _right)
-		{ return _left.first->rating() == _right.first->rating() ? _left.first->connectionTime() < _right.first->connectionTime() : _left.first->rating() > _right.first->rating(); };
+	auto sessionLess = [](std::pair<std::shared_ptr<SessionFace>, PeerSortObject> const& _left, std::pair<std::shared_ptr<SessionFace>, PeerSortObject> const& _right)
+		{ return _left.second.rating() == _right.second.rating() ? _left.second.connectTime() < _right.second.connectTime() : _left.second.rating() > _right.second.rating(); };
 
 	std::sort(sessions.begin(), sessions.end(), sessionLess);
 
