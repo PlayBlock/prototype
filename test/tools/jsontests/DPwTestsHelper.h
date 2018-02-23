@@ -121,7 +121,7 @@ namespace dev {
 
 			uint32_t get_dpo_witnesses() { return _producer_plugin->get_chain_controller().get_dynamic_global_properties().num_pow_witnesses; }
 
-			auto &get_allproducer_power() { return _producer_plugin->get_db().get_index<eos::chain::producer_multi_index, eos::chain::by_pow>(); }
+			chainbase::database &getdb() { return _producer_plugin->get_db(); }
 			dev::h256 get_ownpow_target();
 			dev::h256 get_pow_target() { return _producer_plugin->get_chain_controller().get_pow_target(); };
 

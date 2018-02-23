@@ -283,13 +283,13 @@ BOOST_AUTO_TEST_CASE(dtPowWitness)
 		if (client.get_dpo_witnesses() > config::TotalProducersPerRound)
 		{
 			//获取当前pow队列中的人
-			const auto& allProducerbyPow_start = client.get_allproducer_power();
+			const auto& allProducerbyPow_start = client.getdb().get_index<eos::chain::producer_multi_index, eos::chain::by_pow>();
 			auto itr = allProducerbyPow_start.upper_bound(0);
 
 			client.produce_blocks(config::TotalProducersPerRound);
 			BOOST_REQUIRE(client.get_dpo_witnesses() == (accounts.size() - (config::POWProducersPerRound+1)*i));
 
-			const auto& allProducerbyPow_end = client.get_allproducer_power();
+			const auto& allProducerbyPow_end = client.getdb().get_index<eos::chain::producer_multi_index, eos::chain::by_pow>();
 			auto first = allProducerbyPow_end.upper_bound(0);
 			BOOST_REQUIRE(itr != first);
 		}
