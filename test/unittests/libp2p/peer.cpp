@@ -65,6 +65,7 @@ BOOST_FIXTURE_TEST_SUITE(p2p, P2PPeerFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
+	g_logVerbosity = 4;
 	cout << "host" << endl;
 
 	if (test::Options::get().nonetwork)

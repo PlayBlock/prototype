@@ -1363,14 +1363,23 @@ namespace dev {
 			cout << "cost_2 - u256(100): " << cost_2 - u256(100) << endl;
 
 			//合约创建者 调用合约方法add
+			u256 balance_1 = client.balance(Address(account.address));
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("add") + account3.address.substr(2) + "0232", account);  //添加装备
 			client.produce_blocks();
+			u256 balance_2 = client.balance(Address(account.address));
+			cout << "add_0232: " << balance_1 - balance_2 << endl;
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("add") + account3.address.substr(2) + "0540", account);
 			client.produce_blocks();
+			balance_1 = client.balance(Address(account.address));
+			cout << "add_0540: " << balance_2 - balance_1 << endl;
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("add") + account3.address.substr(2) + "1fbb", account);
 			client.produce_blocks();
+			balance_2 = client.balance(Address(account.address));
+			cout << "add_1fbb: " << balance_1 - balance_2 << endl;
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("add") + account3.address.substr(2) + "55aa", account);
 			client.produce_blocks();
+			balance_1 = client.balance(Address(account.address));
+			cout << "add_55aa: " << balance_2 - balance_1 << endl;
 
 			u256 address_3_u256;
 			addressToU256(Address(account3.address), address_3_u256);
@@ -1390,12 +1399,19 @@ namespace dev {
 			BOOST_REQUIRE_EQUAL(storage_h256[31], 187);
 
 			//合约创建者 调用合约方法sub
+			balance_1 = client.balance(Address(account.address));
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("sub") + account3.address.substr(2) + "0210", account);  //正确删除装备，有剩余
 			client.produce_blocks();
+			balance_2 = client.balance(Address(account.address));
+			cout << "sub_0210: " << balance_1 - balance_2 << endl;
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("sub") + account3.address.substr(2) + "0540", account);  //完全删除装备，无剩余
 			client.produce_blocks();
+			balance_1 = client.balance(Address(account.address));
+			cout << "sub_0540: " << balance_2 - balance_1 << endl;
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("sub") + account3.address.substr(2) + "1fbc", account);  //错误删除装备，无变化
 			client.produce_blocks();
+			balance_2 = client.balance(Address(account.address));
+			cout << "sub_0210: " << balance_1 - balance_2 << endl;
 
 			storage = client.storage(m_newAddress, address_3_u256);
 			storage_h256 = (h256)storage;
@@ -1406,12 +1422,19 @@ namespace dev {
 			BOOST_REQUIRE_EQUAL(storage_h256[31], 187);
 
 			//合约创建者 调用合约方法send
+			balance_1 = client.balance(Address(account.address));
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("send") + account3.address.substr(2) + account2.address.substr(2) + "0223", account);  //错误转移装备数量，无变化
 			client.produce_blocks();
+			balance_2 = client.balance(Address(account.address));
+			cout << "send_0223: " << balance_1 - balance_2 << endl;
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("send") + account3.address.substr(2) + account2.address.substr(2) + "1f0b", account);  //正确转移装备
 			client.produce_blocks();
+			balance_1 = client.balance(Address(account.address));
+			cout << "send_1f0b: " << balance_2 - balance_1 << endl;
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", name2hex("send") + account3.address.substr(2) + account2.address.substr(2) + "0123", account);  //错误转移没有的装备，无变化
 			client.produce_blocks();
+			balance_2 = client.balance(Address(account.address));
+			cout << "send_0123: " << balance_1 - balance_2 << endl;
 
 			u256 address_2_u256;
 			addressToU256(Address(account2.address), address_2_u256);
@@ -1483,8 +1506,14 @@ namespace dev {
 			}
 
 			u256 balance4 = client.balance(Address(account3.address));
+			u256 balance_send_1 = client.balance(Address(account.address));
 			client.sendTransaction(gasLimit, gasPrice, s_address, "10000", "", account);  //增加奖池金额
 			client.produce_blocks();
+
+			u256 balance_send_2 = client.balance(Address(account.address));
+			u256 cost_4 = balance_send_1 - balance_send_2;
+			cout << "cost_4: " << cost_4 << endl;
+
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", prize_data, account);  //转盘，发奖+发装备
 			client.produce_blocks();
 
@@ -1517,8 +1546,11 @@ namespace dev {
 				prize_data += "0000";
 			}
 
+			balance_1 = client.balance(Address(account.address));
 			client.sendTransaction(gasLimit, gasPrice, s_address, "", prize_data, account);  //转盘，发奖+发装备
 			client.produce_blocks();
+			balance_2 = client.balance(Address(account.address));
+			cout << "prize: " << balance_1 - balance_2 << endl;
 
 			storage = client.storage(m_newAddress, address_3_u256);
 			storage_h256 = (h256)storage;
