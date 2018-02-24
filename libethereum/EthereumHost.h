@@ -138,10 +138,22 @@ private:
 
 	mutable Mutex x_transactions;
 	std::shared_ptr<BlockChainSync> m_sync;
-	std::atomic<time_t> m_lastTick = { 0 };
+	std::atomic<time_t> m_lastTick = { 0 }; 
 
 	std::shared_ptr<EthereumHostDataFace> m_hostData;
 	std::shared_ptr<EthereumPeerObserverFace> m_peerObserver;
+
+	//块生成提前广播机制，由于自己产的块，所以无需等到
+	//正式导入即可广播
+	mutable Mutex x_earlyBoardcast;
+	std::vector<std::pair<h256,bytes>> m_earlyBlockQueue;
+	h256 m_latestEarlyBlockSent;
+public:
+
+	void pushEarlyBlock(const h256& _hash ,const bytes& _block);
+
+	void boardCastEarlyBlocks();
+
 };
 
 }

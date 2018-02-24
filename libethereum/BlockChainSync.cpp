@@ -458,7 +458,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	if (itemCount == 0)
 	{
 		ctrace << "Peer does not have the blocks requested !";
-		_peer->addRating(-1);
+		_peer->addRating(-100);
 	}
 
 	h256s itemHashes;
@@ -597,7 +597,7 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 	if (itemCount == 0)
 	{
 		ctrace << "Peer does not have the blocks requested";
-		_peer->addRating(-1);
+		_peer->addRating(-100);
 	}
 
 	//用于打印日志
@@ -745,6 +745,14 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 	}
 	BlockHeader info(_r[0][0].data(), HeaderData);
 	auto h = info.hash();
+
+	//只处理BlockQueue未知的块
+	auto status = host().bq().blockStatus(h);
+	if (status != QueueStatus::Unknown)
+	{
+		return;
+	} 
+
 	DEV_GUARDED(_peer->x_knownBlocks)
 		_peer->m_knownBlocks.insert(h);
 	unsigned blockNumber = static_cast<unsigned>(info.number());
@@ -754,6 +762,8 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		syncPeer(_peer, true);
 		return;
 	}
+
+
 	switch (host().bq().import(_r[0].data()))
 	{
 	case ImportResult::Success:
@@ -803,12 +813,8 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 			restartSync();
 		}
 		logNewBlock(h);
-		u256 totalDifficulty = _r[1].toInt<u256>();
-		if (totalDifficulty > _peer->m_totalDifficulty)
-		{
-			clog(NetMessageDetail) << "Received block with no known parent. Peer needs syncing...";
-			syncPeer(_peer, true);
-		}
+
+		syncPeer(_peer, true);
 		break;
 	}
 	default:;

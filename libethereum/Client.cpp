@@ -797,6 +797,11 @@ void Client::generate_block(
 	if (!submitSealed(blockHeaderRLP.out()))
 	{
 		ctrace << "submitSealed error!";
+	} else {//由于块为自产，所以可放心广播出去
+
+		if (auto h = m_host.lock())
+			h->pushEarlyBlock(m_sealingInfo.hash(), m_working.blockData());
+
 	}
 	m_lastProducedNumber = m_working.info().number();
 	//ctrace << "m_lastProducedNumber: " << m_lastProducedNumber.str();

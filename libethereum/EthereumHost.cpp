@@ -391,6 +391,7 @@ EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, Transact
 	m_sync.reset(new BlockChainSync(*this));
 	m_peerObserver = make_shared<EthereumPeerObserver>(m_sync, m_tq);
 	m_latestBlockSent = _ch.currentHash();
+	m_latestEarlyBlockSent = _ch.currentHash();
 	m_tq.onImport([this](ImportResult _ir, h256 const& _h, h512 const& _nodeId) { onTransactionImported(_ir, _h, _nodeId); });
 }
 
@@ -405,6 +406,7 @@ bool EthereumHost::ensureInitialised()
 	{
 		// First time - just initialise.
 		m_latestBlockSent = m_chain.currentHash();
+		m_latestEarlyBlockSent = m_latestBlockSent;
 		clog(EthereumHostTrace) << "Initialising: latest=" << m_latestBlockSent;
 
 		Guard l(x_transactions);
@@ -432,6 +434,12 @@ void EthereumHost::doWork()
 {
 	bool netChange = ensureInitialised();
 	auto h = m_chain.currentHash();
+
+	if (!isSyncing())
+	{//若未在同步状态则广播自产块
+		boardCastEarlyBlocks();
+	}
+
 	// If we've finished our initial sync (including getting all the blocks into the chain so as to reduce invalid transactions), start trading transactions & blocks
 	if (!isSyncing() && m_chain.isKnown(m_latestBlockSent))
 	{
@@ -592,6 +600,59 @@ void EthereumHost::blockCheat(bytes blockBytes, u256 difficult)
 	});
 }
 
+
+void EthereumHost::pushEarlyBlock(const h256& _hash, const bytes& _block)
+{
+	Guard l(x_earlyBoardcast);
+	m_earlyBlockQueue.push_back(std::make_pair(_hash,_block));
+}
+
+
+void dev::eth::EthereumHost::boardCastEarlyBlocks()
+{
+	Guard l(x_earlyBoardcast);
+
+	if (m_earlyBlockQueue.size() == 0)
+		return;
+
+	for (int i = 0; i < m_earlyBlockQueue.size(); i++)
+	{
+		auto h = m_earlyBlockQueue[i].first;
+		auto peers = randomSelection(25, [&](EthereumPeer* p) {
+			DEV_GUARDED(p->x_knownBlocks)
+				return !p->m_knownBlocks.count(h);
+			return false;
+		});
+
+		//给所有peer发送NewBlockPacket
+		for (shared_ptr<EthereumPeer> const& p : get<0>(peers))
+		{
+			RLPStream ts;
+			p->prep(ts, NewBlockPacket, 2).appendRaw(m_earlyBlockQueue[i].second, 1).append(Invalid256);
+
+			Guard l(p->x_knownBlocks);
+			p->sealAndSend(ts);
+			p->m_knownBlocks.clear();
+		}
+
+		for (shared_ptr<EthereumPeer> const& p : get<1>(peers))
+		{
+			RLPStream ts;
+			p->prep(ts, NewBlockPacket, 2).appendRaw(m_earlyBlockQueue[i].second, 1).append(Invalid256);
+
+			Guard l(p->x_knownBlocks);
+			p->sealAndSend(ts);
+			p->m_knownBlocks.clear();
+		}
+
+		m_latestEarlyBlockSent = h;
+	}
+
+	m_earlyBlockQueue.clear();
+}
+
+
+
 void EthereumHost::maintainBlocks(h256 const& _currentHash)
 {
 	// Send any new blocks.
@@ -599,6 +660,12 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 	auto detailsTo = m_chain.details(_currentHash);
 	if (detailsFrom.number < detailsTo.number)
 	{
+		if (m_latestEarlyBlockSent == _currentHash)
+		{//若为自产块，不重复发送
+			m_latestBlockSent = _currentHash;
+			return;
+		}
+
 		if (diff(detailsFrom.number, detailsTo.number) < 20)
 		{
 			// don't be sending more than 20 "new" blocks. if there are any more we were probably waaaay behind.
@@ -611,16 +678,35 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 					return !p->m_knownBlocks.count(_currentHash);
 				return false;
 			});
-			//for (shared_ptr<EthereumPeer> const& p: get<0>(s))
-			//	for (auto const& b: blocks)
-			//	{
-			//		RLPStream ts;
-			//		p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(m_chain.details(b).totalDifficulty);
 
-			//		Guard l(p->x_knownBlocks);
-			//		p->sealAndSend(ts);
-			//		p->m_knownBlocks.clear();
-			//	}
+			//给所有peer发送NewBlockPacket
+			for (shared_ptr<EthereumPeer> const& p : get<0>(s))
+			{
+				for (auto const& b : blocks)
+				{
+					RLPStream ts;
+					p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(m_chain.details(b).totalDifficulty);
+
+					Guard l(p->x_knownBlocks);
+					p->sealAndSend(ts);
+					p->m_knownBlocks.clear();
+				}
+			}
+
+			for (shared_ptr<EthereumPeer> const& p : get<1>(s))
+			{
+				for (auto const& b : blocks)
+				{
+					RLPStream ts;
+					p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(m_chain.details(b).totalDifficulty);
+
+					Guard l(p->x_knownBlocks);
+					p->sealAndSend(ts);
+					p->m_knownBlocks.clear();
+				}
+			}
+
+			/*
 
 			// 给所有peer发送NewBlockHashesPacket
 			for (shared_ptr<EthereumPeer> const& p : get<0>(s))
@@ -653,6 +739,7 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 				p->sealAndSend(ts);
 				p->m_knownBlocks.clear();
 			}
+			*/
 		}
 		m_latestBlockSent = _currentHash;
 	}
