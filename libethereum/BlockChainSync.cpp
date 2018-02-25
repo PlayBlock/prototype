@@ -755,10 +755,14 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 
 	DEV_GUARDED(_peer->x_knownBlocks)
 		_peer->m_knownBlocks.insert(h);
+
+	//更新Peer最新的Hash
+	_peer->m_latestHash = h;
+
 	unsigned blockNumber = static_cast<unsigned>(info.number());
 	if (blockNumber > (m_lastImportedBlock + 1))
 	{
-		clog(NetAllDetail) << "Received unknown new block";
+		ctrace << "Received unknown new block";
 		syncPeer(_peer, true);
 		return;
 	}
