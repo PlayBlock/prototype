@@ -148,11 +148,19 @@ private:
 	mutable Mutex x_earlyBoardcast;
 	std::vector<std::pair<h256,bytes>> m_earlyBlockQueue;
 	h256 m_latestEarlyBlockSent;
+	
+	mutable Mutex x_deliverBoardcast;
+	std::vector<std::pair<h256, bytes>> m_deliverBlockQueue;
+
 public:
 
 	void pushEarlyBlock(const h256& _hash ,const bytes& _block);
 
-	void boardCastEarlyBlocks();
+	void pushDeliverBlock(const h256& _hash, const bytes& _block);
+
+	void boardCastEarlyBlocks(); 
+
+	void boardCastDeliverBlocks();
 
 };
 

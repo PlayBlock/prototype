@@ -753,8 +753,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		return;
 	} 
 
-	DEV_GUARDED(_peer->x_knownBlocks)
-		_peer->m_knownBlocks.insert(h);
+	_peer->tryInsertPeerKnownBlockList(h); 
 
 	//更新Peer最新的Hash
 	_peer->m_latestHash = h;
@@ -792,8 +791,12 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 			}
 			completeSync();
 		}
+		//接到传来的块，做简单的检验则直接广播出去
+		host().pushDeliverBlock(h, _r[0].data().toBytes());
 		break;
 	case ImportResult::FutureTimeKnown:
+		//接到传来的块，做简单的检验则直接广播出去
+		host().pushDeliverBlock(h, _r[0].data().toBytes());
 		//TODO: Rating dependent on how far in future it is.
 		break;
 
@@ -899,8 +902,7 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
 	{
 		h256 const& h = p.first; 
 		_peer->addRating(1);
-		DEV_GUARDED(_peer->x_knownBlocks)
-			_peer->m_knownBlocks.insert(h);
+		_peer->tryInsertPeerKnownBlockList(h); 
 		auto status = host().bq().blockStatus(h);
 		if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(h)) {
 			ctrace << "---" <<(unsigned)p.second <<":"<< h<<" known";

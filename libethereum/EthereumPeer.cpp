@@ -435,3 +435,19 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
 	return true;
 }
+
+void dev::eth::EthereumPeer::releasePeerKnownBlockList()
+{
+	Guard l(x_knownBlocks); 
+	if (m_knownBlocks.size() > 16384)
+	{
+		m_knownBlocks.clear();
+	}
+}
+
+void dev::eth::EthereumPeer::tryInsertPeerKnownBlockList(const h256& _hash)
+{
+	Guard l(x_knownBlocks); 
+	if (m_knownBlocks.count(_hash) == 0)
+		m_knownBlocks.insert(_hash);
+}

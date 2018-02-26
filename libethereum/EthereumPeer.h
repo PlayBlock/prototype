@@ -136,6 +136,11 @@ public:
 
 	void setLlegal(bool _isLlegal) { m_isllegal = _isLlegal; }
 
+
+	void releasePeerKnownBlockList();
+
+	void tryInsertPeerKnownBlockList(const h256& _hash);
+
 private:
 	using p2p::Capability::sealAndSend;
 
