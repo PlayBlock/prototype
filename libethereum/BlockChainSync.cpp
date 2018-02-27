@@ -766,6 +766,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		return;
 	}
 
+	ctrace << "onPeerNewBlock ==>" << h;
 
 	switch (host().bq().import(_r[0].data()))
 	{
@@ -795,9 +796,22 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		host().pushDeliverBlock(h, _r[0].data().toBytes());
 		break;
 	case ImportResult::FutureTimeKnown:
+		m_highestBlock = max(m_lastImportedBlock, m_highestBlock);
+		m_downloadingBodies.erase(blockNumber);
+		m_downloadingHeaders.erase(blockNumber);
+		removeItem(m_headers, blockNumber);
+		removeItem(m_bodies, blockNumber);
+		if (m_headers.empty())
+		{
+			if (!m_bodies.empty())
+			{
+				clog(NetMessageDetail) << "Block headers map is empty, but block bodies map is not. Force-clearing.";
+				m_bodies.clear();
+			}
+			completeSync();
+		}
 		//接到传来的块，做简单的检验则直接广播出去
-		host().pushDeliverBlock(h, _r[0].data().toBytes());
-		//TODO: Rating dependent on how far in future it is.
+		host().pushDeliverBlock(h, _r[0].data().toBytes()); 
 		break;
 
 	case ImportResult::Malformed:

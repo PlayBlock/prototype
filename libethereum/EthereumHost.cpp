@@ -678,6 +678,8 @@ void dev::eth::EthereumHost::boardCastDeliverBlocks()
 			RLPStream ts;
 			p->prep(ts, NewBlockPacket, 2).appendRaw(m_deliverBlockQueue[i].second, 1).append(Invalid256);
 			p->sealAndSend(ts);
+			
+			ctrace << "deliver block "<< h << " =>" << p->id();
 			//将传出的hash记录到knownList中，防止多次发送相同块
 			p->tryInsertPeerKnownBlockList(h);
 			p->releasePeerKnownBlockList();
@@ -688,6 +690,8 @@ void dev::eth::EthereumHost::boardCastDeliverBlocks()
 			RLPStream ts;
 			p->prep(ts, NewBlockPacket, 2).appendRaw(m_deliverBlockQueue[i].second, 1).append(Invalid256);
 			p->sealAndSend(ts); 
+
+			ctrace << "deliver block " << h << " =>" << p->id();
 			p->tryInsertPeerKnownBlockList(h);
 			p->releasePeerKnownBlockList();
 		} 
