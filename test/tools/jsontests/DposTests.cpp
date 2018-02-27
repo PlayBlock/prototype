@@ -655,9 +655,6 @@ json_spirit::mObject fillFakeTest(json_spirit::mObject const& _input)
 		vector<TestBlock> validUncles = blockchain.syncUncles(block.uncles());
 		block.setUncles(validUncles);
 
-		if (blObjInput.count("blockHeaderPremine"))
-			overwriteBlockHeaderForTest(blObjInput.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname]);
-
 		cnote << "Mining block" << importBlockNumber << "for chain" << chainname << "at test " << testName;
 		//block.mine(blockchain);
 		//Éú²ú¿é
@@ -680,7 +677,7 @@ json_spirit::mObject fillFakeTest(json_spirit::mObject const& _input)
 		checkBlocks(block, alterBlock, testName);
 
 		if (blObjInput.count("blockHeader"))
-			overwriteBlockHeaderForTest(blObjInput.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname]);
+			overwriteBlockHeaderForTest(blObjInput.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname], private_key);
 
 		blObj["rlp"] = toHexPrefixed(alterBlock.bytes());
 		blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.blockHeader());
@@ -697,7 +694,7 @@ json_spirit::mObject fillFakeTest(json_spirit::mObject const& _input)
 
 			InvalidBlock.dposMine(blockchain, _chain.get_slot_time(slot), accountName, private_key);
 			if (blObjInput.count("blockHeader"))
-				overwriteBlockHeaderForTest(blObjInput.at("blockHeader").get_obj(), InvalidBlock, *chainMap[chainname]);
+				overwriteBlockHeaderForTest(blObjInput.at("blockHeader").get_obj(), InvalidBlock, *chainMap[chainname], private_key);
 
 			blObj["rlp"] = toHexPrefixed(InvalidBlock.bytes());
 			blObj["blockHeader"] = writeBlockHeaderToJson(InvalidBlock.blockHeader());

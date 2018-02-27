@@ -536,10 +536,14 @@ dev::eth::BlockHeader constructHeader(
 	bytes const& _extraData)
 {
 	RLPStream rlpStream;
-	rlpStream.appendList(15);
+	rlpStream.appendList(19);
 
 	rlpStream << _parentHash << _sha3Uncles << _author << _stateRoot << _transactionsRoot << _receiptsRoot << _logBloom
-		<< _difficulty << _number << _gasLimit << _gasUsed << _timestamp << _extraData << h256{} << eth::Nonce{};
+		<< _difficulty << _number << _gasLimit << _gasUsed << _timestamp << _extraData 
+		
+		<< uint32_t()
+		//写入hardfork投票信息
+		<< uint32_t() << uint32_t() << byte() + 27 << u256()<< u256();
 
 	return BlockHeader(rlpStream.out(), HeaderData);
 }

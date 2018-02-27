@@ -445,9 +445,6 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		vector<TestBlock> validUncles = blockchain.syncUncles(block.uncles());
 		block.setUncles(validUncles);
 
-		if (blObjInput.count("blockHeaderPremine"))
-			overwriteBlockHeaderForTest(blObjInput.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname]);
-
 		cnote << "Mining block" <<  importBlockNumber << "for chain" << chainname << "at test " << testName;
 		//block.mine(blockchain);
 		//Éú²ú¿é
@@ -457,6 +454,10 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 			accountName = _chain.get_scheduled_producer(++slot);
 		auto pro = _chain.get_producer(accountName);
 		auto private_key = chainMap[chainname]->producer->get_private_key(pro.owner);
+
+		if (blObjInput.count("blockHeaderPremine"))
+			overwriteBlockHeaderForTest(blObjInput.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname], private_key);
+
 		block.dposMine(blockchain, _chain.get_slot_time(slot), pro.owner, private_key);
 		cnote << "Block mined with...";
 		cnote << "Transactions: " << block.transactionQueue().topTransactions(100).size();
@@ -466,7 +467,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		checkBlocks(block, alterBlock, testName);
 
 		if (blObjInput.count("blockHeader"))
-			overwriteBlockHeaderForTest(blObjInput.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname]);
+			overwriteBlockHeaderForTest(blObjInput.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname], private_key);
 
 		blObj["rlp"] = toHexPrefixed(alterBlock.bytes());
 		blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.blockHeader());
@@ -758,7 +759,7 @@ bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256
 }
 
 //TestFunction
-void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, ChainBranch const& _chainBranch)
+void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, ChainBranch const& _chainBranch, const fc::ecc::private_key& _private_key)
 {
 	//_blObj  - json object with header data
 	//_block  - which header would be overwritten
@@ -840,7 +841,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 	else
 	{
 		_block.setBlockHeader(tmp);
-		_block.updateNonce(_chainBranch.blockchain);
+		_block.updateNonce(_chainBranch.blockchain, _private_key);
 	}
 }
 
@@ -1177,11 +1178,11 @@ BOOST_AUTO_TEST_CASE(bcStateTests){}
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest){}
 BOOST_AUTO_TEST_CASE(bcGasPricerTest){}
 BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest){}
-BOOST_AUTO_TEST_CASE(bcUncleHeaderValidity){}
-BOOST_AUTO_TEST_CASE(bcUncleTest){}
+//BOOST_AUTO_TEST_CASE(bcUncleHeaderValidity){}
+//BOOST_AUTO_TEST_CASE(bcUncleTest){}
 BOOST_AUTO_TEST_CASE(bcValidBlockTest){}
 BOOST_AUTO_TEST_CASE(bcWalletTest){}
-BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest){}
+//BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest){}
 BOOST_AUTO_TEST_CASE(bcMultiChainTest){}
 BOOST_AUTO_TEST_CASE(bcForkStressTest){}
 BOOST_AUTO_TEST_CASE(bcForgedTest){}
