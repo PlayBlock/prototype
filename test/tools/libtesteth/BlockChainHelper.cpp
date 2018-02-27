@@ -27,6 +27,7 @@
 #include <libethashseal/GenesisInfo.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <test/tools/libtesteth/TestHelper.h>
+#include <libproducer/producer_plugin.hpp>
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
@@ -441,7 +442,32 @@ void TestBlock::updateNonce(TestBlockChain const& _bc)
 	else
 	{
 		//do not verify blockheader for validity here
-		dev::eth::mine(m_blockHeader, _bc.getInterface().sealEngine(), false);
+		std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(_bc.getInterface());
+		p->get_chain_controller().setStateDB(_bc.testGenesis().state().db());
+		_bc.interfaceUnsafe().setProducer(p);
+		chain::chain_controller & _chain(p->get_chain_controller());
+		//Éú²ú¿é
+		auto slot = 1;
+		auto accountName = _chain.get_scheduled_producer(slot);
+		while (accountName == AccountName())
+			accountName = _chain.get_scheduled_producer(++slot);
+		auto pro = _chain.get_producer(accountName);
+		auto private_key = p->get_private_key(pro.owner);
+
+		dev::eth::dposMine(m_blockHeader, private_key);
+	}
+
+	recalcBlockHeaderBytes();
+}
+
+void TestBlock::updateNonce(TestBlockChain const& _bc, const fc::ecc::private_key& block_signing_private_key)
+{
+	if (((BlockHeader)m_blockHeader).difficulty() == 0)
+		BOOST_TEST_MESSAGE("Trying to mine a block with 0 difficulty! " + TestOutputHelper::get().testName());
+	else
+	{
+		//do not verify blockheader for validity here
+		dev::eth::dposMine(m_blockHeader, block_signing_private_key);
 	}
 
 	recalcBlockHeaderBytes();

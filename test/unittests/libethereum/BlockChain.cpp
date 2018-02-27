@@ -26,6 +26,7 @@
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <libethereum/GenesisInfo.h>
 #include <libethereum/ChainParams.h>
+#include <libproducer/producer_plugin.hpp>
 
 using namespace std;
 using namespace dev;
@@ -229,12 +230,25 @@ BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 
 	TestBlock uncleBlock;
-	uncleBlock.mine(bc);
+
+	std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(bc.getInterface());
+	p->get_chain_controller().setStateDB(bc.testGenesis().state().db());
+	bc.interfaceUnsafe().setProducer(p);
+	chain::chain_controller & _chain(p->get_chain_controller());
+	//生产块
+	auto slot = 1;
+	auto accountName = _chain.get_scheduled_producer(slot);
+	while (accountName == AccountName())
+		accountName = _chain.get_scheduled_producer(++slot);
+	auto pro = _chain.get_producer(accountName);
+	auto private_key = p->get_private_key(pro.owner);
+	uncleBlock.dposMine(bc, _chain.get_slot_time(slot), pro.owner, private_key);
+	//uncleBlock.mine(bc);
 
 	BlockHeader uncleHeader = uncleBlock.blockHeader();
 	uncleHeader.setTimestamp(uncleHeader.timestamp() + 10000);
 	uncleBlock.setBlockHeader(uncleHeader);
-	uncleBlock.updateNonce(bc);
+	uncleBlock.updateNonce(bc, private_key);
 
 	BlockQueue uncleBlockQueue;
 	uncleBlockQueue.setChain(bc.getInterface());

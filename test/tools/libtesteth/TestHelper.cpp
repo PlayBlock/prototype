@@ -106,6 +106,21 @@ void dposMine(Block& s, BlockChain const& _bc, fc::time_point_sec when, const ty
 	s.sealBlock(header.out());
 }
 
+void dposMine(BlockHeader& _bi, const fc::ecc::private_key& block_signing_private_key)
+{
+	//s.currentBlock().setTimestamp(u256(when.sec_since_epoch()));
+
+	//s.commitToSeal(_bc, s.info().extraData());
+	//BlockHeader m_sealingInfo = s.info();
+
+	_bi.sign(block_signing_private_key);
+
+	//RLPStream header;
+	//_bi.streamRLP(header);
+
+	//s.sealBlock(header.out());
+}
+
 }
 
 namespace test

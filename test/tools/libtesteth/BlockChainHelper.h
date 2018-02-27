@@ -75,6 +75,7 @@ public:
 	void mine(TestBlockChain const& _bc);
 	void dposMine(TestBlockChain const& _bc, fc::time_point_sec when, const types::AccountName& producer, const fc::ecc::private_key& block_signing_private_key);
 	void updateNonce(TestBlockChain const& _bc);
+	void updateNonce(TestBlockChain const& _bc, const fc::ecc::private_key& block_signing_private_key);
 	void verify(TestBlockChain const& _bc) const;
 
 	void setBlockHeader(BlockHeader const& _header);
