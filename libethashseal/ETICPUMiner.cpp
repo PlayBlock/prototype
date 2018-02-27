@@ -44,7 +44,10 @@ void ETICPUMiner::workLoop()
 	uint64_t tryNonce = s_eng();
 
 	WorkPackage w = work();
-	auto target = w.target;
+	//auto target = w.target;
+
+	m_jumpHash.prepare_calc_pow(w.blockId, tryNonce, w.privateKey, w.target);
+
 
 	std::map<dev::h256, std::pair<dev::u256, dev::u256>> map;
 	std::unordered_map<dev::u256, dev::u256> mapChange;
@@ -55,17 +58,18 @@ void ETICPUMiner::workLoop()
 	op.nonce = tryNonce;
 	op.worker_pubkey = toPublic(w.privateKey);
 
-	//h256 boundary = w.boundary;
-	unsigned hashCount = 1;
-	for (; !shouldStop(); tryNonce++, hashCount++)
-	{
-		op.nonce = tryNonce;
-		op.create(w.privateKey, op.work_input());
-		// 计算结果小于等于target的时候退出，报告找到的这个解
-		if (op.work <= target && submitProof(ETIProofOfWork::Solution{ op }))
-			break;
+	unsigned checkCount = 1;
 
-		if (!(hashCount % 100))
+	for (; !shouldStop(); checkCount++) {
+		if (m_jumpHash.is_calc_finished()) {
+
+			m_jumpHash.query_pow_result(op.nonce, op.input, op.signature, op.work);
+			submitProof(ETIProofOfWork::Solution{ op });
+			m_jumpHash.validate_pow_result(op.worker_pubkey, op.block_id, op.nonce, op.input, op.work, op.signature, w.target);
+			break;
+		}
+
+		if (!(checkCount % 100))
 			accumulateHashes(100);
 	}
 }

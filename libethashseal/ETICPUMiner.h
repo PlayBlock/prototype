@@ -4,7 +4,7 @@
 #include <libethereum/GenericMiner.h>
 //#include "EthashAux.h"
 #include "ETIProofOfWork.h"
-
+#include "jumphash_sdk.h"
 
 namespace dev
 {
@@ -30,6 +30,7 @@ namespace dev
 		private:
 			void workLoop() override;
 			static unsigned s_numInstances;
+			jump_hash m_jumpHash;
 		};
 
 	}
