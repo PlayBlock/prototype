@@ -964,11 +964,12 @@ void BlockChainSync::onPeerAborting()
 bool BlockChainSync::invariants() const
 {
 	if (!isSyncing() && !m_headers.empty())
-		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got headers while not syncing"));
+		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got headers while not syncing")); 
 	if (!isSyncing() && !m_bodies.empty())
 		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got bodies while not syncing"));
-	if (isSyncing() && m_host.chain().number() > 0 && m_haveCommonHeader && m_lastImportedBlock == 0)
-		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Common block not found"));
+	//创世块可以看作含有Common
+	//if (isSyncing() && m_host.chain().number() > 0 && m_haveCommonHeader && m_lastImportedBlock == 0)
+	//	BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Common block not found"));
 	if (isSyncing() && !m_headers.empty() &&  m_lastImportedBlock >= m_headers.begin()->first)
 		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Header is too old"));
 	if (m_headerSyncPeers.empty() != m_downloadingHeaders.empty())
