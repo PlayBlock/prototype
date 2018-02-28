@@ -128,7 +128,8 @@ enum class ImportResult
 	Malformed,
 	OverbidGasPrice,
 	BadChain,
-	ZeroSignature
+	ZeroSignature,
+	Irreversible
 };
 
 struct ImportRequirements

@@ -131,6 +131,7 @@ class WriteBatchNoter: public ldb::WriteBatch::Handler
 };
 
 
+
 }
 
 namespace
@@ -205,6 +206,16 @@ BlockChain::~BlockChain()
 {
 	close();
 }
+
+bool BlockChain::isIrreversibleBlock(const uint32_t num) const
+{
+	if (num <= (*m_producer_plugin).get_chain_controller().get_last_irreversible_block())
+	{
+		return true;
+	}
+	return false;
+}
+
 
 BlockHeader const& BlockChain::genesis() const
 {

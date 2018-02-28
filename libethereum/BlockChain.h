@@ -328,6 +328,8 @@ public:
 
 	State& queryBlockStateCache(const h256& _h, OverlayDB const& _stateDB); 
 
+	bool isIrreversibleBlock(const uint32_t num) const;
+
 private:
 	static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
 

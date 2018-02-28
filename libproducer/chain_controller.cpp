@@ -132,6 +132,8 @@ void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 		//初始化hardforks相关全局变量
 		init_hardforks();
 
+		//初始化当前不可逆转块号
+		_last_irreversible_block_num =  get_dynamic_global_properties().last_irreversible_block_num;
 	}
 	catch (UnknownHardfork& e) {//若当前不在主分叉上
 		ctrace << "YOUR CLIENT'S VERSION IS TOO OLD!!!!!!";
@@ -719,6 +721,8 @@ void chain_controller::update_last_irreversible_block()
 		_db.modify(dpo, [&](dynamic_global_property_object& _dpo) {
 			_dpo.last_irreversible_block_num = new_last_irreversible_block_num;
 		});
+		//更新外部的不可逆转块号
+		_last_irreversible_block_num = new_last_irreversible_block_num;
 	}
 
 	// Trim fork_database and undo histories

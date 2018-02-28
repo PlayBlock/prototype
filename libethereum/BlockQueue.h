@@ -280,7 +280,7 @@ public:
 	bool unknownFull() const;
 	u256 difficulty() const;	// Total difficulty of queueud blocks
 	bool isActive() const;
-
+	 
 private:
 	struct UnverifiedBlock
 	{

@@ -113,6 +113,14 @@ Transactions TransactionQueue::topTransactions(unsigned _limit, h256Hash const& 
 	for (auto t = m_current.begin(); ret.size() < _limit && t != m_current.end(); ++t)
 		if (!_avoid.count(t->transaction.sha3()))
 			ret.push_back(t->transaction);
+
+	/*vector<u256> ns;
+	for (int i = 0; i < ret.size(); i++)
+	{
+		ns.push_back( ret[i].nonce());
+	}
+
+	ctrace << "topTransactions: " << ns;*/
 	return ret;
 }
 

@@ -699,6 +699,10 @@ void BlockChainSync::collectBlocks()
 			}
 			return;
 
+		case ImportResult::Irreversible: //遇到了未知的不可逆转块，说明某客户端与当前客户端链严重偏离
+			ctrace << "Unknown irreversible block founded!!! ignore and restart sync!"; 
+			restartSync();
+			return;
 		default:;
 		}
 	}
@@ -838,6 +842,11 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		syncPeer(_peer, true);
 		break;
 	}
+	case ImportResult::Irreversible: //遇到了未知的不可逆转块，说明某客户端与当前客户端链严重偏离
+		ctrace << "Unknown irreversible block founded!!! ignore and restart sync!";
+		_peer->addRating(-10000);
+		restartSync();
+		break;
 	default:;
 	}
 }

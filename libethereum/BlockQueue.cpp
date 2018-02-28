@@ -188,6 +188,8 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 
 	clog(BlockQueueTraceChannel) << "Queuing block" << h << "for import...";
 
+	
+
 	UpgradableGuard l(m_lock);
 
 	if (m_readySet.count(h) || m_drainingSet.count(h) || m_unknownSet.count(h) || m_knownBad.count(h))
@@ -217,6 +219,15 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 	{
 		cblockq << "Already known in chain.";
 		return ImportResult::AlreadyInChain;
+	}
+
+
+	{//未知的不可逆转块略过！！
+		BlockHeader tmpHeader(_block);
+		if (m_bc->isIrreversibleBlock(tmpHeader.number().convert_to<uint32_t>()))
+		{
+			return ImportResult::Irreversible;
+		}
 	}
 
 	UpgradeGuard ul(l);
@@ -563,6 +574,7 @@ bool BlockQueue::isActive() const
 				return false;
 	return true;
 }
+
 
 std::ostream& dev::eth::operator<< (std::ostream& os, QueueStatus const& obj)
 {
