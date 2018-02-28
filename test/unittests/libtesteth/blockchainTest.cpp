@@ -58,15 +58,19 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnMultipleNetworks)
 				"extraData" : "0x42",
 				"gasLimit" : "0x7fffffffffffffff",
 				"gasUsed" : "0",
-				"mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-				"nonce" : "0x0102030405060708",
 				"number" : "0",
 				"parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
 				"receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
 				"stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
 				"timestamp" : "0x03b6",
 				"transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-				"uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+				"uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                "runningVersion" : "0x00",
+		     	"hardforkVersion" : "0x00",
+			    "genesisTime" : "0x00",
+			    "v" : "0x1b",
+			    "r" : "0x00",
+			    "s" : "0x00"
 			},
 			"pre" : {
 				"0x1000000000000000000000000000000000000000" : {
@@ -123,15 +127,19 @@ BOOST_AUTO_TEST_CASE(fillingWithWrongExpectation)
 				"extraData" : "0x42",
 				"gasLimit" : "0x7fffffffffffffff",
 				"gasUsed" : "0",
-				"mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-				"nonce" : "0x0102030405060708",
 				"number" : "0",
 				"parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
 				"receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
 				"stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
 				"timestamp" : "0x03b6",
 				"transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-				"uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+				"uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                "runningVersion" : "0x00",
+		     	"hardforkVersion" : "0x00",
+			    "genesisTime" : "0x00",
+			    "v" : "0x1b",
+			    "r" : "0x00",
+			    "s" : "0x00"
 			},
 			"pre" : {
 				"0x1000000000000000000000000000000000000000" : {

@@ -1116,11 +1116,6 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 		BOOST_CHECK_MESSAGE(trField.rlp() == trRlp.rlp(), _testname + "transactions rlp do not match");
 	}
 
-	vector<TestBlock> const& unclesFromField = _blockFromFields.uncles();
-	vector<TestBlock> const& unclesFromRlp = _blockFromRlp.uncles();
-	BOOST_REQUIRE_EQUAL(unclesFromField.size(), unclesFromRlp.size());
-	for (size_t i = 0; i < unclesFromField.size(); ++i)
-		BOOST_CHECK_MESSAGE(unclesFromField.at(i).blockHeader() == unclesFromRlp.at(i).blockHeader(), _testname + "block header in rlp and in field do not match at uncles");
 }
 
 //namespaces
