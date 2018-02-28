@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	TestBlock block1;
 	TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
 	block1.addTransaction(transaction1);
-	block1.mine(blockchain);
+	block1.dposMine(blockchain);
 
 	BlockQueue blockQueue;
 	blockQueue.setChain(blockchain.getInterface());
@@ -58,43 +58,43 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	blockchain.addBlock(block1);
 	res = blockQueue.import(&block1.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::AlreadyInChain, "Simple block import to BlockQueue should have return AlreadyInChain");
-
+	/*
 	TestBlock block2;
-	block2.mine(blockchain);
+	block2.dposMine(blockchain);
 	BlockHeader block2Header = block2.blockHeader();
 	block2Header.setTimestamp(block2Header.timestamp() + 100);
 	block2.setBlockHeader(block2Header);
 	block2.updateNonce(blockchain);
 	res = blockQueue.import(&block2.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::FutureTimeKnown, "Simple block import to BlockQueue should have return FutureTimeKnown");
-
+	*/
 	TestBlock block3;
-	block3.mine(blockchain);
+	block3.dposMine(blockchain);
 	BlockHeader block3Header = block3.blockHeader();
 	block3Header.clear();
 	block3.setBlockHeader(block3Header);
 	res = blockQueue.import(&block3.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::Malformed, "Simple block import to BlockQueue should have return Malformed");
-
+	/*
 	TestBlock block4;
-	block4.mine(blockchain2);
+	block4.dposMine(blockchain2);
 	blockchain2.addBlock(block4);
 	TestBlock block5;
-	block5.mine(blockchain2);
+	block5.dposMine(blockchain2);
 	BlockHeader block5Header = block5.blockHeader();
 	block5Header.setTimestamp(block5Header.timestamp() + 100);
 	block5.setBlockHeader(block5Header);
 	block5.updateNonce(blockchain2);
 	res = blockQueue.import(&block5.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::FutureTimeUnknown, "Simple block import to BlockQueue should have return FutureTimeUnknown");
-
+	*/
 	blockQueue.clear();
 	TestBlock block3a;
-	block3a.mine(blockchain2);
+	block3a.dposMine(blockchain2);
 	blockchain2.addBlock(block3a);
 
 	TestBlock block3b;
-	block3b.mine(blockchain2);
+	block3b.dposMine(blockchain2);
 	BlockHeader block3bHeader = block3b.blockHeader();
 	block3bHeader.setTimestamp(block3bHeader.timestamp() - 40);
 	block3b.setBlockHeader(block3bHeader);

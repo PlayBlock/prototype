@@ -457,18 +457,14 @@ void TestBlock::updateNonce(TestBlockChain const& _bc)
 		BOOST_TEST_MESSAGE("Trying to mine a block with 0 difficulty! " + TestOutputHelper::get().testName());
 	else
 	{
-		//do not verify blockheader for validity here
-		std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(_bc.getInterface());
-		p->get_chain_controller().setStateDB(_bc.testGenesis().state().db());
-		_bc.interfaceUnsafe().setProducer(p);
-		chain::chain_controller & _chain(p->get_chain_controller());
+		chain::chain_controller & _chain(_bc.getProducerPlugin().get_chain_controller());
 		//Éú²ú¿é
 		auto slot = 1;
 		auto accountName = _chain.get_scheduled_producer(slot);
 		while (accountName == AccountName())
 			accountName = _chain.get_scheduled_producer(++slot);
 		auto pro = _chain.get_producer(accountName);
-		auto private_key = p->get_private_key(pro.owner);
+		auto private_key = _bc.getProducerPlugin().get_private_key(pro.owner);
 
 		dev::eth::dposMine(m_blockHeader, private_key);
 	}
