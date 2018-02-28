@@ -330,6 +330,22 @@ void TestBlock::dposMine(TestBlockChain const& _bc, fc::time_point_sec when, con
 		recalcBlockHeaderBytes();
 }
 
+void TestBlock::dposMine(TestBlockChain const& _bc)
+{
+	//std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(_bc.getInterface());
+	//_bc.getProducerPlugin().get_chain_controller().setStateDB(_bc.testGenesis().state().db());
+	//_bc.interfaceUnsafe().setProducer(&(_bc.getProducerPlugin()));
+	chain::chain_controller & _chain(_bc.getProducerPlugin().get_chain_controller());
+	//Éú²ú¿é
+	auto slot = 1;
+	auto accountName = _chain.get_scheduled_producer(slot);
+	while (accountName == AccountName())
+		accountName = _chain.get_scheduled_producer(++slot);
+	auto pro = _chain.get_producer(accountName);
+	auto private_key = _bc.getProducerPlugin().get_private_key(pro.owner);
+	dposMine(_bc, _chain.get_slot_time(slot), pro.owner, private_key);
+}
+
 void TestBlock::setBlockHeader(BlockHeader const& _header)
 {
 	m_blockHeader = _header;
@@ -586,6 +602,10 @@ void TestBlockChain::reset(TestBlock const& _genesisBlock)
 		assert(false);
 	}
 	m_lastBlock = m_genesisBlock = _genesisBlock;
+
+	m_producer_plugin = make_shared<producer_plugin>(getInterface());
+	m_producer_plugin->get_chain_controller().setStateDB(testGenesis().state().db());
+	m_blockChain->setProducer(m_producer_plugin);
 }
 
 bool TestBlockChain::addBlock(TestBlock const& _block)

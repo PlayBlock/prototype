@@ -231,17 +231,14 @@ BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 
 	TestBlock uncleBlock;
 
-	std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(bc.getInterface());
-	p->get_chain_controller().setStateDB(bc.testGenesis().state().db());
-	bc.interfaceUnsafe().setProducer(p);
-	chain::chain_controller & _chain(p->get_chain_controller());
+	chain::chain_controller & _chain(bc.getProducerPlugin().get_chain_controller());
 	//生产块
 	auto slot = 1;
 	auto accountName = _chain.get_scheduled_producer(slot);
 	while (accountName == AccountName())
 		accountName = _chain.get_scheduled_producer(++slot);
 	auto pro = _chain.get_producer(accountName);
-	auto private_key = p->get_private_key(pro.owner);
+	auto private_key = bc.getProducerPlugin().get_private_key(pro.owner);
 	uncleBlock.dposMine(bc, _chain.get_slot_time(slot), pro.owner, private_key);
 	//uncleBlock.mine(bc);
 
@@ -290,7 +287,7 @@ BOOST_AUTO_TEST_CASE(attemptImport)
 	TestTransaction tr = TestTransaction::defaultTransaction();
 	TestBlock block;
 	block.addTransaction(tr);
-	block.mine(bc);
+	block.dposMine(bc);
 
 	pair<ImportResult, ImportRoute> importAttempt;
 	BlockChain& bcRef = bc.interfaceUnsafe();
@@ -318,7 +315,7 @@ BOOST_AUTO_TEST_CASE(insert)
 	TestTransaction tr = TestTransaction::defaultTransaction();
 	TestBlock block;
 	block.addTransaction(tr);
-	block.mine(bc);
+	block.dposMine(bc);
 
 	BlockChain& bcRef = bc.interfaceUnsafe();
 
@@ -353,7 +350,7 @@ BOOST_AUTO_TEST_CASE(insertException)
 	TestTransaction tr = TestTransaction::defaultTransaction();
 	TestBlock block;
 	block.addTransaction(tr);
-	block.mine(bc);
+	block.dposMine(bc);
 	bc.addBlock(block);
 
 	auto is_critical = [](std::exception const& _e) { cnote << _e.what(); return true; };
@@ -371,7 +368,7 @@ BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
 		TestTransaction tr = TestTransaction::defaultTransaction();
 		TestBlock block;
 		block.addTransaction(tr);
-		block.mine(bc);
+		block.dposMine(bc);
 		bc.addBlock(block);
 	}
 
@@ -379,7 +376,7 @@ BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
 		TestTransaction tr = TestTransaction::defaultTransaction(1);
 		TestBlock block;
 		block.addTransaction(tr);
-		block.mine(bc);
+		block.dposMine(bc);
 		bc.addBlock(block);
 	}
 
@@ -387,7 +384,7 @@ BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
 		TestTransaction tr = TestTransaction::defaultTransaction(2);
 		TestBlock block;
 		block.addTransaction(tr);
-		block.mine(bc);
+		block.dposMine(bc);
 		bc.addBlock(block);
 	}
 

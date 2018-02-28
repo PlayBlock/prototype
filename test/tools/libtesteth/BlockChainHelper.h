@@ -74,6 +74,7 @@ public:
 	void noteDirty() { m_dirty = true; }
 	void mine(TestBlockChain const& _bc);
 	void dposMine(TestBlockChain const& _bc, fc::time_point_sec when, const types::AccountName& producer, const fc::ecc::private_key& block_signing_private_key);
+	void dposMine(TestBlockChain const& _bc);
 	void updateNonce(TestBlockChain const& _bc);
 	void updateNonce(TestBlockChain const& _bc, const fc::ecc::private_key& block_signing_private_key);
 	void verify(TestBlockChain const& _bc) const;
@@ -131,6 +132,7 @@ public:
 	BlockChain & getInterface() const { return *m_blockChain;}
 	BlockChain& interfaceUnsafe() const { return *m_blockChain;}
 	TestBlock const& testGenesis() const { return m_genesisBlock; }
+	producer_plugin & getProducerPlugin() const { return *m_producer_plugin; }
 
 	static json_spirit::mObject defaultGenesisBlockJson();
 	static TestBlock defaultGenesisBlock(u256 const& _gasLimit = DefaultBlockGasLimit);
@@ -138,7 +140,8 @@ public:
 	static AccountMap defaultAccountMap();
 	static eth::Network s_sealEngineNetwork;
 private:
-
+	
+	std::shared_ptr<producer_plugin> m_producer_plugin;
 	std::unique_ptr<BlockChain> m_blockChain;
 	TestBlock m_genesisBlock;
 	TestBlock m_lastBlock;
