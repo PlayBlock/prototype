@@ -67,12 +67,13 @@ EthereumPeer::~EthereumPeer()
 	abortSync();
 }
 
-void EthereumPeer::init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, shared_ptr<EthereumHostDataFace> _hostData, shared_ptr<EthereumPeerObserverFace> _observer)
+void EthereumPeer::init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, shared_ptr<EthereumHostDataFace> _hostData, shared_ptr<EthereumPeerObserverFace> _observer)
 {
 	m_hostData = _hostData;
 	m_observer = _observer;
 	m_hostProtocolVersion = _hostProtocolVersion;
-	requestStatus(_hostNetworkId, _chainTotalDifficulty, _chainCurrentHash, _chainGenesisHash);
+	m_lastIrrBlock = _lastIrrBlock;
+	requestStatus(_hostNetworkId, _chainTotalDifficulty, _chainCurrentHash, _chainGenesisHash,_lastIrrBlock);
 }
 
 bool EthereumPeer::isRude() const
@@ -123,19 +124,21 @@ void EthereumPeer::setIdle()
 	setAsking(Asking::Nothing);
 }
 
-void EthereumPeer::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash)
+void EthereumPeer::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock)
 {
 	assert(m_asking == Asking::Nothing);
 	setAsking(Asking::State);
 	m_requireTransactions = true;
 	RLPStream s;
 	bool latest = m_peerCapabilityVersion == m_hostProtocolVersion;
-	prep(s, StatusPacket, 5)
+	prep(s, StatusPacket, 6)
 					<< (latest ? m_hostProtocolVersion : EthereumHost::c_oldProtocolVersion)
 					<< _hostNetworkId
 					<< _chainTotalDifficulty
 					<< _chainCurrentHash
-					<< _chainGenesisHash;
+					<< _chainGenesisHash
+					<< _lastIrrBlock
+					;
 	sealAndSend(s);
 }
 
@@ -254,10 +257,13 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		m_totalDifficulty = _r[2].toInt<u256>();
 		m_latestHash = _r[3].toHash<h256>();
 		m_genesisHash = _r[4].toHash<h256>();
+		m_lastIrrBlock = _r[5].toInt<u256>();
+
 		if (m_peerCapabilityVersion == m_hostProtocolVersion)
 			m_protocolVersion = m_hostProtocolVersion;
 
 		clog(NetMessageSummary) << "Status:" << m_protocolVersion << "/" << m_networkId << "/" << m_genesisHash << ", TD:" << m_totalDifficulty << "=" << m_latestHash;
+		clog(NetMessageSummary) << "LastIrrBlock:" << m_lastIrrBlock;
 		setIdle();
 		observer->onPeerStatus(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())));
 		break;

@@ -101,7 +101,7 @@ public:
 	/// How many message types do we have?
 	static unsigned messageCount() { return PacketCount; }
 
-	void init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, std::shared_ptr<EthereumHostDataFace> _hostData, std::shared_ptr<EthereumPeerObserverFace> _observer);
+	void init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, std::shared_ptr<EthereumHostDataFace> _hostData, std::shared_ptr<EthereumPeerObserverFace> _observer);
 
 	p2p::NodeID id() const { return session()->id(); }
 
@@ -130,11 +130,13 @@ public:
 	/// Abort the sync operation.
 	void abortSync();
 
-	bool isLlegal() const {
-		return m_isllegal;
-	}
+	bool isLlegal() const { return m_isllegal; }
 
 	void setLlegal(bool _isLlegal) { m_isllegal = _isLlegal; }
+
+	uint32_t getLastIrrBlock() const { return m_lastIrrBlock.convert_to<uint32_t>(); }
+
+	void setLastIrrBlock(uint32_t _lastIrrBlock) { m_lastIrrBlock = _lastIrrBlock; }
 
 
 	void releasePeerKnownBlockList();
@@ -151,7 +153,7 @@ private:
 	virtual bool interpret(unsigned _id, RLP const& _r);
 
 	/// Request status. Called from constructor
-	void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash);
+	void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock);
 
 	/// Clear all known transactions.
 	void clearKnownTransactions() { std::lock_guard<std::mutex> l(x_knownTransactions); m_knownTransactions.clear(); }
@@ -191,7 +193,7 @@ private:
 	h256 m_latestHash;						///< Peer's latest block's hash that we know about or default null value if no need to sync.
 	u256 m_totalDifficulty;					///< Peer's latest block's total difficulty.
 	h256 m_genesisHash;						///< Peer's genesis hash
-
+	u256 m_lastIrrBlock;					///< Peer的最新不可逆转块
 	u256 const m_peerCapabilityVersion;			///< Protocol version this peer supports received as capability
 	/// Have we received a GetTransactions packet that we haven't yet answered?
 	bool m_requireTransactions = false;

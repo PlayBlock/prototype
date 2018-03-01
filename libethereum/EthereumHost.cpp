@@ -843,6 +843,7 @@ shared_ptr<Capability> EthereumHost::newPeerCapability(shared_ptr<SessionFace> c
 		m_chain.details().totalDifficulty,
 		m_chain.currentHash(),
 		m_chain.genesisHash(),
+		m_chain.getIrreversibleBlock(),
 		m_hostData,
 		m_peerObserver
 	);

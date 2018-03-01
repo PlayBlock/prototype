@@ -110,7 +110,7 @@ public:
 		offset(UserPacket),
 		peer(session, &hostCap, offset, { "eth", 0 })
 	{
-		peer.init(63, 2, 0, h256(0), h256(0), std::shared_ptr<EthereumHostDataFace>(), observer);
+		peer.init(63, 2, 0, h256(0), h256(0), u256(0),std::shared_ptr<EthereumHostDataFace>(), observer);
 	}
 
 	MockHostCapability hostCap;

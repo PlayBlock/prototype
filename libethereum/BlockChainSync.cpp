@@ -230,6 +230,12 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 	{ 
 		_peer->setLlegal(true); 
 
+		if (_peer->getLastIrrBlock() < m_lastIrreversibleBlock) 
+		{
+			ctrace << "peer:" << _peer->id() << "|" << _peer->getLastIrrBlock()<<" < " << "m_lastIrreversibleBlock = " << m_lastIrreversibleBlock;
+			return;
+		}
+
 		auto status = host().bq().blockStatus(_peer->m_latestHash);
 		if (status == QueueStatus::Unknown) 
 		{//当peer的laststHash为未知时，采取向其request块头
