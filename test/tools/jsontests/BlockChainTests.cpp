@@ -184,24 +184,15 @@ fs::path TransitionTestsSuite::suiteFillerFolder() const {
 ChainBranch::ChainBranch(TestBlock const& _genesis): blockchain(_genesis)
 {
 	importedBlocks.push_back(_genesis);
-	producer = make_shared<class producer_plugin>(blockchain.getInterface());
-	producer->get_chain_controller().setStateDB(blockchain.testGenesis().state().db());
-	blockchain.interfaceUnsafe().setProducer(producer);
 }
 
 ChainBranch::ChainBranch(ChainBranch *_default) : blockchain(_default->importedBlocks.at(0))
 {
 	importedBlocks = _default->importedBlocks;
-	producer = make_shared<class producer_plugin>(blockchain.getInterface());
-	producer->get_chain_controller().setStateDB(blockchain.testGenesis().state().db());
-	blockchain.interfaceUnsafe().setProducer(producer);
 }
 void ChainBranch::reset()
 {
 	blockchain.reset(importedBlocks.at(0));
-	producer = make_shared<class producer_plugin>(blockchain.getInterface());
-	producer->get_chain_controller().setStateDB(blockchain.testGenesis().state().db());
-	blockchain.interfaceUnsafe().setProducer(producer);
 }
 
 void ChainBranch::restoreFromHistory(size_t _importBlockNumber)
@@ -278,7 +269,7 @@ ETIProofOfWork::Solution make_pow_producer(ChainBranch* _chainName)
 	uint64_t tryNonce = s_eng();
 	uint64_t start = tryNonce;
 	uint64_t nonce = start;// +thread_num;
-	auto target = _chainName->producer->get_chain_controller().get_pow_target();
+	auto target = _chainName->blockchain.getProducerPluginPtr()->get_chain_controller().get_pow_target();
 
 	ETIProofOfWork::WorkPackage newWork{ bh.hash(), priviteKey, workerAccount, nonce, target };
 
@@ -301,11 +292,6 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 
 	TestBlockChain testChain(genesisBlock);
 	assert(testChain.getInterface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
-
-	//创建生产者
-	std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(testChain.getInterface());
-	p->get_chain_controller().setStateDB(testChain.testGenesis().state().db());
-	testChain.interfaceUnsafe().setProducer(p);
 
 	output["genesisBlockHeader"] = writeBlockHeaderToJson(genesisBlock.blockHeader());
 	output["genesisRLP"] = toHexPrefixed(genesisBlock.bytes());
@@ -375,7 +361,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		TestBlock block;
 		TestBlockChain& blockchain = chainMap[chainname]->blockchain;
 		vector<TestBlock>& importedBlocks = chainMap[chainname]->importedBlocks;
-		chain::chain_controller & _chain(chainMap[chainname]->producer->get_chain_controller());
+		chain::chain_controller & _chain(blockchain.getProducerPluginPtr()->get_chain_controller());
 		
 		//Import Transactions
 		if (blObjInput.count("transactions"))
@@ -453,7 +439,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		while(accountName == AccountName())
 			accountName = _chain.get_scheduled_producer(++slot);
 		auto pro = _chain.get_producer(accountName);
-		auto private_key = chainMap[chainname]->producer->get_private_key(pro.owner);
+		auto private_key = blockchain.getProducerPluginPtr()->get_private_key(pro.owner);
 
 		if (blObjInput.count("blockHeaderPremine"))
 			overwriteBlockHeaderForTest(blObjInput.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname], private_key);
@@ -571,16 +557,8 @@ void testBCTest(json_spirit::mObject const& _o)
 	TestBlock genesisBlock(_o.at("genesisBlockHeader").get_obj(), _o.at("pre").get_obj());
 	TestBlockChain blockchain(genesisBlock);
 
-
-	std::shared_ptr<class producer_plugin> producer = make_shared<class producer_plugin>(blockchain.getInterface());
-	producer->get_chain_controller().setStateDB(blockchain.testGenesis().state().db());
-	blockchain.interfaceUnsafe().setProducer(producer);
-
 	TestBlockChain testChain(genesisBlock);
 	assert(testChain.getInterface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
-	std::shared_ptr<class producer_plugin> p = make_shared<class producer_plugin>(testChain.getInterface());
-	p->get_chain_controller().setStateDB(testChain.testGenesis().state().db());
-	testChain.interfaceUnsafe().setProducer(p);
 
 	if (_o.count("genesisRLP") > 0)
 	{
