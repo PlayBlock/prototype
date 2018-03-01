@@ -133,7 +133,7 @@ public:
 	BlockChain& interfaceUnsafe() const { return *m_blockChain;}
 	TestBlock const& testGenesis() const { return m_genesisBlock; }
 	producer_plugin & getProducerPlugin() const { return *m_producer_plugin; }
-
+	std::shared_ptr<producer_plugin> getProducerPluginPtr() const { return m_producer_plugin; }
 	static json_spirit::mObject defaultGenesisBlockJson();
 	static TestBlock defaultGenesisBlock(u256 const& _gasLimit = DefaultBlockGasLimit);
 	static TestBlock defaultDposGenesisBlock(u256 const& _gasLimit = DefaultBlockGasLimit);

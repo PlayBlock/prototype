@@ -11,7 +11,7 @@ namespace dev {
 
 		DposTestClient::DposTestClient() :
 			m_bc(TestBlockChain::defaultDposGenesisBlock()),
-			_producer_plugin(make_shared<class producer_plugin>(m_bc.getInterface())),
+			_producer_plugin(m_bc.getProducerPluginPtr()),
 			_chain(_producer_plugin->get_chain_controller())
 		{
 
