@@ -114,9 +114,9 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 	m_bqReady = m_bq.onReady([=](){ this->onBlockQueueReady(); });			// TODO: should read m_bq->onReady(thisThread, syncBlockQueue);
 	m_bq.setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
 	bc().setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
-	bc().setOnBlockImport([=](BlockHeader const& _info){
+	bc().setOnBlockImport([=](BlockHeader const& _info, const unsigned _last_irr_block){
 		if (auto h = m_host.lock())
-			h->onBlockImported(_info);
+			h->onBlockImported(_info, _last_irr_block);
 	});
 
 	if (_forceAction == WithExisting::Rescue)
@@ -135,6 +135,13 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 	m_producer_plugin->get_chain_controller().init_allvotes(bc().info());
 	m_producer_plugin->setClient(*this);
 	m_bc.setProducer(m_producer_plugin);
+
+	//此处用来初始化同步逻辑类的不可逆转块
+	if (auto h = m_host.lock()) 
+	{
+		h->initSync(m_producer_plugin->get_chain_controller().get_last_irreversible_block());
+	}
+
 
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
@@ -794,13 +801,17 @@ void Client::generate_block(
 	RLPStream blockHeaderRLP;
 	m_sealingInfo.streamRLP(blockHeaderRLP);
 
+	uint32_t lastIrrBlock = bc().getIrreversibleBlock();
+
 	if (!submitSealed(blockHeaderRLP.out()))
 	{
 		ctrace << "submitSealed error!";
 	} else {//由于块为自产，所以可放心广播出去
 
 		if (auto h = m_host.lock())
-			h->pushEarlyBlock(m_sealingInfo.hash(), m_working.blockData());
+		{
+			h->pushEarlyBlock(m_sealingInfo.hash(), m_working.blockData(), lastIrrBlock);
+		}
 
 	}
 	m_lastProducedNumber = m_working.info().number();

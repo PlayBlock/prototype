@@ -51,6 +51,10 @@ class BlockChainSync final: public HasInvariants
 public:
 	BlockChainSync(EthereumHost& _host);
 	~BlockChainSync();
+
+	//目前用来初始化最新不可逆转块号
+	void init(const uint32_t _last_irr_block);
+
 	void abortSync(); ///< Abort all sync activity
 
 	/// @returns true is Sync is in progress
@@ -81,7 +85,7 @@ public:
 	void onPeerAborting();
 
 	/// Called when a blockchain has imported a new block onto the DB
-	void onBlockImported(BlockHeader const& _info);
+	void onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block);
 
 	/// @returns Synchonization status
 	SyncStatus status() const;
@@ -156,6 +160,7 @@ private:
 	unsigned m_lastImportedBlock = 0; 			///< Last imported block number
 	h256 m_lastImportedBlockHash;				///< Last imported block hash
 	u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
+	unsigned m_lastIrreversibleBlock = 0;				///<当前链最新不可逆转块
 
 private:
 	static char const* const s_stateNames[static_cast<int>(SyncState::Size)];

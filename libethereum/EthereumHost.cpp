@@ -603,17 +603,17 @@ void EthereumHost::blockCheat(bytes blockBytes, u256 difficult)
 }
 
 
-void EthereumHost::pushEarlyBlock(const h256& _hash, const bytes& _block)
+void EthereumHost::pushEarlyBlock(const h256& _hash, const bytes& _block, const u256& _last_irr_block)
 {
 	Guard l(x_earlyBoardcast);
-	m_earlyBlockQueue.push_back(std::make_pair(_hash,_block));
+	m_earlyBlockQueue.push_back(std::make_pair(_hash,std::make_pair(_block,_last_irr_block)));
 }
 
 
-void dev::eth::EthereumHost::pushDeliverBlock(const h256& _hash, const bytes& _block)
+void dev::eth::EthereumHost::pushDeliverBlock(const h256& _hash, const bytes& _block, const u256& _last_irr_block)
 {
 	Guard l(x_deliverBoardcast);
-	m_deliverBlockQueue.push_back(std::make_pair(_hash, _block));
+	m_deliverBlockQueue.push_back(std::make_pair(_hash, std::make_pair(_block, _last_irr_block)));
 }
 
 void dev::eth::EthereumHost::boardCastEarlyBlocks()
@@ -627,6 +627,8 @@ void dev::eth::EthereumHost::boardCastEarlyBlocks()
 	{
 		
 		auto h = m_earlyBlockQueue[i].first;
+		auto lastIrrBlock = m_earlyBlockQueue[i].second.second;
+
 		auto peers = randomSelection(25, [&](EthereumPeer* p) {
 			DEV_GUARDED(p->x_knownBlocks)
 				return !p->m_knownBlocks.count(h);
@@ -637,7 +639,7 @@ void dev::eth::EthereumHost::boardCastEarlyBlocks()
 		for (shared_ptr<EthereumPeer> const& p : get<0>(peers))
 		{
 			RLPStream ts;
-			p->prep(ts, NewBlockPacket, 2).appendRaw(m_earlyBlockQueue[i].second, 1).append(Invalid256); 
+			p->prep(ts, NewBlockPacket, 2).appendRaw(m_earlyBlockQueue[i].second.first, 1).append(lastIrrBlock);
 			p->sealAndSend(ts);
 			p->releasePeerKnownBlockList(); 
 		}
@@ -645,7 +647,7 @@ void dev::eth::EthereumHost::boardCastEarlyBlocks()
 		for (shared_ptr<EthereumPeer> const& p : get<1>(peers))
 		{
 			RLPStream ts;
-			p->prep(ts, NewBlockPacket, 2).appendRaw(m_earlyBlockQueue[i].second, 1).append(Invalid256); 
+			p->prep(ts, NewBlockPacket, 2).appendRaw(m_earlyBlockQueue[i].second.first, 1).append(lastIrrBlock);
 			p->sealAndSend(ts);
 			p->releasePeerKnownBlockList();
 		}
@@ -661,11 +663,13 @@ void dev::eth::EthereumHost::boardCastDeliverBlocks()
 	Guard l(x_deliverBoardcast);
 
 	if (m_deliverBlockQueue.size() == 0)
-		return;
+		return; 
 
 	for (int i = 0; i < m_deliverBlockQueue.size(); i++)
 	{
 		auto h = m_deliverBlockQueue[i].first;
+		auto lastIrrBlock = m_deliverBlockQueue[i].second.second;
+
 		auto peers = randomSelection(25, [&](EthereumPeer* p) {
 			DEV_GUARDED(p->x_knownBlocks)
 				return !p->m_knownBlocks.count(h);
@@ -676,7 +680,7 @@ void dev::eth::EthereumHost::boardCastDeliverBlocks()
 		for (shared_ptr<EthereumPeer> const& p : get<0>(peers))
 		{
 			RLPStream ts;
-			p->prep(ts, NewBlockPacket, 2).appendRaw(m_deliverBlockQueue[i].second, 1).append(Invalid256);
+			p->prep(ts, NewBlockPacket, 2).appendRaw(m_deliverBlockQueue[i].second.first, 1).append(lastIrrBlock);
 			p->sealAndSend(ts);
 			
 			ctrace << "deliver block "<< h << " =>" << p->id();
@@ -688,7 +692,7 @@ void dev::eth::EthereumHost::boardCastDeliverBlocks()
 		for (shared_ptr<EthereumPeer> const& p : get<1>(peers))
 		{
 			RLPStream ts;
-			p->prep(ts, NewBlockPacket, 2).appendRaw(m_deliverBlockQueue[i].second, 1).append(Invalid256);
+			p->prep(ts, NewBlockPacket, 2).appendRaw(m_deliverBlockQueue[i].second.first, 1).append(lastIrrBlock);
 			p->sealAndSend(ts); 
 
 			ctrace << "deliver block " << h << " =>" << p->id();

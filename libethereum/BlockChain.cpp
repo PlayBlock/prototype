@@ -216,6 +216,12 @@ bool BlockChain::isIrreversibleBlock(const uint32_t num) const
 	return false;
 }
 
+const uint32_t BlockChain::getIrreversibleBlock() const
+{
+	return (*m_producer_plugin).get_chain_controller().get_last_irreversible_block();
+}
+
+
 
 BlockHeader const& BlockChain::genesis() const
 {
@@ -1149,7 +1155,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 		noteCanonChanged();
 
 	if (isImportedAndBest && m_onBlockImport)
-		m_onBlockImport(_block.info);
+		m_onBlockImport(_block.info, m_producer_plugin->get_chain_controller().get_last_irreversible_block());
 
 	h256s fresh;
 	h256s dead;

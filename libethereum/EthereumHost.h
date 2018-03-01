@@ -78,9 +78,13 @@ public:
 	bool isSyncing() const;
 	bool isBanned(p2p::NodeID const& _id) const { return !!m_banned.count(_id); }
 
+	//用于初始化链同步逻辑的最新不可逆转块
+	void initSync(const uint32_t _last_irr_block) { m_sync->init(_last_irr_block); }
+
+
 	void noteNewTransactions() { m_newTransactions = true; }
 	void noteNewBlocks() { m_newBlocks = true; }
-	void onBlockImported(BlockHeader const& _info) { m_sync->onBlockImported(_info); }
+	void onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block) { m_sync->onBlockImported(_info, _last_irr_block); }
 
 	BlockChain const& chain() const { return m_chain; }
 	OverlayDB const& db() const { return m_db; }
@@ -146,17 +150,17 @@ private:
 	//块生成提前广播机制，由于自己产的块，所以无需等到
 	//正式导入即可广播
 	mutable Mutex x_earlyBoardcast;
-	std::vector<std::pair<h256,bytes>> m_earlyBlockQueue;
+	std::vector<std::pair<h256,std::pair<bytes,u256>>> m_earlyBlockQueue;
 	h256 m_latestEarlyBlockSent;
 	
 	mutable Mutex x_deliverBoardcast;
-	std::vector<std::pair<h256, bytes>> m_deliverBlockQueue;
+	std::vector<std::pair<h256, std::pair<bytes, u256>>> m_deliverBlockQueue;
 
 public:
 
-	void pushEarlyBlock(const h256& _hash ,const bytes& _block);
+	void pushEarlyBlock(const h256& _hash ,const bytes& _block, const u256& _last_irr_block);
 
-	void pushDeliverBlock(const h256& _hash, const bytes& _block);
+	void pushDeliverBlock(const h256& _hash, const bytes& _block, const u256& _last_irr_block);
 
 	void boardCastEarlyBlocks(); 
 
