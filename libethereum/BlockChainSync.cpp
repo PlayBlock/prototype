@@ -784,6 +784,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		ctrace << "lastIrrBlock > m_lastIrreversibleBlock" << lastIrrBlock << " > " << m_lastIrreversibleBlock;
 		ctrace << "back2LastIrrBlockAndResync";
 		back2LastIrrBlockAndResync();
+		_peer->m_latestHash = m_lastImportedBlockHash;
 		_peer->addRating(10000);
 		syncPeer(_peer, true);
 		return;
