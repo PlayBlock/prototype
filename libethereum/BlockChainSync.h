@@ -109,6 +109,8 @@ private:
 	void clearPeerDownload();
 	void collectBlocks();  
 
+	void back2LastIrrBlockAndResync();
+
 private:
 	struct Header
 	{

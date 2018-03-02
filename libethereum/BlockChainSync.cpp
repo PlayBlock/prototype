@@ -775,6 +775,19 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		syncPeer(_peer, true);
 		return;
 	}
+	else if (
+		blockNumber < m_lastImportedBlock && 
+		lastIrrBlock > m_lastIrreversibleBlock
+		) 
+	{//发现当前链不在正确的不可逆链上前进
+		ctrace << "blockNumber < m_lastImportedBlock" << blockNumber << " < " << m_lastImportedBlock;
+		ctrace << "lastIrrBlock > m_lastIrreversibleBlock" << lastIrrBlock << " > " << m_lastIrreversibleBlock;
+		ctrace << "back2LastIrrBlockAndResync";
+		back2LastIrrBlockAndResync();
+		_peer->addRating(10000);
+		syncPeer(_peer, true);
+		return;
+	}
 
 	ctrace << "onPeerNewBlock ==>" << h;
 
@@ -881,6 +894,22 @@ void BlockChainSync::resetSync()
 	m_syncingTotalDifficulty = 0;
 	m_state = SyncState::NotSynced;
 }
+
+
+
+void BlockChainSync::back2LastIrrBlockAndResync()
+{
+	RecursiveGuard l(x_sync);
+	resetSync();
+	m_highestBlock = 0; 
+	m_haveCommonHeader = false;
+	host().bq().clear();
+	//回退到不可逆节点
+	m_startingBlock = m_lastIrreversibleBlock;
+	m_lastImportedBlock = m_startingBlock;
+	m_lastImportedBlockHash = host().chain().numberHash(m_lastImportedBlock);
+}
+
 
 void BlockChainSync::restartSync()
 {
