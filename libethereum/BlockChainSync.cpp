@@ -783,10 +783,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		ctrace << "blockNumber < m_lastImportedBlock" << blockNumber << " < " << m_lastImportedBlock;
 		ctrace << "lastIrrBlock > m_lastIrreversibleBlock" << lastIrrBlock << " > " << m_lastIrreversibleBlock;
 		ctrace << "back2LastIrrBlockAndResync";
-		back2LastIrrBlockAndResync();
-		_peer->m_latestHash = m_lastImportedBlockHash;
-		_peer->addRating(10000);
-		syncPeer(_peer, true);
+		back2LastIrrBlockAndResync(); 
 		return;
 	}
 
@@ -904,11 +901,7 @@ void BlockChainSync::back2LastIrrBlockAndResync()
 	resetSync();
 	m_highestBlock = 0; 
 	m_haveCommonHeader = false;
-	host().bq().clear();
-	//回退到不可逆节点
-	m_startingBlock = m_lastIrreversibleBlock;
-	m_lastImportedBlock = m_startingBlock;
-	m_lastImportedBlockHash = host().chain().numberHash(m_lastImportedBlock);
+	host().bq().clear(); 
 }
 
 
