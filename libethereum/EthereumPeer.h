@@ -134,7 +134,7 @@ public:
 
 	void setLlegal(bool _isLlegal) { m_isllegal = _isLlegal; }
 
-	uint32_t getLastIrrBlock() const { return m_lastIrrBlock.convert_to<uint32_t>(); }
+	uint32_t getLastIrrBlock() const { return m_lastIrrBlock; }
 
 	void setLastIrrBlock(uint32_t _lastIrrBlock) { m_lastIrrBlock = _lastIrrBlock; }
 
@@ -193,7 +193,7 @@ private:
 	h256 m_latestHash;						///< Peer's latest block's hash that we know about or default null value if no need to sync.
 	u256 m_totalDifficulty;					///< Peer's latest block's total difficulty.
 	h256 m_genesisHash;						///< Peer's genesis hash
-	u256 m_lastIrrBlock;					///< Peer的最新不可逆转块
+	uint32_t m_lastIrrBlock;					///< Peer的最新不可逆转块
 	u256 const m_peerCapabilityVersion;			///< Protocol version this peer supports received as capability
 	/// Have we received a GetTransactions packet that we haven't yet answered?
 	bool m_requireTransactions = false;
@@ -209,6 +209,7 @@ private:
 	std::weak_ptr<EthereumHostDataFace> m_hostData;
 
 	bool m_isllegal = true;	//Peer是否为合法
+	 
 };
 
 }

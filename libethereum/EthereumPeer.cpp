@@ -72,7 +72,7 @@ void EthereumPeer::init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256
 	m_hostData = _hostData;
 	m_observer = _observer;
 	m_hostProtocolVersion = _hostProtocolVersion;
-	m_lastIrrBlock = _lastIrrBlock;
+	m_lastIrrBlock = _lastIrrBlock.convert_to<uint32_t>();
 	requestStatus(_hostNetworkId, _chainTotalDifficulty, _chainCurrentHash, _chainGenesisHash,_lastIrrBlock);
 }
 
@@ -257,7 +257,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		m_totalDifficulty = _r[2].toInt<u256>();
 		m_latestHash = _r[3].toHash<h256>();
 		m_genesisHash = _r[4].toHash<h256>();
-		m_lastIrrBlock = _r[5].toInt<u256>();
+		m_lastIrrBlock = _r[5].toInt<u256>().convert_to<uint32_t>();
 
 		if (m_peerCapabilityVersion == m_hostProtocolVersion)
 			m_protocolVersion = m_hostProtocolVersion;

@@ -110,7 +110,7 @@ private:
 	void collectBlocks();  
 
 	void back2LastIrrBlockAndResync();
-
+	void keeySyncAlive();
 private:
 	struct Header
 	{
