@@ -704,7 +704,7 @@ void dev::eth::EthereumHost::boardCastDeliverBlocks()
 }
 
 void EthereumHost::maintainBlocks(h256 const& _currentHash)
-{
+{ 
 	// Send any new blocks.
 	auto detailsFrom = m_chain.details(m_latestBlockSent);
 	auto detailsTo = m_chain.details(_currentHash);
@@ -735,7 +735,7 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 				for (auto const& b : blocks)
 				{
 					RLPStream ts;
-					p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(m_chain.details(b).totalDifficulty); 
+					p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(u256(m_chain.getIrreversibleBlock())); 
 					p->sealAndSend(ts); 
 					p->releasePeerKnownBlockList();
 				}
@@ -746,7 +746,7 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 				for (auto const& b : blocks)
 				{
 					RLPStream ts;
-					p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(m_chain.details(b).totalDifficulty); 
+					p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(u256(m_chain.getIrreversibleBlock()));
 					p->sealAndSend(ts);
 					p->releasePeerKnownBlockList();
 				}
