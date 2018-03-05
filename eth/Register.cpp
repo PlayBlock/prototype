@@ -956,15 +956,15 @@ DEFINE_INTRINSIC_FUNCTION2(env, WAVMAssert, WAVMAssert, none, i32, test, i32, ms
 		BOOST_THROW_EXCEPTION(WASMAssertFailed());
 	}
 }
-
+//´ýÉ¾³ý
 DEFINE_INTRINSIC_FUNCTION1(env, test1, test1, none, i32, a) {
 	std::cout << "test1 " << "a: " << a  << std::endl;
 }
-
+//´ýÉ¾³ý
 DEFINE_INTRINSIC_FUNCTION2(env, test2, test2, none, i32, a, i32, b) {
 	std::cout << "test2 " << "a: " << a << " b:" << b << std::endl;
 }
-
+//´ýÉ¾³ý
 DEFINE_INTRINSIC_FUNCTION1(env, malloc, malloc, i32, i32, size) {
 	if (size < 0)
 	{
@@ -980,7 +980,29 @@ DEFINE_INTRINSIC_FUNCTION1(env, malloc, malloc, i32, i32, size) {
 	}
 	return old_end;
 }
-
+//´ýÉ¾³ý
 DEFINE_INTRINSIC_FUNCTION1(env, free, free, none, i32, ptr) {
 	std::cout << "####free#####" << std::endl;
+}
+
+DEFINE_INTRINSIC_FUNCTION2(env, WAVMReturn, WAVMReturn, none, i32, sourcePtr, i32, length)
+{
+	WASM_VM::AddUsedGas(sstoreSetGas); //gasÖµÓÐ´ýÈ·¶¨
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	byte* str = memoryArrayPtr<byte>(mem, sourcePtr, length);
+	bytesConstRef bcr(str, length);
+	bytes ss = bcr.toBytes();
+	instance->getReturn() = ss;
+	//const char* str = &memoryRef<const char>(mem, charptr);
+	//std::string str_res(str, strnlen(str, instance->current_state->mem_end - charptr));
+	//std::cerr << str_res;
+	//struct R
+	//{
+	//	int len;
+	//	char* data;
+	//};
+	//char* r = memoryArrayPtr<char>(mem, sourcePtr, length);
+	//ctrace << "WAVMReturn";
 }

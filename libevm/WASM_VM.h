@@ -58,6 +58,7 @@ namespace eth
 		Runtime::MemoryInstance* getMemory() { return current_memory; }
 		ExtVMFace* getExt() { return current_ext; }
 		bytes getParameter() { return current_parameter; }
+		bytes& getReturn() { return current_return; }
 		void ResetTime() {
 			execute_time.restart();
 		}
@@ -83,6 +84,7 @@ namespace eth
 		void LoadModuleState(Address const& _address, const std::string& _string);
 		ExtVMFace* current_ext;
 		bytes current_parameter;
+		bytes current_return;
 		//static int mem_end;
 		Timer execute_time;
 	};
