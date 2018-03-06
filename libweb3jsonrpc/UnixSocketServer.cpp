@@ -77,6 +77,10 @@ bool UnixDomainSocketServer::StartListening()
 			return false;
 
 		m_socket = socket(PF_UNIX, SOCK_STREAM, 0);
+		struct timeval timeout = { 1,0 };//1s
+		setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
+		setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+
 		memset(&(m_address), 0, sizeof(sockaddr_un));
 		m_address.sun_family = AF_UNIX;
 #ifdef __APPLE__
