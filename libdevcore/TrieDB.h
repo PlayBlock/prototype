@@ -105,6 +105,49 @@ public:
 	bool contains(bytes const& _key) const { return contains(&_key); }
 	bool contains(bytesConstRef _key) const { return !at(_key).empty(); }
 
+	void insertAtBranch(bytesConstRef _key, bytesConstRef _value);
+	void insertAtBranchByIterator(bytesConstRef _key, bytesConstRef _value);
+	void insertByIterator(bytesConstRef _key, bytesConstRef _value);
+	bool prepareForMultiThread()
+	{
+		m_rootCache.clear();
+		std::string rootContent = m_db->lookup(m_root);
+		RLP root(rootContent);
+		if (root.itemCount() == 17)
+		{
+			for (int i = 0; i < 16; i++)
+			{
+				if (root[i].isData() && root[i].size() == 32)
+				{
+
+					m_rootCache.push_back(h256(root[i].toBytes()));
+				}
+				else
+				{
+					m_rootCache.clear();
+					return false;
+				}
+			}
+			if (!root[16].isEmpty())
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	void finishMultiThread()
+	{
+		RLPStream stream(17);
+		for (int i = 0; i < 16; i++)
+		{
+			stream << m_rootCache[i];
+		}
+		stream << "";
+		forceKillNode(m_root);
+		bytes b = stream.out();
+		m_root = forceInsertNode(&b);
+	}
+
 	class iterator
 	{
 	public:
@@ -225,6 +268,9 @@ public:
 		}
 	}
 
+
+
+
 	/// Get the underlying database.
 	/// @warning This can be used to bypass the trie code. Don't use these unless you *really*
 	/// know what you're doing.
@@ -239,6 +285,8 @@ private:
 	void mergeAtAux(RLPStream& _out, RLP const& _replace, NibbleSlice _key, bytesConstRef _value);
 	bytes mergeAt(RLP const& _replace, NibbleSlice _k, bytesConstRef _v, bool _inLine = false);
 	bytes mergeAt(RLP const& _replace, h256 const& _replaceHash, NibbleSlice _k, bytesConstRef _v, bool _inLine = false);
+
+	bytes mergeAtByIterator(RLP const& _replace, h256 const& _replaceHash, NibbleSlice _k, bytesConstRef _v, bool _inLine = false);
 
 	bool deleteAtAux(RLPStream& _out, RLP const& _replace, NibbleSlice _key);
 	bytes deleteAt(RLP const& _replace, NibbleSlice _k);
@@ -298,6 +346,7 @@ private:
 	void killNode(RLP const& _d, h256 const& _h) { if (_d.data().size() >= 32) forceKillNode(_h); }
 
 	h256 m_root;
+	std::vector<h256> m_rootCache;
 	DB* m_db = nullptr;
 };
 
@@ -329,6 +378,21 @@ public:
 	void insert(KeyType _k, bytesConstRef _value) { Generic::insert(bytesConstRef((byte const*)&_k, sizeof(KeyType)), _value); }
 	void insert(KeyType _k, bytes const& _value) { insert(_k, bytesConstRef(&_value)); }
 	void remove(KeyType _k) { Generic::remove(bytesConstRef((byte const*)&_k, sizeof(KeyType))); }
+
+	
+	void insertByIterator(KeyType _k, bytesConstRef _value) { Generic::insertByIterator(bytesConstRef((byte const*)&_k, sizeof(KeyType)), _value); }
+	
+	void insertAtBranchByIterator(KeyType _k, bytesConstRef _value) { Generic::insertAtBranchByIterator(bytesConstRef((byte const*)&_k, sizeof(KeyType)), _value); }
+
+
+	void insertAtBranch(KeyType _k, bytesConstRef _value) { Generic::insertAtBranch(bytesConstRef((byte const*)&_k, sizeof(KeyType)), _value); }
+	void insertAtBranch(KeyType _k, bytes const& _value) { insertAtBranch(_k, bytesConstRef(&_value)); }
+
+	bool prepareForMultiThread() {
+		return Generic::prepareForMultiThread();
+	}
+	void finish() { Generic::finish(); }
+
 
 	class iterator: public Generic::iterator
 	{
@@ -445,6 +509,35 @@ public:
 		Super::insert(hash, _value);
 		Super::db()->insertAux(hash, _key);
 	}
+	
+	void insertByIterator(bytesConstRef _key, bytesConstRef _value)
+	{
+		h256 hash = sha3(_key);
+		Super::insertByIterator(hash, _value);
+		Super::db()->insertAux(hash, _key);
+	}
+	
+	void insertAtBranch(bytesConstRef _key, bytesConstRef _value)
+	{
+		h256 hash = sha3(_key);
+		Super::insertAtBranch(hash, _value);
+		Super::db()->insertAux(hash, _key);
+	}
+
+	void insertAtBranchByIterator(bytesConstRef _key, bytesConstRef _value)
+	{
+		h256 hash = sha3(_key);
+		Super::insertAtBranchByIterator(hash, _value);
+		Super::db()->insertAux(hash, _key);
+	}
+
+	bool prepareForMultiThread() {
+		return Super::prepareForMultiThread();
+	}
+	void finish() { Super::finishMultiThread(); };
+
+
+
 
 	void remove(bytesConstRef _key) { Super::remove(sha3(_key)); }
 
@@ -780,13 +873,82 @@ template <class DB> void GenericTrieDB<DB>::insert(bytesConstRef _key, bytesCons
 	std::string rootValue = node(m_root);
 	assert(rootValue.size());
 	bytes b = mergeAt(RLP(rootValue), m_root, NibbleSlice(_key), _value);
-
+	//bytes b = mergeAtByIterator(RLP(rootValue), m_root, NibbleSlice(_key), _value);
 	// mergeAt won't attempt to delete the node if it's less than 32 bytes
 	// However, we know it's the root node and thus always hashed.
 	// So, if it's less than 32 (and thus should have been deleted but wasn't) then we delete it here.
 	if (rootValue.size() < 32)
 		forceKillNode(m_root);
 	m_root = forceInsertNode(&b);
+}
+
+template <class DB> void GenericTrieDB<DB>::insertByIterator(bytesConstRef _key, bytesConstRef _value)
+{
+#if ETH_PARANOIA
+	tdebug << "Insert" << toHex(_key.cropped(0, 4)) << "=>" << toHex(_value);
+#endif
+
+	std::string rootValue = node(m_root);
+	assert(rootValue.size());
+	//bytes b = mergeAt(RLP(rootValue), m_root, NibbleSlice(_key), _value);
+	bytes b = mergeAtByIterator(RLP(rootValue), m_root, NibbleSlice(_key), _value);
+	// mergeAt won't attempt to delete the node if it's less than 32 bytes
+	// However, we know it's the root node and thus always hashed.
+	// So, if it's less than 32 (and thus should have been deleted but wasn't) then we delete it here.
+	if (rootValue.size() < 32)
+		forceKillNode(m_root);
+	m_root = forceInsertNode(&b);
+}
+
+
+
+
+template <class DB> void GenericTrieDB<DB>::insertAtBranch(bytesConstRef _key, bytesConstRef _value)
+{
+#if ETH_PARANOIA
+	tdebug << "insertAtBranch" << toHex(_key.cropped(0, 4)) << "=>" << toHex(_value);
+#endif
+	//插入最后
+	byte BranchNum = _key[0] >> 4;
+	std::string branchRootValue = node(m_rootCache[BranchNum]);
+	RLP branchRLP(branchRootValue);
+	//assert(branchRootValue.size());
+	bytes b = mergeAt(RLP(branchRootValue), m_rootCache[BranchNum], NibbleSlice(_key,1), _value);
+	forceKillNode(m_rootCache[BranchNum]);
+	m_rootCache[BranchNum] = forceInsertNode(&b);
+
+
+	// mergeAt won't attempt to delete the node if it's less than 32 bytes
+	// However, we know it's the root node and thus always hashed.
+	// So, if it's less than 32 (and thus should have been deleted but wasn't) then we delete it here.
+	//if (rootValue.size() < 32)
+	//	forceKillNode(m_root);
+	//m_root = forceInsertNode(&b);
+
+}
+
+template <class DB> void GenericTrieDB<DB>::insertAtBranchByIterator(bytesConstRef _key, bytesConstRef _value)
+{
+#if ETH_PARANOIA
+	tdebug << "insertAtBranch" << toHex(_key.cropped(0, 4)) << "=>" << toHex(_value);
+#endif
+	//插入最后
+	byte BranchNum = _key[0] >> 4;
+	std::string branchRootValue = node(m_rootCache[BranchNum]);
+	RLP branchRLP(branchRootValue);
+	//assert(branchRootValue.size());
+	bytes b = mergeAtByIterator(RLP(branchRootValue), m_root, NibbleSlice(_key,1), _value);
+	forceKillNode(m_rootCache[BranchNum]);
+	m_rootCache[BranchNum] = forceInsertNode(&b);
+
+
+	// mergeAt won't attempt to delete the node if it's less than 32 bytes
+	// However, we know it's the root node and thus always hashed.
+	// So, if it's less than 32 (and thus should have been deleted but wasn't) then we delete it here.
+	//if (rootValue.size() < 32)
+	//	forceKillNode(m_root);
+	//m_root = forceInsertNode(&b);
+
 }
 
 template <class DB> std::string GenericTrieDB<DB>::at(bytesConstRef _key) const
@@ -923,6 +1085,221 @@ template <class DB> void GenericTrieDB<DB>::mergeAtAux(RLPStream& _out, RLP cons
 	bytes b = mergeAt(r, _k, _v, !isRemovable);
 	streamNode(_out, b);
 }
+
+template <class DB> bytes GenericTrieDB<DB>::mergeAtByIterator(RLP const& _orig, h256 const& _origHash, NibbleSlice _k, bytesConstRef _v, bool _inLine)
+{
+
+#if ETH_PARANOIA
+	tdebug << "mergeAt " << _orig << _k << sha3(_orig.data());
+#endif
+	//std::cout << "Insert: " << " key: " << _k << " value: " << _v << std::endl;
+	bytes out;
+	std::stack<h256> hashStack;
+	//byte is a merge flag
+	//0-16  
+	std::stack<std::pair<RLP, byte>> RlpStack;
+	std::stack<RLPStream> RLPStreamStack;
+	std::stack<std::string> StrStack;
+	NibbleSlice remainKey = _k;
+	RLP currentRLP = _orig;
+
+
+	std::stack<bytes> BytesStack;
+	int knownItemCount = -1;
+	while (true)
+	{
+		//std::cout << "remainKey :" << remainKey << std::endl;
+		//std::cout << currentRLP << std::endl;
+		//go forward to the place where we insert the new key/value
+		//empty node
+		if (knownItemCount == 0 || currentRLP.isEmpty())
+			//if (currentRLP.isEmpty())
+		{
+			knownItemCount = -1;
+			//out = place(currentRLP, _k, _v);
+			out = rlpList(hexPrefixEncode(remainKey, true), _v);
+			//RLP res(out);
+			//std::cout << "empty:" << res;
+			break;
+		}
+		int const itemCount = knownItemCount == -1 ? currentRLP.itemCount() : knownItemCount;
+		knownItemCount = -1;
+		if (itemCount == 2)
+		{
+			NibbleSlice currentKey = keyOf(currentRLP);
+			//std::cout << "currentKey" << currentKey;
+			//exact leaf
+			if (currentKey == remainKey && isLeaf(currentRLP))
+			{
+				//b = place(currentRLP, _k, _v);
+				out = rlpList(hexPrefixEncode(remainKey, true), _v);
+				killNode(currentRLP);
+				break;
+			}
+			//extension 
+			// partial key is our key - move down.				
+			if (remainKey.contains(currentKey) && !isLeaf(currentRLP))
+			{
+				RLPStream stream(2);
+				stream << currentRLP[0];
+				RLPStreamStack.push(std::move(stream));
+				RlpStack.emplace(currentRLP, 255);
+				//if (currentRLP[1].isEmpty())
+				//{
+				//	assert(true);
+				//}
+				//else if (currentRLP[1].isList())
+				//{
+
+				//}
+				//else
+				assert(currentRLP[1].isData());
+				{
+					h256 hash = currentRLP[1].toHash<h256>();
+					StrStack.push(node(hash));
+					remainKey = remainKey.mid(currentKey.size());
+					currentRLP = RLP(StrStack.top());
+					currentKey = keyOf(currentRLP);
+					forceKillNode(hash);
+				}
+				continue;
+
+			}
+			unsigned sh = currentKey.shared(remainKey);
+			//		ctrace << _k << " sh " << currentKey << " = " << sh;
+			// shared stuff 
+			if (sh)
+			{
+				RLPStream bottom(2);
+				bottom << hexPrefixEncode(currentKey, isLeaf(currentRLP), (int)sh) << currentRLP[1];
+
+				RLPStream top(2);
+				top << hexPrefixEncode(currentKey, false, 0, (int)sh);
+				streamNode(top, bottom.out());
+				//currentRLP = RLP(top.out());
+				BytesStack.push(top.out());
+
+				killNode(currentRLP);
+
+				currentRLP = RLP(BytesStack.top());
+
+				knownItemCount = 2;
+			}
+			// nothing shared - branch
+			else
+			{
+				RLPStream r(17);
+				if (currentKey.size() == 0)
+				{
+					//assert(isLeaf(currentRLP));
+					for (unsigned i = 0; i < 16; ++i)
+						r << "";
+					r << currentRLP[1];
+					out = r.out();
+					killNode(currentRLP);
+					break;
+				}
+				else
+				{
+					byte b = currentKey[0];
+					bool bLeaf = isLeaf(currentRLP);
+					bool flag = bLeaf || currentKey.size() > 1;
+					for (unsigned i = 0; i < 16; ++i)
+					{
+						if (i == b)
+						{
+							if (flag)
+								//streamNode(r, rlpList(hexPrefixEncode(currentKey.mid(1), isLeaf(_orig)), _orig[1]));
+								streamNode(r, rlpList(hexPrefixEncode(currentKey.mid(1), bLeaf), currentRLP[1]));
+							//r << rlpList(hexPrefixEncode(currentKey.mid(1), isLeaf(currentRLP)), currentRLP[1]);
+							else
+								r << currentRLP[1];
+						}
+						else
+							r << "";
+					}
+					r << "";
+					BytesStack.push(r.out());
+					killNode(currentRLP);
+					currentRLP = RLP(BytesStack.top());
+				}
+				knownItemCount = 17;
+			}
+		}
+		//branch 
+		else if (itemCount == 17)
+		{
+			//set value in branch node
+			if (remainKey.size() == 0)
+			{
+				//place here
+				RLPStream s = RLPStream(17);
+				for (byte i = 0; i < 16; ++i)
+					s << currentRLP[i];
+				s << _v;
+				out = s.out();
+				killNode(currentRLP);
+				break;
+			}
+			//down along branch
+			byte branchNum = remainKey[0];
+			RLPStream stream(17);
+			for (byte i = 0; i < branchNum; i++)
+			{
+				stream << currentRLP[i];
+
+			}
+			RLPStreamStack.push(std::move(stream));
+			RlpStack.emplace(currentRLP, branchNum);
+
+			if (currentRLP[branchNum].isEmpty())
+			{
+				killNode(currentRLP);
+				currentRLP = currentRLP[branchNum];
+				knownItemCount = 0;
+			}
+			else if (currentRLP[branchNum].isList())
+			{
+				killNode(currentRLP);
+				currentRLP = currentRLP[branchNum];
+			}
+			else {
+				killNode(currentRLP);
+				h256 hash = currentRLP[branchNum].toHash<h256>();
+				StrStack.emplace(node(hash));
+				currentRLP = RLP(StrStack.top());
+				forceKillNode(hash);
+			}
+			remainKey = remainKey.mid(1);
+		}
+
+	}
+
+	assert(RlpStack.size() == RLPStreamStack.size());
+
+	while (!RlpStack.empty())
+	{
+		streamNode(RLPStreamStack.top(), out);
+		if (RlpStack.top().second != 255)
+		{
+			for (byte i = RlpStack.top().second + 1; i < 17; i++)
+			{
+				RLPStreamStack.top() << RlpStack.top().first[i];
+			}
+		}
+		out = RLPStreamStack.top().out();
+		//RLP test = RLP(out);
+		//if (test.isList())
+		//{
+		//	std::cout << "final out:" << test << std::endl;
+		//}
+		RlpStack.pop();
+		RLPStreamStack.pop();
+	}
+	return out;
+
+}
+
 
 template <class DB> void GenericTrieDB<DB>::remove(bytesConstRef _key)
 {

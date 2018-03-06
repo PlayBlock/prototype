@@ -566,11 +566,15 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 			receipts.push_back(receiptRLP.out());
 			++i;
 		}
+#if MultiThreadImport
+	m_state.commit(State::CommitBehaviour::RemoveEmptyAccounts);
+#endif
 
 #if BenchMarkFlag
 	clog(BenchMarkChannel) << "Transactions Total Time(Out of Loop): " << _exeTransaction.elapsed();
-	clog(BenchMarkChannel) << "Execute Time: " << BenchMark::MainTime << "Commit Time:" << BenchMark::SerielizeTime;
-	clog(BenchMarkChannel) << "commit_1: " << BenchMark::record_1 << " commit_2:" << BenchMark::record_2 << " commit_3:" << BenchMark::record_3;
+	clog(BenchMarkChannel) << "1 Execute: " << BenchMark::record_1 << "(a)ExecuteTransaction: " << BenchMark::MainTime << "(b)CommitToBuffer:" << BenchMark::SerielizeTime;
+	clog(BenchMarkChannel) << "Tree Operation:"<< BenchMark::record_3 ;
+	clog(BenchMarkChannel) << "2 Save m_transactions / m_receipts /transactionset :" << BenchMark::record_2;
 #endif
 
 

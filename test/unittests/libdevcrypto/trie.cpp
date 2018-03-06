@@ -26,6 +26,8 @@
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
 #include <boost/filesystem/path.hpp>
+#include <libdevcore/SHA3.h>
+
 
 using namespace std;
 using namespace dev;
@@ -44,6 +46,256 @@ using dev::operator <<;
 BOOST_AUTO_TEST_SUITE(Crypto)
 
 BOOST_FIXTURE_TEST_SUITE(Trie, TestOutputHelperFixture)
+
+
+template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<FatGenericTrieDB<DB>, KeyType>;
+BOOST_AUTO_TEST_CASE(trie_speed)
+{
+	cout << "trie_speed" << endl;
+
+	const int First = 100;
+	const int Second = 10000;
+	
+	MemoryDB testdb_1;
+	MemoryDB testdb_2;
+	MemoryDB testdb_3;
+	MemoryDB testdb_4;
+
+	SpecificTrieDB<FatGenericTrieDB<MemoryDB>, Address> testTree_1(&testdb_1);
+	testTree_1.init();
+
+	SpecificTrieDB<FatGenericTrieDB<MemoryDB>, Address> testTree_2(&testdb_2);
+	testTree_2.init();
+
+	SpecificTrieDB<FatGenericTrieDB<MemoryDB>, Address> testTree_3(&testdb_3);
+	testTree_3.init();
+
+	SpecificTrieDB<FatGenericTrieDB<MemoryDB>, Address> testTree_4(&testdb_4);
+	testTree_4.init();
+
+	string test("a");
+	bytesConstRef testString(test);
+	for (int i = 0; i < First; i++)
+	{
+		//testTree.insert(Address(i), Address(i).ref());
+		testTree_1.insert(Address(i), testString);
+		testTree_2.insert(Address(i), testString);
+		testTree_3.insert(Address(i), testString);
+		testTree_4.insert(Address(i), testString);
+	}
+
+	{
+		testdb_1.purge();
+		testdb_2.purge();
+		testdb_3.purge();
+		testdb_4.purge();
+		
+		auto main1 = testdb_1.getMain();
+		auto main2 = testdb_2.getMain();
+		auto main3 = testdb_3.getMain();
+		auto main4 = testdb_4.getMain();
+
+		h256 h1 = testTree_1.root();
+		h256 h2 = testTree_2.root();
+		h256 h3 = testTree_3.root();
+		h256 h4 = testTree_4.root();
+
+		auto aux1 = testdb_1.getAux();
+		auto aux2 = testdb_2.getAux();
+		auto aux3 = testdb_3.getAux();
+		auto aux4 = testdb_4.getAux();
+
+
+		assert(main1 == main2&&main2 == main3&&main3 == main4);
+		assert(aux1 == aux2 &&aux2 == aux3&&aux3 == aux4);
+		assert(h1 == h2 && h2 == h3 && h3 == h4);
+
+	}
+
+
+	//////////////////////////////////////////////////////////////////////////	
+
+	{
+		Timer _time;
+		for (int i = First; i < Second; i++)//20000
+		{
+			//std::cout << i << std::endl;
+			string str = toString(i);
+			bytesConstRef ref(str);
+			//testTree.insert(Address(i), Address(i).ref());
+
+			testTree_1.insert(Address(i), testString);
+		}
+		std::cout << "insert" << _time.elapsed() << std::endl;
+	}
+
+	{
+		Timer _time;
+		for (int i = First; i < Second; i++)//20000
+		{
+			//std::cout << i << std::endl;
+			string str = toString(i);
+			bytesConstRef ref(str);
+			//testTree.insert(Address(i), Address(i).ref());
+
+			testTree_2.insertByIterator(Address(i), testString);
+		}
+		std::cout << "insert by iterator" << _time.elapsed() << std::endl;
+	}
+
+
+	
+
+
+	{
+		vector<vector<int>> cacheBySha3(17);
+		for (int i = First; i < Second; i++)
+		{
+			h256 sh = sha3(Address(i));
+			int b = sh[0] >> 4;
+			cacheBySha3[b].push_back(i);
+		}
+
+		auto cacheIterator = cacheBySha3.begin();
+		auto cacheEnd = cacheBySha3.end();
+		mutex x_cacheIterator;
+
+		testTree_3.prepareForMultiThread();
+
+		Timer _time;
+
+		std::vector<std::thread> threads;
+		for (int m = 0; m < 4; m++)
+		{
+			threads.push_back(std::thread([&] {
+				while (true)
+				{
+					UniqueGuard lock_cacheIterator(x_cacheIterator);
+					if (cacheIterator == cacheEnd)
+					{
+						break;
+					}
+					vector<int> const& intVector = *cacheIterator;
+					cacheIterator++;
+					lock_cacheIterator.unlock();
+
+					for (auto const& i : intVector)
+					{
+						//string str = toString(i);
+						//bytesConstRef ref(str);
+						testTree_3.insertAtBranch(Address(i), testString);
+					}
+				}
+
+			}));
+		}
+
+		for (int m = 0; m < threads.size(); m++)
+		{
+			threads[m].join();
+		}
+		testTree_3.finish();
+
+		std::cout << "insert multi thread" << _time.elapsed() << std::endl;
+	}
+
+	{
+		vector<vector<int>> cacheBySha3(17);
+		for (int i = First; i < Second; i++)
+		{
+			h256 sh = sha3(Address(i));
+			int b = sh[0] >> 4;
+			cacheBySha3[b].push_back(i);
+		}
+
+		auto cacheIterator = cacheBySha3.begin();
+		auto cacheEnd = cacheBySha3.end();
+		mutex x_cacheIterator;
+
+		testTree_4.prepareForMultiThread();
+
+		Timer _time;
+
+		std::vector<std::thread> threads;
+		for (int m = 0; m < 4; m++)
+		{
+			threads.push_back(std::thread([&] {
+				while (true)
+				{
+					UniqueGuard lock_cacheIterator(x_cacheIterator);
+					if (cacheIterator == cacheEnd)
+					{
+						break;
+					}
+					vector<int> const& intVector = *cacheIterator;
+					cacheIterator++;
+					lock_cacheIterator.unlock();
+
+					for (auto const& i : intVector)
+					{
+						//string str = toString(i);
+						//bytesConstRef ref(str);
+						testTree_4.insertAtBranchByIterator(Address(i), testString);
+					}
+				}
+
+			}));
+		}
+
+		for (int m = 0; m < threads.size(); m++)
+		{
+			threads[m].join();
+		}
+		testTree_4.finish();
+
+		std::cout << "insert by iterator multi thread" << _time.elapsed() << std::endl;
+	}
+
+
+
+	{
+
+		testdb_1.purge();
+		testdb_2.purge();
+		testdb_3.purge();
+		testdb_4.purge();
+
+		auto main1 = testdb_1.getMain();
+		auto main2 = testdb_2.getMain();
+		auto main3 = testdb_3.getMain();
+		auto main4 = testdb_4.getMain();
+
+		h256 h1 = testTree_1.root();
+		h256 h2 = testTree_2.root();
+		h256 h3 = testTree_3.root();
+		h256 h4 = testTree_4.root();
+
+		auto aux1 = testdb_1.getAux();
+		auto aux2 = testdb_2.getAux();
+		auto aux3 = testdb_3.getAux();
+		auto aux4 = testdb_4.getAux();
+
+		BOOST_REQUIRE_MESSAGE(h1 == h2,"hash root not same");
+		BOOST_REQUIRE_MESSAGE(h2 == h3, "hash root not same");
+		BOOST_REQUIRE_MESSAGE(h3 == h4, "hash root not same");
+
+
+		BOOST_REQUIRE_MESSAGE(main1 == main2, "main table not same");
+		BOOST_REQUIRE_MESSAGE(main2 == main3, "main table not same");
+		BOOST_REQUIRE_MESSAGE(main3 == main4, "main table not same");
+
+		BOOST_REQUIRE_MESSAGE(aux1 == aux2, "aux table not same");
+		BOOST_REQUIRE_MESSAGE(aux2 == aux3, "aux table not same");
+		BOOST_REQUIRE_MESSAGE(aux3 == aux4, "aux table not same");
+
+
+	}
+
+}
+
+
+
+
 
 BOOST_AUTO_TEST_CASE(fat_trie)
 {

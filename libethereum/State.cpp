@@ -219,7 +219,20 @@ void State::commit(CommitBehaviour _commitBehaviour)
 {
 	if (_commitBehaviour == CommitBehaviour::RemoveEmptyAccounts)
 		removeEmptyAccounts();
+
+#if MultiThreadImport
+	if (m_cache.size() > 1000 && m_state.prepareForMultiThread())
+	{
+		m_touched += dev::eth::commit(m_cache, m_state);
+	}
+	else
+	{
+		m_touched += dev::eth::commitEx(m_cache, m_state);
+	}
+#else
 	m_touched += dev::eth::commit(m_cache, m_state);
+#endif
+
 	m_changeLog.clear();
 	m_cache.clear();
 	m_unchangedCacheEntries.clear();
@@ -581,7 +594,14 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 #if BenchMarkFlag
 			timer.restart();
 #endif
-			commit(State::CommitBehaviour::RemoveEmptyAccounts);	
+			
+#if MultiThreadImport
+
+#else
+			commit(State::CommitBehaviour::RemoveEmptyAccounts);
+#endif
+			
+				
 #if BenchMarkFlag
 			BenchMark::SerielizeTime += timer.elapsed();
 #endif
@@ -758,6 +778,100 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
 		}
 	return ret;
 }
+
+template <class DB>
+AddressHash dev::eth::commitEx(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state)
+{
+	AddressHash ret;
+	mutex x_ret;
+
+	vector<vector<pair<Address, const Account*>>> cacheBySha3(16);
+	
+	auto cacheIterator = cacheBySha3.begin();
+	auto cacheEnd = cacheBySha3.end();
+	mutex x_cacheIterator;
+
+	for (auto const& i : _cache)
+	{
+		byte firstByte = sha3(i.first)[0];
+		cacheBySha3[firstByte].emplace_back(i.first, &(i.second));
+	}
+
+	vector<std::thread> threads;
+	for (int m = 0; m < 4; m++)
+	{
+		threads.push_back(std::thread([&] {
+			while (true)
+			{
+				UniqueGuard lock_cacheIterator(x_cacheIterator);
+				if (cacheIterator == cacheEnd)
+				{
+					break;
+				}
+				vector<pair<Address, const Account*>> const& cacheVector = *cacheIterator;
+				cacheIterator++;
+				lock_cacheIterator.unlock();
+
+				for (auto const& i : cacheVector)
+				{
+					if (i.second->isDirty())
+					{
+						if (!i.second->isAlive())
+						{
+							_state.remove(i.first);
+						}
+						else
+						{
+							RLPStream s(4);
+							s << i.second->nonce() << i.second->balance();
+
+							if (i.second->storageOverlay().empty())
+							{
+								assert(i.second->baseRoot());
+								s.append(i.second->baseRoot());
+							}
+							else
+							{
+								SecureTrieDB<h256, DB> storageDB(_state.db(), i.second->baseRoot());
+								for (auto const& j : i.second->storageOverlay())
+									if (j.second)
+										storageDB.insert(j.first, rlp(j.second));
+									else
+										storageDB.remove(j.first);
+								assert(storageDB.root());
+								s.append(storageDB.root());
+							}
+							if (i.second->hasNewCode())
+							{
+								h256 ch = i.second->codeHash();
+								// Store the size of the code
+								CodeSizeCache::instance().store(ch, i.second->code().size());
+								_state.db()->insert(ch, &i.second->code());
+								s << ch;
+							}
+							else
+								s << i.second->codeHash();
+							_state.insertAtBranch(i.first, &s.out());
+						}
+						Guard lock_ret(x_ret);
+						ret.insert(i.first);
+					}
+				}
+
+			}
+
+		}));
+	}
+	for (int m = 0; m < threads.size(); m++)
+	{
+		threads[m].join();
+	}
+	_state.finish();
+
+
+	return ret;
+}
+
 
 
 template AddressHash dev::eth::commit<OverlayDB>(AccountMap const& _cache, SecureTrieDB<Address, OverlayDB>& _state);

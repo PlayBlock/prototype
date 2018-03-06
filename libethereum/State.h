@@ -32,6 +32,7 @@
 #include "TransactionReceipt.h"
 #include "GasPricer.h"
 
+#define MultiThreadImport 0
 namespace dev
 {
 
@@ -362,6 +363,10 @@ State& createIntermediateState(State& o_s, Block const& _block, unsigned _txInde
 
 template <class DB>
 AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state);
+
+template <class DB>
+AddressHash commitEx(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state);
+
 
 }
 }

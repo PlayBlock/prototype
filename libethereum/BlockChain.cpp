@@ -49,7 +49,7 @@ using namespace dev::eth;
 namespace fs = boost::filesystem;
 
 #define ETH_TIMED_IMPORTS 1
-
+#define MultiThreadVerifyOneBlock 0
 namespace
 {
 
@@ -1799,6 +1799,76 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 			++i;
 		}
 	i = 0;
+
+#if	MultiThreadVerifyOneBlock
+	if (_ir & (ImportRequirements::TransactionBasic | ImportRequirements::TransactionSignatures))
+	{
+		RLP const& txRLP = r[1];
+		std::vector<std::thread> threads;
+
+		auto rlpIterator = txRLP.begin();
+		auto rlpEnd = txRLP.end();
+
+		mutex x_rlp;
+		mutex x_transaction;
+
+		std::atomic<bool> hasException(false);
+
+		for (int m = 0; m < 4; m++)
+		{
+			threads.push_back(std::thread([&] {
+				while (true)
+				{
+					if (hasException)
+					{
+						break;
+					}
+					UniqueGuard lock_rlp(x_rlp);
+					if (rlpIterator == rlpEnd)
+					{
+						break;
+					}
+					bytesConstRef d = (*rlpIterator).data();
+					rlpIterator++;
+					lock_rlp.unlock();
+					try
+					{
+						Transaction t(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None);
+						m_sealEngine->verifyTransaction(_ir, t, h, 0);
+
+
+						UniqueGuard lock_transaction(x_transaction);
+						res.transactions.push_back(t);
+						++i;
+						lock_transaction.unlock();
+					}
+					catch (Exception& ex)
+					{
+						bool flag = false;
+						if (hasException.compare_exchange_strong(flag, true))
+						{
+							ex << errinfo_phase(1);
+							ex << errinfo_transactionIndex(i);
+							ex << errinfo_transaction(d.toBytes());
+							addBlockInfo(ex, h, _block.toBytes());
+							if (_onBad)
+								_onBad(ex);
+						}
+					}
+				}
+			}));
+		}
+		for (int m = 0; m < threads.size(); m++)
+		{
+			threads[m].join();
+		}
+		if (hasException)
+		{
+			throw;
+		}
+
+	}
+#else
 	if (_ir & (ImportRequirements::TransactionBasic | ImportRequirements::TransactionSignatures))
 		for (RLP const& tr: r[1])
 		{
@@ -1821,6 +1891,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 			}
 			++i;
 		}
+#endif
 	res.block = bytesConstRef(_block);
 	return res;
 }

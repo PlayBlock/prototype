@@ -25,7 +25,8 @@
 #include "Common.h"
 #include "Log.h"
 #include "RLP.h"
-
+#include <libdevcore/Guards.h>
+#define DEV_GUARDED_DB 1
 namespace dev
 {
 
@@ -60,6 +61,16 @@ public:
 
 	h256Hash keys() const;
 
+	//for test
+
+	std::unordered_map<h256, std::pair<std::string, unsigned>> getMain()
+	{
+		return m_main;
+	}
+	std::unordered_map<h256, std::pair<bytes, bool>> getAux()
+	{
+		return m_aux;
+	}
 protected:
 #if DEV_GUARDED_DB
 	mutable SharedMutex x_this;
