@@ -914,7 +914,7 @@ template <class DB> void GenericTrieDB<DB>::insertAtBranch(bytesConstRef _key, b
 	RLP branchRLP(branchRootValue);
 	//assert(branchRootValue.size());
 	bytes b = mergeAt(RLP(branchRootValue), m_rootCache[BranchNum], NibbleSlice(_key,1), _value);
-	forceKillNode(m_rootCache[BranchNum]);
+	//forceKillNode(m_rootCache[BranchNum]);
 	m_rootCache[BranchNum] = forceInsertNode(&b);
 
 

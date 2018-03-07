@@ -223,11 +223,11 @@ void State::commit(CommitBehaviour _commitBehaviour)
 #if MultiThreadImport
 	if (m_cache.size() > 1000 && m_state.prepareForMultiThread())
 	{
-		m_touched += dev::eth::commit(m_cache, m_state);
+		m_touched += dev::eth::commitEx(m_cache, m_state);
 	}
 	else
 	{
-		m_touched += dev::eth::commitEx(m_cache, m_state);
+		m_touched += dev::eth::commit(m_cache, m_state);
 	}
 #else
 	m_touched += dev::eth::commit(m_cache, m_state);
@@ -793,7 +793,7 @@ AddressHash dev::eth::commitEx(AccountMap const& _cache, SecureTrieDB<Address, D
 
 	for (auto const& i : _cache)
 	{
-		byte firstByte = sha3(i.first)[0];
+		byte firstByte = sha3(i.first)[0] >> 4;
 		cacheBySha3[firstByte].emplace_back(i.first, &(i.second));
 	}
 
