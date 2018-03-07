@@ -178,6 +178,7 @@ bool ExitHandler::s_shouldExit = false;
 
 int main(int argc, char** argv)
 {
+	cblockq << "Test Jenkins.";
 	setDefaultOrCLocale();
 	 
 	// Init secp256k1 context by calling one of the functions.
