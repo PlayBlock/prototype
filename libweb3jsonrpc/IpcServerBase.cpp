@@ -31,7 +31,7 @@ using namespace std;
 using namespace jsonrpc;
 using namespace dev;
 
-int const c_bufferSize = 1024;
+int const c_bufferSize = 10240;
 
 struct IpcSendChannel: public LogChannel { static const char* name() { return "I>"; } static const int verbosity = 10; };
 struct IpcReceiveChannel: public LogChannel { static const char* name() { return "I<"; } static const int verbosity = 10; };
@@ -105,6 +105,15 @@ template <class S> void IpcServerBase<S>::GenerateResponse(S _connection)
 	size_t nbytes = 0;
 	do
 	{
+		if (!request.empty())
+		{
+			std::string r = request.substr(0, i + 1);
+			request.erase(0, i + 1);
+			cipcr << r;
+			OnRequest(r, reinterpret_cast<void*>((intptr_t)_connection));
+			i = 0;
+			// break;
+		}
 		nbytes = Read(_connection, buffer, c_bufferSize);
 		if (nbytes <= 0)
 			break;
