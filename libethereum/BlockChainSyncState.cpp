@@ -1172,6 +1172,7 @@ namespace dev
 			{
 				ctrace << "Peer does not have the blocks requested !";
 				_peer->addRating(-100);
+				return;
 			}
 			else if( itemCount == 1)
 			{//只对单个块头的消息进行处理,因为在查找相同块阶段只会有单个块消息出现
