@@ -30,6 +30,7 @@
 #include <libp2p/Common.h>
 #include "CommonNet.h"
 #include "boost/smart_ptr/shared_ptr.hpp"
+#include "BlockChainSyncState.h"
 
 namespace dev
 {
