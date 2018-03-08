@@ -280,6 +280,12 @@ public:
 	bool unknownFull() const;
 	u256 difficulty() const;	// Total difficulty of queueud blocks
 	bool isActive() const;
+
+
+	std::size_t knownSize() const;
+	std::size_t knownCount() const;
+	std::size_t unknownSize() const;
+	std::size_t unknownCount() const;
 	 
 private:
 	struct UnverifiedBlock
@@ -298,10 +304,6 @@ private:
 	void updateBad_WITH_LOCK(h256 const& _bad);
 	void drainVerified_WITH_BOTH_LOCKS();
 
-	std::size_t knownSize() const;
-	std::size_t knownCount() const;
-	std::size_t unknownSize() const;
-	std::size_t unknownCount() const;
 
 	BlockChain const* m_bc;												///< The blockchain into which our imports go.
 

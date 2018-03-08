@@ -216,9 +216,8 @@ bool Client::isSyncing() const
 bool Client::isMajorSyncing() const
 {
 	if (auto h = m_host.lock())
-	{
-		SyncState state = h->status().state;
-		return state != SyncState::Idle || h->bq().items().first > 10;
+	{ 
+		return  h->bq().items().first > 10;
 	}
 	return false;
 }

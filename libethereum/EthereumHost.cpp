@@ -41,7 +41,7 @@ using namespace p2p;
 unsigned const EthereumHost::c_oldProtocolVersion = 62; //TODO: remove this once v63+ is common
 static unsigned const c_maxSendTransactions = 256;
 
-char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"NotSynced", "Idle", "Waiting", "Blocks", "State"};
+char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"NotSynced", "Idle", "Waiting", "Blocks", "State","FindingCommonBlock","SyncBlocks"};
 
 #if defined(_WIN32)
 const char* EthereumHostTrace::name() { return EthPurple "^" EthGray "  "; }
@@ -548,13 +548,8 @@ void EthereumHost::foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)
 
 	for (auto s: sessions)
 		if (!_f(capabilityFromSession<EthereumPeer>(*s.first)))
-			return;
-
-	sessions = peerSessions(c_oldProtocolVersion); //TODO: remove once v61+ is common
-	std::sort(sessions.begin(), sessions.end(), sessionLess);
-	for (auto s: sessions)
-		if (!_f(capabilityFromSession<EthereumPeer>(*s.first, c_oldProtocolVersion)))
-			return;
+			return; 
+	 
 }
 
 tuple<vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<SessionFace>>> EthereumHost::randomSelection(unsigned _percent, std::function<bool(EthereumPeer*)> const& _allow)

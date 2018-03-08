@@ -85,6 +85,16 @@ class EthereumPeer: public p2p::Capability
 	friend class EthereumHost; //TODO: remove this
 	friend class BlockChainSync; //TODO: remove this
 
+
+	friend class BlockChainSyncState;
+	friend class NotSyncedState;
+	friend class IdleSyncState;
+	friend class WaitingSyncState;
+	friend class BlockSyncState;
+	friend class SyncBlocksSyncState;
+	friend class FindingCommonBlockSyncState;
+	friend class DefaultSyncState;
+
 public:
 	/// Basic constructor.
 	EthereumPeer(std::shared_ptr<p2p::SessionFace> _s, p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const& _cap);

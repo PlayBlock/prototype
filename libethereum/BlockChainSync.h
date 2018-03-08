@@ -29,6 +29,7 @@
 #include <libethcore/BlockHeader.h>
 #include <libp2p/Common.h>
 #include "CommonNet.h"
+#include "boost/smart_ptr/shared_ptr.hpp"
 
 namespace dev
 {
@@ -90,7 +91,9 @@ public:
 	/// @returns Synchonization status
 	SyncStatus status() const;
 
-	static char const* stateName(SyncState _s) { return s_stateNames[static_cast<int>(_s)]; }
+	static char const* stateName(SyncState _s);
+
+	void switchState(SyncState _s);
 
 private:
 	/// Resume downloading after witing state
@@ -146,11 +149,8 @@ private:
 	EthereumHost& m_host;
 	Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
 	mutable RecursiveMutex x_sync; 
-	std::atomic<SyncState> m_state{SyncState::Idle};		///< Current sync state
-	h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
-	unsigned m_chainStartBlock = 0;
-	unsigned m_startingBlock = 0;      	    	///< Last block number for the start of sync
-	unsigned m_highestBlock = 0;       	     	///< Highest block number seen
+	std::atomic<SyncState> m_state{SyncState::Idle};		///< Current sync state 
+
 	std::unordered_set<unsigned> m_downloadingHeaders;		///< Set of block body numbers being downloaded
 	std::unordered_set<unsigned> m_downloadingBodies;		///< Set of block header numbers being downloaded
 	std::map<unsigned, std::vector<Header>> m_headers;	    ///< Downloaded headers
@@ -158,16 +158,53 @@ private:
 	std::map<std::weak_ptr<EthereumPeer>, std::vector<unsigned>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_headerSyncPeers; ///< Peers to m_downloadingSubchain number map
 	std::map<std::weak_ptr<EthereumPeer>, std::vector<unsigned>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_bodySyncPeers; ///< Peers to m_downloadingSubchain number map
 	std::unordered_map<HeaderId, unsigned, HeaderIdHash> m_headerIdToNumber;
-	bool m_haveCommonHeader = false;			///< True if common block for our and remote chain has been found
 	unsigned m_lastImportedBlock = 0; 			///< Last imported block number
-	h256 m_lastImportedBlockHash;				///< Last imported block hash
-	u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
-	unsigned m_lastIrreversibleBlock = 0;				///<当前链最新不可逆转块
+	h256 m_lastImportedBlockHash;				///< Last imported block hash 
+	unsigned m_lastIrreversibleBlock = 0;		///<当前链最新不可逆转块
+
+	/*用于同步任务的状态变量*/
+	unsigned m_syncStartBlock = 0;				
+	h256	 m_syncStartBlockHash;
+	unsigned m_syncLastIrrBlock = 0;
+
+	unsigned m_expectBlockForFindingCommon = 0;
+	h256	 m_expectBlockHashForFindingCommon = h256();
+
+
+	///////////////>废弃字段
+	h256Hash m_knownNewHashes;
+	///< New hashes we know about use for logging only
+	unsigned m_chainStartBlock = 0;
+	unsigned m_startingBlock = 0;      	    	///< Last block number for the start of sync
+	unsigned m_highestBlock = 0;       	     	///< Highest block number seen 
+	bool m_haveCommonHeader = false;			///< True if common block for our and remote chain has been found
+	///////////////>废弃字段
 
 private:
-	static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
+	//static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
 	bool invariants() const override;
 	void logNewBlock(h256 const& _h);
+
+
+	friend class BlockChainSyncState;
+	friend class NotSyncedState; 
+	friend class IdleSyncState; 
+	friend class WaitingSyncState; 
+	friend class BlockSyncState;
+	friend class FindingCommonBlockSyncState;
+	friend class SyncBlocksSyncState; 
+	friend class DefaultSyncState;
+
+	//当前状态
+	std::shared_ptr<BlockChainSyncState> m_pCurrState;
+
+	std::shared_ptr<NotSyncedState> m_pNotSyncedState;
+	std::shared_ptr<IdleSyncState> m_pIdleSyncState;
+	std::shared_ptr<WaitingSyncState> m_pWatingSyncState;
+	std::shared_ptr<BlockSyncState> m_pBlockSyncState;
+	std::shared_ptr<FindingCommonBlockSyncState> m_pFindingCommonBlockSyncState;
+	std::shared_ptr<SyncBlocksSyncState> m_pSyncBlocksSyncState;
+	
 };
 
 std::ostream& operator<<(std::ostream& _out, SyncStatus const& _sync);
