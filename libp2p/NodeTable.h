@@ -308,6 +308,11 @@ struct DiscoveryDatagram: public RLPXDatagramFace
 	static std::unique_ptr<DiscoveryDatagram> interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet);
 };
 
+#define PINGNODE_TYPE 5
+#define PONGNODE_TYPE 6
+#define FINDNODE_TYPE 7
+#define NEIGHBOURS_TYPE 8
+
 /**
  * Ping packet: Sent to check if node is alive.
  * PingNode is cached and regenerated after ts + t, where t is timeout.
@@ -323,7 +328,7 @@ struct PingNode: DiscoveryDatagram
 	PingNode(NodeIPEndpoint const& _src, NodeIPEndpoint const& _dest): DiscoveryDatagram(_dest), source(_src), destination(_dest) {}
 	PingNode(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
-	static const uint8_t type = 1;
+	static const uint8_t type = PINGNODE_TYPE;
 	uint8_t packetType() const { return type; }
 
 	unsigned version = 0;
@@ -356,7 +361,7 @@ struct Pong: DiscoveryDatagram
 	Pong(NodeIPEndpoint const& _dest): DiscoveryDatagram((bi::udp::endpoint)_dest), destination(_dest) {}
 	Pong(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
-	static const uint8_t type = 2;
+	static const uint8_t type = PONGNODE_TYPE;
 	uint8_t packetType() const { return type; }
 
 	NodeIPEndpoint destination;
@@ -394,7 +399,7 @@ struct FindNode: DiscoveryDatagram
 	FindNode(bi::udp::endpoint _to, h512 _target): DiscoveryDatagram(_to), target(_target) {}
 	FindNode(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
-	static const uint8_t type = 3;
+	static const uint8_t type = FINDNODE_TYPE;
 	uint8_t packetType() const { return type; }
 
 	h512 target;
@@ -434,7 +439,7 @@ struct Neighbours: DiscoveryDatagram
 		void streamRLP(RLPStream& _s) const { _s.appendList(4); endpoint.streamRLP(_s, NodeIPEndpoint::StreamInline); _s << node; }
 	};
 
-	static const uint8_t type = 4;
+	static const uint8_t type = NEIGHBOURS_TYPE;
 	uint8_t packetType() const { return type; }
 
 	std::vector<Neighbour> neighbours;
