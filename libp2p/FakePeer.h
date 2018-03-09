@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Peer.h
+/** @file FakePeer.h
  * @author Alex Leverington <nessence@gmail.com>
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -24,6 +24,8 @@
 
 #include "Common.h"
 
+#include "Peer.h"
+
 namespace dev
 {
 
@@ -31,8 +33,8 @@ namespace p2p
 {
 
 /**
- * @brief Representation of connectivity state and all other pertinent Peer metadata.
- * A Peer represents connectivity between two nodes, which in this case, are the host
+ * @brief Representation of connectivity state and all other pertinent FakePeer metadata.
+ * A FakePeer represents connectivity between two nodes, which in this case, are the host
  * and remote nodes.
  *
  * State information necessary for loading network topology is maintained by NodeTable.
@@ -49,41 +51,41 @@ namespace p2p
  * @todo reimplement recording of historical session information on per-transport basis
  * @todo move attributes into protected
  */
-class Peer: public Node
+class FakePeer: public Peer
 {
-	friend class Session;		/// Allows Session to update score and rating.
+	friend class FakeSession;		/// Allows Session to update score and rating.
 	friend class Host;		/// For Host: saveNetwork(), restoreNetwork()
-	friend class FakeHost;
+
 	friend class RLPXHandshake;
 
 public:
-	/// Construct Peer from Node.
-	Peer(Node const& _node): Node(_node) {}
+	/// Construct FakePeer from Node.
+	FakePeer(Node const& _node): Peer(_node) {}
 
-	Peer(Peer const&);
+	FakePeer(FakePeer const&);
 	
-	virtual bool isOffline() const { return !m_session.lock(); }
+	bool isOffline() const { return !m_session.lock(); }
 
-	virtual bool operator<(Peer const& _p) const;
+	virtual bool operator<(FakePeer const& _p) const;
 	
 	/// WIP: Returns current peer rating.
-	virtual int rating() const { return m_rating; }
+	int rating() const { return m_rating; }
 	
 	/// Return true if connection attempt should be made to this peer or false if
-	virtual bool shouldReconnect() const;
+	bool shouldReconnect() const;
 	
 	/// Number of times connection has been attempted to peer.
-	virtual int failedAttempts() const { return m_failedAttempts; }
+	int failedAttempts() const { return m_failedAttempts; }
 
 	/// Reason peer was previously disconnected.
-	virtual DisconnectReason lastDisconnect() const { return m_lastDisconnect; }
+	DisconnectReason lastDisconnect() const { return m_lastDisconnect; }
 	
-	/// Peer session is noted as useful.
-	virtual void noteSessionGood() { m_failedAttempts = 0; }
+	/// FakePeer session is noted as useful.
+	void noteSessionGood() { m_failedAttempts = 0; }
 	
 protected:
 	/// Returns number of seconds to wait until attempting connection, based on attempted connection history.
-	virtual unsigned fallbackSeconds() const;
+	unsigned fallbackSeconds() const;
 
 	std::atomic<int> m_score{0};									///< All time cumulative.
 	std::atomic<int> m_rating{0};									///< Trending.
@@ -99,27 +101,8 @@ protected:
 	std::weak_ptr<Session> m_session;
 };
 
-//用于记录根据Peer进行排序的信息
-class PeerSortObject
-{
-	public: 
-		PeerSortObject(const NodeID& _id , const int _rating, const std::chrono::steady_clock::time_point& _connectTime) 
-			:m_id(_id),m_rating(_rating), m_connectTime(_connectTime){}
 
-		PeerSortObject(const PeerSortObject& _obj)
-			:m_id(id()),m_rating(_obj.rating()),m_connectTime(_obj.connectTime()){}
-
-		NodeID id() const { return m_id; }
-		int rating() const { return m_rating; }
-		std::chrono::steady_clock::time_point connectTime() const { return m_connectTime; }
-
-	private:
-		NodeID m_id;
-		int m_rating;
-		std::chrono::steady_clock::time_point m_connectTime;
-};
-
-using Peers = std::vector<Peer>;
+using FakePeers = std::vector<FakePeer>;
 
 }
 }
