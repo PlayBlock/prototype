@@ -37,6 +37,7 @@ namespace p2p
 class HostCapabilityFace
 {
 	friend class Host;
+	friend class FakeHost;
 	template <class T> friend class HostCapability;
 	friend class Capability;
 	friend class Session;

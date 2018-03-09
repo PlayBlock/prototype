@@ -160,120 +160,120 @@ public:
 	template <class T> void addCapability(std::shared_ptr<T> const & _p, std::string const& _name, u256 const& _version) { m_capabilities[std::make_pair(_name, _version)] = _p; }
 
 	bool haveCapability(CapDesc const& _name) const { return m_capabilities.count(_name) != 0; }
-	CapDescs caps() const { CapDescs ret; for (auto const& i: m_capabilities) ret.push_back(i.first); return ret; }
+	virtual CapDescs caps() const { CapDescs ret; for (auto const& i: m_capabilities) ret.push_back(i.first); return ret; }
 	template <class T> std::shared_ptr<T> cap() const { try { return std::static_pointer_cast<T>(m_capabilities.at(std::make_pair(T::staticName(), T::staticVersion()))); } catch (...) { return nullptr; } }
 
 	/// Add a potential peer.
-	void addPeer(NodeSpec const& _s, PeerType _t);
+	virtual void addPeer(NodeSpec const& _s, PeerType _t);
 
 	/// Add node as a peer candidate. Node is added if discovery ping is successful and table has capacity.
-	void addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint);
+	virtual void addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint);
 	
 	/// Create Peer and attempt keeping peer connected.
-	void requirePeer(NodeID const& _node, NodeIPEndpoint const& _endpoint);
+	virtual void requirePeer(NodeID const& _node, NodeIPEndpoint const& _endpoint);
 
 	/// Create Peer and attempt keeping peer connected.
-	void requirePeer(NodeID const& _node, bi::address const& _addr, unsigned short _udpPort, unsigned short _tcpPort) { requirePeer(_node, NodeIPEndpoint(_addr, _udpPort, _tcpPort)); }
+	virtual void requirePeer(NodeID const& _node, bi::address const& _addr, unsigned short _udpPort, unsigned short _tcpPort) { requirePeer(_node, NodeIPEndpoint(_addr, _udpPort, _tcpPort)); }
 
 	/// Note peer as no longer being required.
-	void relinquishPeer(NodeID const& _node);
+	virtual void relinquishPeer(NodeID const& _node);
 	
 	/// Set ideal number of peers.
-	void setIdealPeerCount(unsigned _n) { m_idealPeerCount = _n; }
+	virtual void setIdealPeerCount(unsigned _n) { m_idealPeerCount = _n; }
 
 	/// Set multipier for max accepted connections.
-	void setPeerStretch(unsigned _n) { m_stretchPeers = _n; }
+	virtual void setPeerStretch(unsigned _n) { m_stretchPeers = _n; }
 	
 	/// Get peer information.
-	PeerSessionInfos peerSessionInfo() const;
+	virtual PeerSessionInfos peerSessionInfo() const;
 
 	/// Get number of peers connected.
-	size_t peerCount() const;
+	virtual size_t peerCount() const;
 
 	/// Get the address we're listening on currently.
-	std::string listenAddress() const { return m_tcpPublic.address().is_unspecified() ? "0.0.0.0" : m_tcpPublic.address().to_string(); }
+	virtual std::string listenAddress() const { return m_tcpPublic.address().is_unspecified() ? "0.0.0.0" : m_tcpPublic.address().to_string(); }
 
 	/// Get the port we're listening on currently.
-	unsigned short listenPort() const { return std::max(0, m_listenPort.load()); }
+	virtual unsigned short listenPort() const { return std::max(0, m_listenPort.load()); }
 
 	/// Serialise the set of known peers.
-	bytes saveNetwork() const;
+	virtual bytes saveNetwork() const;
 
 	// TODO: P2P this should be combined with peers into a HostStat object of some kind; coalesce data, as it's only used for status information.
-	Peers getPeers() const { RecursiveGuard l(x_sessions); Peers ret; for (auto const& i: m_peers) ret.push_back(*i.second); return ret; }
+	virtual Peers getPeers() const { RecursiveGuard l(x_sessions); Peers ret; for (auto const& i: m_peers) ret.push_back(*i.second); return ret; }
 
-	NetworkPreferences const& networkPreferences() const { return m_netPrefs; }
+	virtual NetworkPreferences const& networkPreferences() const { return m_netPrefs; }
 
-	void setNetworkPreferences(NetworkPreferences const& _p, bool _dropPeers = false) { m_dropPeers = _dropPeers; auto had = isStarted(); if (had) stop(); m_netPrefs = _p; if (had) start(); }
+	virtual void setNetworkPreferences(NetworkPreferences const& _p, bool _dropPeers = false) { m_dropPeers = _dropPeers; auto had = isStarted(); if (had) stop(); m_netPrefs = _p; if (had) start(); }
 
 	/// Start network. @threadsafe
-	void start();
+	virtual void start();
 
 	/// Stop network. @threadsafe
 	/// Resets acceptor, socket, and IO service. Called by deallocator.
-	void stop();
+	virtual void stop();
 
 	/// @returns if network has been started.
-	bool isStarted() const { return isWorking(); }
+	virtual bool isStarted() const { return isWorking(); }
 
 	/// @returns our reputation manager.
-	ReputationManager& repMan() { return m_repMan; }
+	virtual ReputationManager& repMan() { return m_repMan; }
 
 	/// @returns if network is started and interactive.
-	bool haveNetwork() const { Guard l(x_runTimer); Guard ll(x_nodeTable); return m_run && !!m_nodeTable; }
+	virtual bool haveNetwork() const { Guard l(x_runTimer); Guard ll(x_nodeTable); return m_run && !!m_nodeTable; }
 	
 	/// Validates and starts peer session, taking ownership of _io. Disconnects and returns false upon error.
-	void startPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
+	virtual void startPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
 
 	/// Get session by id
-	std::shared_ptr<SessionFace> peerSession(NodeID const& _id) { RecursiveGuard l(x_sessions); return m_sessions.count(_id) ? m_sessions[_id].lock() : std::shared_ptr<SessionFace>(); }
+	virtual std::shared_ptr<SessionFace> peerSession(NodeID const& _id) { RecursiveGuard l(x_sessions); return m_sessions.count(_id) ? m_sessions[_id].lock() : std::shared_ptr<SessionFace>(); }
 
 	/// Get our current node ID.
-	NodeID id() const { return m_alias.pub(); }
+	virtual NodeID id() const { return m_alias.pub(); }
 
 	/// Get the public TCP endpoint.
-	bi::tcp::endpoint const& tcpPublic() const { return m_tcpPublic; }
+	virtual bi::tcp::endpoint const& tcpPublic() const { return m_tcpPublic; }
 
 	/// Get the public endpoint information.
-	std::string enode() const { return "enode://" + id().hex() + "@" + (networkPreferences().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkPreferences().publicIPAddress) + ":" + toString(m_tcpPublic.port()); }
+	virtual std::string enode() const { return "enode://" + id().hex() + "@" + (networkPreferences().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkPreferences().publicIPAddress) + ":" + toString(m_tcpPublic.port()); }
 
 	/// Get the node information.
-	p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkPreferences().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkPreferences().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
+	virtual p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkPreferences().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkPreferences().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
 
 protected:
-	void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);
+	virtual void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);
 
 	/// Deserialise the data and populate the set of known peers.
-	void restoreNetwork(bytesConstRef _b);
+	virtual void restoreNetwork(bytesConstRef _b);
 
-private:
+//private:
 	enum PeerSlotType { Egress, Ingress };
 	
-	unsigned peerSlots(PeerSlotType _type) { return _type == Egress ? m_idealPeerCount : m_idealPeerCount * m_stretchPeers; }
+	virtual unsigned peerSlots(PeerSlotType _type) { return _type == Egress ? m_idealPeerCount : m_idealPeerCount * m_stretchPeers; }
 	
-	bool havePeerSession(NodeID const& _id) { return !!peerSession(_id); }
+	virtual bool havePeerSession(NodeID const& _id) { return !!peerSession(_id); }
 
 	/// Determines and sets m_tcpPublic to publicly advertised address.
-	void determinePublic();
+	virtual void determinePublic();
 
-	void connect(std::shared_ptr<Peer> const& _p);
+	virtual void connect(std::shared_ptr<Peer> const& _p);
 
 	/// Returns true if pending and connected peer count is less than maximum
-	bool peerSlotsAvailable(PeerSlotType _type = Ingress);
+	virtual bool peerSlotsAvailable(PeerSlotType _type = Ingress);
 	
 	/// Ping the peers to update the latency information and disconnect peers which have timed out.
-	void keepAlivePeers();
+	virtual void keepAlivePeers();
 
 	/// Disconnect peers which didn't respond to keepAlivePeers ping prior to c_keepAliveTimeOut.
-	void disconnectLatePeers();
+	virtual void disconnectLatePeers();
 
 	/// Called only from startedWorking().
-	void runAcceptor();
+	virtual void runAcceptor();
 
 	/// Called by Worker. Not thread-safe; to be called only by worker.
 	virtual void startedWorking();
 	/// Called by startedWorking. Not thread-safe; to be called only be Worker.
-	void run(boost::system::error_code const& error);			///< Run network. Called serially via ASIO deadline timer. Manages connection state transitions.
+	virtual void run(boost::system::error_code const& error);			///< Run network. Called serially via ASIO deadline timer. Manages connection state transitions.
 
 	/// Run network. Not thread-safe; to be called only by worker.
 	virtual void doWork();
@@ -285,11 +285,11 @@ private:
 	static KeyPair networkAlias(bytesConstRef _b);
 
 	/// returns true if a member of m_requiredPeers
-	bool isRequiredPeer(NodeID const&) const;
+	virtual bool isRequiredPeer(NodeID const&) const;
 
-	bool nodeTableHasNode(Public const& _id) const;
-	Node nodeFromNodeTable(Public const& _id) const;
-	bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
+	virtual bool nodeTableHasNode(Public const& _id) const;
+	virtual Node nodeFromNodeTable(Public const& _id) const;
+	virtual bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
 
 	bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 

@@ -72,6 +72,7 @@ bool isPublicAddress(std::string const& _addressToCheck);
 class UPnP;
 class Capability;
 class Host;
+class FakeHost;
 class Session;
 
 struct NetworkStartRequired: virtual dev::Exception {};
