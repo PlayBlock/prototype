@@ -1356,7 +1356,7 @@ namespace dev
 
 
 				_p->requestBlockHeaders(nextTryCommonBlock(), 1, 0, false);
-				return true;
+				return false;
 			});
 		}
 
@@ -1376,7 +1376,7 @@ namespace dev
 				clearPeerDownloadMarks(_p); 
 
 				_p->requestBlockHeaders(m_sync.m_expectBlockHashForFindingCommon, 1, 0, false);
-				return true;
+				return false;
 			});
 		}
 
