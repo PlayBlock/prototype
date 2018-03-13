@@ -96,6 +96,7 @@ public:
 
 	static unsigned const c_oldProtocolVersion;
 	void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
+	void foreachPeerByLastIrr(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
 
 	static void blockCheat(bytes blockBytes, u256 difficult);
 	static void transactionCheat(Transaction t);

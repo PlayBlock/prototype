@@ -104,20 +104,23 @@ protected:
 class PeerSortObject
 {
 	public: 
-		PeerSortObject(const NodeID& _id , const int _rating, const std::chrono::steady_clock::time_point& _connectTime) 
-			:m_id(_id),m_rating(_rating), m_connectTime(_connectTime){}
+		PeerSortObject(const NodeID& _id , const int _rating, const std::chrono::steady_clock::time_point& _connectTime,const unsigned _lastIrrBlock) 
+			:m_id(_id),m_rating(_rating), m_connectTime(_connectTime),m_lastIrrBlock(_lastIrrBlock){}
 
 		PeerSortObject(const PeerSortObject& _obj)
-			:m_id(id()),m_rating(_obj.rating()),m_connectTime(_obj.connectTime()){}
+			:m_id(id()),m_rating(_obj.rating()),m_connectTime(_obj.connectTime()),m_lastIrrBlock(_obj.lastIrrBlock()){}
 
 		NodeID id() const { return m_id; }
 		int rating() const { return m_rating; }
 		std::chrono::steady_clock::time_point connectTime() const { return m_connectTime; }
+		unsigned lastIrrBlock() const { return m_lastIrrBlock; }
+		void lastIrrBlock(const unsigned _lastIrrBlock) { m_lastIrrBlock = _lastIrrBlock; }
 
 	private:
 		NodeID m_id;
 		int m_rating;
 		std::chrono::steady_clock::time_point m_connectTime;
+		unsigned m_lastIrrBlock;
 };
 
 using Peers = std::vector<Peer>;

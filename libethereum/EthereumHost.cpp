@@ -526,6 +526,54 @@ void EthereumHost::maintainTransactions()
 	});
 }
 
+void EthereumHost::foreachPeerByLastIrr(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const
+{
+	//order peers by protocol, rating, connection age
+	auto sessions = peerSessions();
+
+	for (auto s : sessions)
+	{
+		std::shared_ptr<EthereumPeer> pEthPeer = capabilityFromSession<EthereumPeer>(*s.first); 
+		s.second.lastIrrBlock(pEthPeer->getLastIrrBlock());
+	}
+
+	auto sessionLess = [](std::pair<std::shared_ptr<SessionFace>, PeerSortObject> const& _left, std::pair<std::shared_ptr<SessionFace>, PeerSortObject> const& _right)
+	{
+		if (_left.second.lastIrrBlock() == _right.second.lastIrrBlock())
+		{
+			if (_left.second.rating() == _right.second.rating())
+			{
+				return _left.second.connectTime() < _right.second.connectTime();
+			}
+			else {
+				return _left.second.rating() > _right.second.rating();
+			}
+		}
+		else {
+			return _left.second.lastIrrBlock() > _right.second.lastIrrBlock();
+		} 
+	};
+
+	std::sort(sessions.begin(), sessions.end(), sessionLess);
+
+	std::vector<p2p::NodeID> peerIDs;
+	std::vector<int> ratings;
+
+	for (auto s : sessions)
+	{
+		std::shared_ptr<EthereumPeer> pPeer =
+			capabilityFromSession<EthereumPeer>(*s.first);
+		peerIDs.push_back(pPeer->id());
+		ratings.push_back(s.first->rating());
+	}
+
+	for (auto s : sessions)
+		if (!_f(capabilityFromSession<EthereumPeer>(*s.first)))
+			return;
+}
+
+
+
 void EthereumHost::foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const
 {
 	//order peers by protocol, rating, connection age

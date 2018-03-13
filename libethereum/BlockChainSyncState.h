@@ -213,6 +213,8 @@ namespace dev
 
 			void syncHeadersAndBodies();
 
+			void syncHeadersAndBodies(std::shared_ptr<EthereumPeer> _peer);
+
 		private: 
 			fc::time_point m_lastBlockMsgTimePoint; ///<最近一次接到BlockHeader的时间点
 		};

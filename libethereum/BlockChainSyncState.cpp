@@ -764,14 +764,14 @@ namespace dev
 				return;
 			}
 
-			host().foreachPeer([this](std::shared_ptr<EthereumPeer> _peer)
+			//按最新不可逆高度排序
+			host().foreachPeerByLastIrr([this](std::shared_ptr<EthereumPeer> _peer)
 			{
-
 				if (_peer->m_asking != Asking::Nothing)
 				{
 					clog(NetAllDetail) << "Can't sync with this peer - outstanding asks.";
 					return true;
-				} 
+				}
 
 				//拒绝已被判定为非法的Peer
 				if (!_peer->isLlegal())
@@ -785,87 +785,91 @@ namespace dev
 					resetSyncTempData();
 					switchState(SyncState::Idle);
 					return false;
-				} 
-
-				// check to see if we need to download any block bodies first
-				auto header = m_sync.m_headers.begin();
-				h256s neededBodies;
-				vector<unsigned> neededNumbers;
-				unsigned index = 0;
-
-				if (!m_sync.m_headers.empty() && m_sync.m_headers.begin()->first == m_sync.m_syncStartBlock + 1)
-				{//存在相同块，且header不为空，与m_syncStartBlock接上
-
-					while (header != m_sync.m_headers.end() && neededBodies.size() < c_maxRequestBodies && index < header->second.size())
-					{
-						unsigned block = header->first + index;
-						if (m_sync.m_downloadingBodies.count(block) == 0 && !haveItem(m_sync.m_bodies, block))
-						{
-							neededBodies.push_back(header->second[index].hash);
-							neededNumbers.push_back(block);
-							m_sync.m_downloadingBodies.insert(block);
-						}
-
-						++index;
-						if (index >= header->second.size())
-							break; // Download bodies only for validated header chain
-					}
-				}
-				if (neededBodies.size() > 0)
-				{
-					ctrace << "request Block Nums:" << neededNumbers;
-					ctrace << "request Block Hashes:" << neededBodies;
-					m_sync.m_bodySyncPeers[_peer] = neededNumbers;
-					_peer->requestBlockBodies(neededBodies);
-				}
-				else
-				{
-					// check if need to download headers
-					unsigned start = m_sync.m_syncStartBlock + 1;
-					auto next = m_sync.m_headers.begin();
-					unsigned count = 0;
-					if (!m_sync.m_headers.empty() && start >= m_sync.m_headers.begin()->first)
-					{
-						start = m_sync.m_headers.begin()->first + m_sync.m_headers.begin()->second.size();
-						++next;
-					}
-
-					while (count == 0 && next != m_sync.m_headers.end())
-					{
-						count = std::min(c_maxRequestHeaders, next->first - start);
-						while (count > 0 && m_sync.m_downloadingHeaders.count(start) != 0)
-						{
-							start++;
-							count--;
-						}
-						std::vector<unsigned> headers;
-						for (unsigned block = start; block < start + count; block++)
-							if (m_sync.m_downloadingHeaders.count(block) == 0)
-							{
-								headers.push_back(block);
-								m_sync.m_downloadingHeaders.insert(block);
-							}
-						count = headers.size();
-						if (count > 0)
-						{
-							m_sync.m_headerSyncPeers[_peer] = headers;
-							assert(!haveItem(m_sync.m_headers, start));
-							_peer->requestBlockHeaders(start, count, 0, false);
-						}
-						else if (start >= next->first)
-						{
-							start = next->first + next->second.size();
-							++next;
-						}
-					}
-
 				}
 
-				return true;
+				syncHeadersAndBodies(_peer);
+				
+				return false; //只访问最高不可逆高度的节点
 			});
 		}
 
 
+
+		void SyncBlocksSyncState::syncHeadersAndBodies(std::shared_ptr<EthereumPeer> _peer)
+		{ 
+			// check to see if we need to download any block bodies first
+			auto header = m_sync.m_headers.begin();
+			h256s neededBodies;
+			vector<unsigned> neededNumbers;
+			unsigned index = 0;
+
+			if (!m_sync.m_headers.empty() && m_sync.m_headers.begin()->first == m_sync.m_syncStartBlock + 1)
+			{//存在相同块，且header不为空，与m_syncStartBlock接上
+
+				while (header != m_sync.m_headers.end() && neededBodies.size() < c_maxRequestBodies && index < header->second.size())
+				{
+					unsigned block = header->first + index;
+					if (m_sync.m_downloadingBodies.count(block) == 0 && !haveItem(m_sync.m_bodies, block))
+					{
+						neededBodies.push_back(header->second[index].hash);
+						neededNumbers.push_back(block);
+						m_sync.m_downloadingBodies.insert(block);
+					}
+
+					++index;
+					if (index >= header->second.size())
+						break; // Download bodies only for validated header chain
+				}
+			}
+			if (neededBodies.size() > 0)
+			{
+				ctrace << "request Block Nums:" << neededNumbers;
+				ctrace << "request Block Hashes:" << neededBodies;
+				m_sync.m_bodySyncPeers[_peer] = neededNumbers;
+				_peer->requestBlockBodies(neededBodies);
+			}
+			else
+			{
+				// check if need to download headers
+				unsigned start = m_sync.m_syncStartBlock + 1;
+				auto next = m_sync.m_headers.begin();
+				unsigned count = 0;
+				if (!m_sync.m_headers.empty() && start >= m_sync.m_headers.begin()->first)
+				{
+					start = m_sync.m_headers.begin()->first + m_sync.m_headers.begin()->second.size();
+					++next;
+				}
+
+				while (count == 0 && next != m_sync.m_headers.end())
+				{
+					count = std::min(c_maxRequestHeaders, next->first - start);
+					while (count > 0 && m_sync.m_downloadingHeaders.count(start) != 0)
+					{
+						start++;
+						count--;
+					}
+					std::vector<unsigned> headers;
+					for (unsigned block = start; block < start + count; block++)
+						if (m_sync.m_downloadingHeaders.count(block) == 0)
+						{
+							headers.push_back(block);
+							m_sync.m_downloadingHeaders.insert(block);
+						}
+					count = headers.size();
+					if (count > 0)
+					{
+						m_sync.m_headerSyncPeers[_peer] = headers;
+						assert(!haveItem(m_sync.m_headers, start));
+						_peer->requestBlockHeaders(start, count, 0, false);
+					}
+					else if (start >= next->first)
+					{
+						start = next->first + next->second.size();
+						++next;
+					}
+				} 
+			} 
+		}
 
 		void SyncBlocksSyncState::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 		{ 
@@ -1371,7 +1375,7 @@ namespace dev
 
 		void FindingCommonBlockSyncState::requestExpectHashHeader()
 		{
-			host().foreachPeer([this](std::shared_ptr<EthereumPeer> _p)
+			host().foreachPeerByLastIrr([this](std::shared_ptr<EthereumPeer> _p)
 			{
 				if (_p->m_asking != Asking::Nothing)
 				{

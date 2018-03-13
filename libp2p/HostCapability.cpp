@@ -23,6 +23,7 @@
 
 #include "Session.h"
 #include "Host.h"
+#include "libethereum\EthereumPeer.h"
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -38,10 +39,11 @@ std::vector<std::pair<std::shared_ptr<SessionFace>, PeerSortObject>> HostCapabil
 	std::vector<std::pair<std::shared_ptr<SessionFace>, PeerSortObject>> ret;
 	for (auto const& i: m_host->m_sessions)
 		if (std::shared_ptr<SessionFace> s = i.second.lock())
-			if (s->capabilities().count(std::make_pair(name(), _version))) {
+			if (s->capabilities().count(std::make_pair(name(), _version))) { 
 				//此处将second定义为PeerSortObject，因为在多线程环境下如果在排序中直接使用Session
 				//会导致中途评分及连接时间变化，把排序搞烂
-				ret.push_back(make_pair(s, PeerSortObject(s->peer()->id, s->rating(),s->connectionTime()) ));
+				ret.push_back(make_pair(s, PeerSortObject(s->peer()->id, s->rating(),s->connectionTime(),0) ));
 			}
 	return ret;
 }
+ 

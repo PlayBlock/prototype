@@ -50,8 +50,7 @@ public:
 	Host* host() const { return m_host; }
 
 	std::vector<std::pair<std::shared_ptr<SessionFace>, PeerSortObject>> peerSessions() const;
-	std::vector<std::pair<std::shared_ptr<SessionFace>, PeerSortObject>> peerSessions(u256 const& _version) const;
-
+	std::vector<std::pair<std::shared_ptr<SessionFace>, PeerSortObject>> peerSessions(u256 const& _version) const; 
 protected:
 	virtual std::string name() const = 0;
 	virtual u256 version() const = 0;
