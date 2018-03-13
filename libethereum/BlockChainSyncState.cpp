@@ -1137,6 +1137,7 @@ namespace dev
 
 		void FindingCommonBlockSyncState::onEnter()
 		{
+			m_unexpectTimes = 0;
 			m_lastBlockHeaderTimePoint = fc::time_point::now();
 			updateLastUpdateTime();
 		}
@@ -1218,6 +1219,14 @@ namespace dev
 
 				} else {//接到非预期块头 
 					ctrace << "recv unexpected block header!!!";
+					m_unexpectTimes++;
+					if (m_unexpectTimes > 20)
+					{//有可能对方已切换分叉
+						m_unexpectTimes = 0;
+						_peer->addRating(-10000);
+						switchState(SyncState::Idle);
+						return;
+					}
 				}  
 			}else {//回传的Header数量超预期
 				ctrace << "Ignore peer unexpected block header !";

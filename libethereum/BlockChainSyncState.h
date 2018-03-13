@@ -174,7 +174,8 @@ namespace dev
 			//每隔一段时间发送请求BlockHeader命令，保持FindingCommon状态的活性
 			void keepAlive();
 		private: 
-			
+
+			int	m_unexpectTimes = 0;					    ///<收到非预期次数
 			fc::time_point m_lastBlockHeaderTimePoint; ///<最近一次接到BlockHeader的时间点
 		};
 
