@@ -4,6 +4,10 @@
 //#include<libp2ptestrobot/P2PTestRobot.hpp>
 
 
+namespace P2PTest {
+	class P2PTestRobot;
+}
+
 namespace dev
 {
 namespace p2p
@@ -123,8 +127,9 @@ public:
 
 
 	void FakeHost::connectToHost(NodeID const& _id);
-	void FakeHost::sendToHost(NodeID const& _id, uint16_t _capId, PacketType _t, bytes const& _r);
-	void FakeHost::recvFromHost(NodeID const& _id, uint16_t _capId, PacketType _t, bytes const& _r);
+	void FakeHost::sendToHost(bytes const& _r);
+	void FakeHost::recvFromHost(bytes const& _r);
+	bool FakeHost::checkPacket(bytesConstRef _msg);
 protected:
 	void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);
 
@@ -177,7 +182,9 @@ private:
 
 	mutable std::unordered_map<NodeID, std::weak_ptr<SessionFace>> m_sessions;
 
-	//P2PTestRobot m_testRobot;
+	P2PTest::P2PTestRobot* m_testRobot;
+
+	std::shared_ptr<SessionFace> m_ps;
 
 };
 }

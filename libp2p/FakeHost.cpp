@@ -40,6 +40,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include "FakeHost.h"
 #include "FakePeer.h"
 #include "FakeSession.h"
+#include <libp2ptestrobot/P2PTestRobot.hpp>
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -54,11 +55,13 @@ std::chrono::milliseconds const c_keepAliveTimeOut = std::chrono::milliseconds(1
 FakeHost::FakeHost(string const& _clientVersion, KeyPair const& _alias, NetworkPreferences const& _n)
 	: Host(_clientVersion, _alias, _n)
 {
+	m_testRobot = new P2PTest::P2PTestRobot(*this);
 }
 
 FakeHost::FakeHost(string const& _clientVersion, NetworkPreferences const& _n, bytesConstRef _restoreNetwork) :
 	Host(_clientVersion, _n, _restoreNetwork)
 {
+	m_testRobot = new P2PTest::P2PTestRobot(*this);
 }
 
 FakeHost::~FakeHost()
@@ -311,22 +314,22 @@ void FakeHost::CreatPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<R
 	set<CapDesc> caps_set;
 	caps_set.insert(std::pair<std::string, u256>("eth", u256(62)));
 	// create session so disconnects are managed
-	shared_ptr<SessionFace> ps = make_shared<FakeSession>(this, p, PeerSessionInfo({ _id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), caps_set, 0, map<string, string>(), protocolVersion }));
+	m_ps = make_shared<FakeSession>(this, p, PeerSessionInfo({ _id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), caps_set, 0, map<string, string>(), protocolVersion }));
 	if (protocolVersion < dev::p2p::c_protocolVersion - 1)
 	{
-		ps->disconnect(IncompatibleProtocol);
+		m_ps->disconnect(IncompatibleProtocol);
 		return;
 	}
 	if (caps.empty())
 	{
-		ps->disconnect(UselessPeer);
+		m_ps->disconnect(UselessPeer);
 		return;
 	}
 
 	if (m_netPrefs.pin && !isRequiredPeer(_id))
 	{
 		cdebug << "Unexpected identity from peer (got" << _id << ", must be one of " << m_requiredPeers << ")";
-		ps->disconnect(UnexpectedIdentity);
+		m_ps->disconnect(UnexpectedIdentity);
 		return;
 	}
 
@@ -338,13 +341,13 @@ void FakeHost::CreatPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<R
 				{
 					// Already connected.
 					clog(NetWarn) << "Session already exists for peer with id" << _id;
-					ps->disconnect(DuplicatePeer);
+					m_ps->disconnect(DuplicatePeer);
 					return;
 				}
 
 		if (!peerSlotsAvailable())
 		{
-			ps->disconnect(TooManyPeers);
+			m_ps->disconnect(TooManyPeers);
 			return;
 		}
 
@@ -355,14 +358,14 @@ void FakeHost::CreatPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<R
 		{
 			auto pcap = m_capabilities[i];
 			if (!pcap)
-				return ps->disconnect(IncompatibleProtocol);
+				return m_ps->disconnect(IncompatibleProtocol);
 
-			pcap->newPeerCapability(ps, offset, i);
+			pcap->newPeerCapability(m_ps, offset, i);
 			offset += pcap->messageCount();
 		}
 
 		//ps->start();
-		m_sessions[_id] = ps;
+		m_sessions[_id] = m_ps;
 	}
 
 	clog(NetP2PNote) << "p2p.host.peer.register" << _id;
@@ -377,12 +380,46 @@ void FakeHost::connectToHost(NodeID const& _id)
 
 }
 
-void FakeHost::sendToHost(NodeID const& _id, uint16_t _capId, PacketType _t, bytes const& _r)
+bool FakeHost::checkPacket(bytesConstRef _msg)
 {
-	m_sessions[_id].lock()->readPacket(_capId, _t,RLP(_r));
+	if (_msg[0] > 0x7f || _msg.size() < 2)
+		return false;
+	if (RLP(_msg.cropped(1)).actualSize() + 1 != _msg.size())
+		return false;
+	return true;
 }
-void FakeHost::recvFromHost(NodeID const& _id, uint16_t _capId, PacketType _t, bytes const& _r)
+
+void FakeHost::sendToHost(bytes const& _r)
 {
+	NodeID  id("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
+	uint16_t hProtocolId =63;
+	//PacketType type = UserPacket;
+
+	bytesConstRef frame(_r.data(), _r.size());
+
+	if (!checkPacket(frame))
+	{
+		cerr << "Received " << frame.size() << ": " << toHex(frame) << endl;
+		clog(NetWarn) << "INVALID MESSAGE RECEIVED";
+		return;
+	}
+	else
+	{
+		auto packetType = (PacketType)RLP(frame.cropped(0, 1)).toInt<unsigned>();
+		RLP r(frame.cropped(1));
+		bool ok = m_sessions[id].lock()->readPacket(hProtocolId, packetType, r);
+		if (!ok)
+			clog(NetWarn) << "Couldn't interpret packet." << RLP(r);
+	}
+
+
+	
+}
+void FakeHost::recvFromHost(bytes const& _r)
+{
+	NodeID  _id;
+	uint16_t _capId;
+	PacketType _t;
 	m_sessions[_id].lock()->sendPacket(_capId, _t, RLP(_r));
 }
 
@@ -807,7 +844,9 @@ void FakeHost::doWork()
 		Sleep(10);
 		NodeID  m_remote("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
 
-		connectToHost(m_remote);
+		// connectToHost(m_remote);
+
+		m_testRobot->run();
 
 		/*if (m_run)
 			m_ioService.run();*/

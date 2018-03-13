@@ -52,6 +52,7 @@ void P2PTestRobot::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty
 		<< _chainGenesisHash
 		<< _lastIrrBlock
 		;
+
 	sealAndSend(s);
 }
 
@@ -74,7 +75,7 @@ void P2PTestRobot::sendToHost(bytes& _s)
 
 void P2PTestRobot::recvFromHost(bytes& _s)
 {
-	m_host.recvFromHost();
+	m_host.recvFromHost(_s);
 }
 
 void P2PTestRobot::run()
@@ -85,10 +86,14 @@ void P2PTestRobot::run()
 	h256 _chainGenesisHash = h256();
 	u256 _lastIrrBlock = u256();
 
+	NodeID  m_remote("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
+
+	m_host.connectToHost(m_remote);
+
 	while (true)
 	{
 		requestStatus(_hostNetworkId, _chainTotalDifficulty, _chainCurrentHash, _chainGenesisHash, _lastIrrBlock);
-		boost::this_thread::sleep_for(boost::chrono::milliseconds(100000));
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(10000));
 	}
 }
 
