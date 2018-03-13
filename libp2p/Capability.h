@@ -34,6 +34,7 @@ class ReputationManager;
 class Capability: public std::enable_shared_from_this<Capability>
 {
 	friend class Session;
+	friend class FakeSession;
 
 public:
 	Capability(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _idOffset);

@@ -32,9 +32,10 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/Exceptions.h>
 #include <libp2p/Host.h>
+#include <libp2p/FakeHost.h>
 #include <libethereum/Client.h>
 #include <libethereum/ChainParams.h>
-
+#define USE_FAKE_HOST 1
 namespace dev
 {
 
@@ -209,9 +210,11 @@ public:
 
 private:
 	std::string m_clientVersion;					///< Our end-application client's name/version.
-
-	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
-
+#if USE_FAKE_HOST
+	p2p::FakeHost m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
+#else
+    p2p::Host m_net;
+#endif
 	std::unique_ptr<eth::Client> m_ethereum;		///< Client for Ethereum ("eth") protocol.
 };
 

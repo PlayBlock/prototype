@@ -41,6 +41,7 @@ class HostCapabilityFace
 	template <class T> friend class HostCapability;
 	friend class Capability;
 	friend class Session;
+	friend class FakeSession;
 
 public:
 	HostCapabilityFace() {}

@@ -1,6 +1,9 @@
 #pragma once
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/RLP.h>
+#include <libp2p/FakeHost.h>
+
+//class dev::p2p::FakeHost;
 
 
 namespace P2PTest {
@@ -10,7 +13,7 @@ namespace P2PTest {
 class P2PTestRobot 
 {
 public:
-	P2PTestRobot();
+	P2PTestRobot(dev::p2p::FakeHost& _host);
 	~P2PTestRobot();
 	void P2PTestRobot::loadConfig();
 	void requestBlockHeaders(dev::h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse);
@@ -26,6 +29,7 @@ public:
 	void run();
 
 	unsigned m_idOffset;
+	dev::p2p::FakeHost& m_host;
 };
 
 

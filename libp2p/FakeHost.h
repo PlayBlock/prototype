@@ -1,7 +1,7 @@
 #pragma once
 
 #include<libp2p/Host.h>
-
+//#include<libp2ptestrobot/P2PTestRobot.hpp>
 
 
 namespace dev
@@ -121,6 +121,10 @@ public:
 	/// Get the node information.
 	p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkPreferences().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkPreferences().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
 
+
+	void FakeHost::connectToHost(NodeID const& _id);
+	void FakeHost::sendToHost(NodeID const& _id, uint16_t _capId, PacketType _t, bytes const& _r);
+	void FakeHost::recvFromHost(NodeID const& _id, uint16_t _capId, PacketType _t, bytes const& _r);
 protected:
 	void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);
 
@@ -132,29 +136,29 @@ private:
 
 	unsigned peerSlots(PeerSlotType _type) { return _type == Egress ? m_idealPeerCount : m_idealPeerCount * m_stretchPeers; }
 
-	virtual bool havePeerSession(NodeID const& _id) { return !!peerSession(_id); }
+	bool havePeerSession(NodeID const& _id) { return !!peerSession(_id); }
 
 	/// Determines and sets m_tcpPublic to publicly advertised address.
-	virtual void determinePublic();
+	void determinePublic();
 
-	virtual void connect(std::shared_ptr<Peer> const& _p);
+	void connect(std::shared_ptr<Peer> const& _p);
 
 	/// Returns true if pending and connected peer count is less than maximum
-	virtual bool peerSlotsAvailable(PeerSlotType _type = Ingress);
+	bool peerSlotsAvailable(PeerSlotType _type = Ingress);
 
 	/// Ping the peers to update the latency information and disconnect peers which have timed out.
-	virtual void keepAlivePeers();
+	void keepAlivePeers();
 
 	/// Disconnect peers which didn't respond to keepAlivePeers ping prior to c_keepAliveTimeOut.
-	virtual void disconnectLatePeers();
+	void disconnectLatePeers();
 
 	/// Called only from startedWorking().
-	virtual void runAcceptor();
+	void runAcceptor();
 
 	/// Called by Worker. Not thread-safe; to be called only by worker.
-	virtual void startedWorking();
+	void startedWorking();
 	/// Called by startedWorking. Not thread-safe; to be called only be Worker.
-	virtual void run(boost::system::error_code const& error);			///< Run network. Called serially via ASIO deadline timer. Manages connection state transitions.
+	void run(boost::system::error_code const& error);			///< Run network. Called serially via ASIO deadline timer. Manages connection state transitions.
 
 																/// Run network. Not thread-safe; to be called only by worker.
 	virtual void doWork();
@@ -163,12 +167,17 @@ private:
 	virtual void doneWorking();
 
 	/// returns true if a member of m_requiredPeers
-	virtual bool isRequiredPeer(NodeID const&) const;
+	bool isRequiredPeer(NodeID const&) const;
 
-	virtual bool nodeTableHasNode(Public const& _id) const;
-	virtual Node nodeFromNodeTable(Public const& _id) const;
-	virtual bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
+	bool nodeTableHasNode(Public const& _id) const;
+	Node nodeFromNodeTable(Public const& _id) const;
+	bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
 	///< Set by constructor and used to set Host key and restore network peers & nodes.
+	void CreatPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
+
+	mutable std::unordered_map<NodeID, std::weak_ptr<SessionFace>> m_sessions;
+
+	//P2PTestRobot m_testRobot;
 
 };
 }

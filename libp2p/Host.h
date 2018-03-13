@@ -131,6 +131,7 @@ class Host: public Worker
 	friend class RLPXHandshake;
 	
 	friend class Session;
+	friend class FakeSession;
 	friend class HostCapabilityFace;
 
 public:

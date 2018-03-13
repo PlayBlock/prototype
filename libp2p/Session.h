@@ -78,6 +78,10 @@ public:
 	virtual std::chrono::steady_clock::time_point lastReceived() const = 0;
 
 	virtual ReputationManager& repMan() = 0;
+
+	virtual bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r) { return false; };
+
+	virtual bool sendPacket(uint16_t _capId, PacketType _t, RLP const& _r) { return false; };
 };
 
 /**
@@ -137,7 +141,7 @@ private:
 	void write();
 
 	/// Deliver RLPX packet to Session or Capability for interpretation.
-	bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r);
+	bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r)override;
 
 	/// Interpret an incoming Session packet.
 	bool interpret(PacketType _t, RLP const& _r);

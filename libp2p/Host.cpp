@@ -262,6 +262,11 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 	auto caps = _rlp[2].toVector<CapDesc>();
 	auto listenPort = _rlp[3].toInt<unsigned short>();
 	auto pub = _rlp[4].toHash<Public>();
+	std::cout << "protocolVersion" << protocolVersion << std::endl;
+	std::cout << "clientVersion" << clientVersion << std::endl;
+	std::cout << "caps" << caps[0].first<< caps[0].second<< std::endl;
+	std::cout << "listenPort" << listenPort << std::endl;
+	std::cout << "pub" << pub << std::endl;
 
 	if (pub != _id)
 	{

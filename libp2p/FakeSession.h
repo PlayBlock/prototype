@@ -55,8 +55,9 @@ class ReputationManager;
  */
 class FakeSession: public SessionFace, public std::enable_shared_from_this<SessionFace>
 {
+	friend class FakeHost;
 public:
-	FakeSession(Host* _server, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s, std::shared_ptr<FakePeer> const& _n, PeerSessionInfo _info);
+	FakeSession(Host* _server,std::shared_ptr<Peer> const& _n, PeerSessionInfo _info);
 	virtual ~FakeSession();
 
 	void start() override;
@@ -106,7 +107,9 @@ private:
 	void write();
 
 	/// Deliver RLPX packet to FakeSession or Capability for interpretation.
-	bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r);
+	bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r)override;
+
+	bool sendPacket(uint16_t _capId, PacketType _t, RLP const& _r)override;
 
 	/// Interpret an incoming FakeSession packet.
 	bool interpret(PacketType _t, RLP const& _r);
@@ -123,7 +126,7 @@ private:
 	std::vector<byte> m_data;			    ///< Buffer for ingress packet data.
 	bytes m_incoming;						///< Read buffer for ingress bytes.
 
-	std::shared_ptr<FakePeer> m_peer;			///< The Peer object.
+	std::shared_ptr<Peer> m_peer;			///< The Peer object.
 	bool m_dropped = false;					///< If true, we've already divested ourselves of this peer. We're just waiting for the reads & writes to fail before the shared_ptr goes OOS and the destructor kicks in.
 
 	mutable Mutex x_info;

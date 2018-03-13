@@ -32,18 +32,14 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-FakeSession::FakeSession(Host* _h, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s, std::shared_ptr<FakePeer> const& _n, PeerSessionInfo _info):
+FakeSession::FakeSession(Host* _h, std::shared_ptr<Peer> const& _n, PeerSessionInfo _info):
 	m_server(_h),
-	m_io(move(_io)),
-	m_socket(_s),
 	m_peer(_n),
 	m_info(_info),
 	m_ping(chrono::steady_clock::time_point::max())
 {
 	m_peer->m_lastDisconnect = NoDisconnect;
 	m_lastReceived = m_connect = chrono::steady_clock::now();
-	DEV_GUARDED(x_info)
-		m_info.socketId = m_socket->ref().native_handle();
 }
 
 FakeSession::~FakeSession()
@@ -59,13 +55,7 @@ FakeSession::~FakeSession()
 
 	try
 	{
-		bi::tcp::socket& socket = m_socket->ref();
-		if (socket.is_open())
-		{
-			boost::system::error_code ec;
-			socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-			socket.close();
-		}
+		
 	}
 	catch (...){}
 }
@@ -122,9 +112,9 @@ bool FakeSession::readPacket(uint16_t _capId, PacketType _t, RLP const& _r)
 		if (_capId == 0 && _t < UserPacket)
 			return interpret(_t, _r);
 
-		//for (auto const& i: m_capabilities)
-		//	if (_t >= (int)i.second->m_idOffset && _t - i.second->m_idOffset < i.second->hostCapability()->messageCount())
-		//		return i.second->m_enabled ? i.second->interpret(_t - i.second->m_idOffset, _r) : true;
+		for (auto const& i: m_capabilities)
+			if (_t >= (int)i.second->m_idOffset && _t - i.second->m_idOffset < i.second->hostCapability()->messageCount())
+				return i.second->m_enabled ? i.second->interpret(_t - i.second->m_idOffset, _r) : true;
 
 		return false;
 	}
@@ -137,6 +127,15 @@ bool FakeSession::readPacket(uint16_t _capId, PacketType _t, RLP const& _r)
 	return true;
 }
 
+
+bool FakeSession::sendPacket(uint16_t _capId, PacketType _t, RLP const& _r)
+{
+	m_lastReceived = chrono::steady_clock::now();
+	clog(NetRight) << _t << _r;
+
+
+	return true;
+}
 bool FakeSession::interpret(PacketType _t, RLP const& _r)
 {
 	switch (_t)
@@ -213,8 +212,8 @@ void FakeSession::send(bytes&& _msg)
 	if (!checkPacket(msg))
 		clog(NetWarn) << "INVALID PACKET CONSTRUCTED!";
 
-	if (!m_socket->ref().is_open())
-		return;
+	//if (!m_socket->ref().is_open())
+	//	return;
 
 	bool doWrite = false;
 	DEV_GUARDED(x_framing)
@@ -229,39 +228,39 @@ void FakeSession::send(bytes&& _msg)
 
 void FakeSession::write()
 {
-	bytes const* out = nullptr;
-	DEV_GUARDED(x_framing)
-	{
-		m_io->writeSingleFramePacket(&m_writeQueue[0], m_writeQueue[0]);
-		out = &m_writeQueue[0];
-	}
-	auto self(shared_from_this());
-	 
-	//boost::asio::socket_base::receive_buffer_size recv_buf_size;
-	//boost::asio::socket_base::send_buffer_size send_buf_size;
-	//m_socket->ref().get_option(recv_buf_size);
-	//m_socket->ref().get_option(send_buf_size);
-	//ctrace << "async_write bufsize = " << out->size() << " send_buf_size  = " << send_buf_size.value() << " recv_buf_size = " << recv_buf_size.value();
-	ba::async_write(m_socket->ref(), ba::buffer(*out), [this, self](boost::system::error_code ec, std::size_t /*length*/)
-	{
-		ThreadContext tc(info().id.abridged());
-		ThreadContext tc2(info().clientVersion);
-		// must check queue, as write callback can occur following dropped()
-		if (ec)
-		{
-			clog(NetWarn) << "Error sending: " << ec.message();
-			drop(TCPError);
-			return;
-		}
+	//bytes const* out = nullptr;
+	//DEV_GUARDED(x_framing)
+	//{
+	//	m_io->writeSingleFramePacket(&m_writeQueue[0], m_writeQueue[0]);
+	//	out = &m_writeQueue[0];
+	//}
+      auto self(shared_from_this());
+	// 
+	////boost::asio::socket_base::receive_buffer_size recv_buf_size;
+	////boost::asio::socket_base::send_buffer_size send_buf_size;
+	////m_socket->ref().get_option(recv_buf_size);
+	////m_socket->ref().get_option(send_buf_size);
+	////ctrace << "async_write bufsize = " << out->size() << " send_buf_size  = " << send_buf_size.value() << " recv_buf_size = " << recv_buf_size.value();
+	//ba::async_write(m_socket->ref(), ba::buffer(*out), [this, self](boost::system::error_code ec, std::size_t /*length*/)
+	//{
+	//	ThreadContext tc(info().id.abridged());
+	//	ThreadContext tc2(info().clientVersion);
+	//	// must check queue, as write callback can occur following dropped()
+		//if (ec)
+		//{
+		//	clog(NetWarn) << "Error sending: " << ec.message();
+		//	drop(TCPError);
+		//	return;
+		//}
 
-		DEV_GUARDED(x_framing)
-		{
-			m_writeQueue.pop_front();
-			if (m_writeQueue.empty())
-				return;
-		}
-		write();
-	});
+		//DEV_GUARDED(x_framing)
+		//{
+		//	m_writeQueue.pop_front();
+		//	if (m_writeQueue.empty())
+		//		return;
+		//}
+		//write();
+	//});
 }
 
 namespace
@@ -331,29 +330,30 @@ void FakeSession::doRead()
 	auto self(shared_from_this());
 	m_data.resize(h256::size);
 
-	boost::asio::socket_base::receive_buffer_size recv_buf_size;
-	boost::asio::socket_base::send_buffer_size send_buf_size;
-	m_socket->ref().get_option(recv_buf_size);
-	m_socket->ref().get_option(send_buf_size);
-	
-	//ctrace << "send_buf_size  = " << send_buf_size.value() << " recv_buf_size = " << recv_buf_size.value();
+	//boost::asio::socket_base::receive_buffer_size recv_buf_size;
+	//boost::asio::socket_base::send_buffer_size send_buf_size;
+	//m_socket->ref().get_option(recv_buf_size);
+	//m_socket->ref().get_option(send_buf_size);
+	//
+	////ctrace << "send_buf_size  = " << send_buf_size.value() << " recv_buf_size = " << recv_buf_size.value();
 
-	ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, h256::size), [this,self](boost::system::error_code ec, std::size_t length)
-	{
-		ThreadContext tc(info().id.abridged());
-		ThreadContext tc2(info().clientVersion);
-		if (!checkRead(h256::size, ec, length))
-			return;
-		else if (!m_io->authAndDecryptHeader(bytesRef(m_data.data(), length)))
-		{
-			clog(NetWarn) << "header decrypt failed";
-			drop(BadProtocol); // todo: better error
-			return;
-		}
+	//ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, h256::size), [this,self](boost::system::error_code ec, std::size_t length)
+	//{
+	//	ThreadContext tc(info().id.abridged());
+	//	ThreadContext tc2(info().clientVersion);
+	//	if (!checkRead(h256::size, ec, length))
+	//		return;
+	//	else if (!m_io->authAndDecryptHeader(bytesRef(m_data.data(), length)))
+	//	{
+	//		clog(NetWarn) << "header decrypt failed";
+	//		drop(BadProtocol); // todo: better error
+	//		return;
+	//	}
 		
 		uint16_t hProtocolId;
 		uint32_t hLength;
 		uint8_t hPadding;
+		std::size_t length = h256::size;
 		try
 		{
 			RLPXFrameInfo header(bytesConstRef(m_data.data(), length));
@@ -372,20 +372,20 @@ void FakeSession::doRead()
 		/// read padded frame and mac
 		auto tlen = hLength + hPadding + h128::size;
 		m_data.resize(tlen);
-		ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, tlen), [this, self, hLength, hProtocolId, tlen](boost::system::error_code ec, std::size_t length)
+		//ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, tlen), [this, self, hLength, hProtocolId, tlen](boost::system::error_code ec, std::size_t length)
 		{ 
 			//ctrace << "async_read length = "<<length;
 
-			ThreadContext tc(info().id.abridged());
-			ThreadContext tc2(info().clientVersion);
-			if (!checkRead(tlen, ec, length))
-				return;
-			else if (!m_io->authAndDecryptFrame(bytesRef(m_data.data(), tlen)))
-			{
-				clog(NetWarn) << "frame decrypt failed";
-				drop(BadProtocol); // todo: better error
-				return;
-			}
+			//ThreadContext tc(info().id.abridged());
+			//ThreadContext tc2(info().clientVersion);
+			//if (!checkRead(tlen, ec, length))
+			//	return;
+			//else if (!m_io->authAndDecryptFrame(bytesRef(m_data.data(), tlen)))
+			//{
+			//	clog(NetWarn) << "frame decrypt failed";
+			//	drop(BadProtocol); // todo: better error
+			//	return;
+			//}
 
 			bytesConstRef frame(m_data.data(), hLength);
 			if (!checkPacket(frame))
@@ -404,8 +404,8 @@ void FakeSession::doRead()
 					clog(NetWarn) << "Couldn't interpret packet." << RLP(r);
 			}
 			doRead();
-		});
-	});
+		}//);
+	//});
 }
 
 bool FakeSession::checkRead(std::size_t _expected, boost::system::error_code _ec, std::size_t _length)

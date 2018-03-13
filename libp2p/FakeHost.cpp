@@ -33,12 +33,13 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/FileSystem.h>
-#include <libp2p/Session.h>
 #include <libp2p/Common.h>
 #include <libp2p/Capability.h>
 #include <libp2p/UPnP.h>
 #include <libp2p/RLPxHandshake.h>
 #include "FakeHost.h"
+#include "FakePeer.h"
+#include "FakeSession.h"
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -48,8 +49,6 @@ std::chrono::seconds const c_keepAliveInterval = std::chrono::seconds(30);
 
 /// Disconnect timeout after failure to respond to keepAlivePeers ping.
 std::chrono::milliseconds const c_keepAliveTimeOut = std::chrono::milliseconds(1000);
-
-HostNodeTableHandler::HostNodeTableHandler(Host& _host) : m_host(_host) {}
 
 
 FakeHost::FakeHost(string const& _clientVersion, KeyPair const& _alias, NetworkPreferences const& _n)
@@ -167,10 +166,10 @@ void FakeHost::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<R
 		{
 			// peer doesn't exist, try to get port info from node table
 			if (Node n = nodeFromNodeTable(_id))
-				p = make_shared<Peer>(n);
+				p = make_shared<FakePeer>(n);
 
 			if (!p)
-				p = make_shared<Peer>(Node(_id, UnspecifiedNodeIPEndpoint));
+				p = make_shared<FakePeer>(Node(_id, UnspecifiedNodeIPEndpoint));
 
 			m_peers[_id] = p;
 		}
@@ -204,7 +203,7 @@ void FakeHost::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<R
 	clog(NetMessageSummary) << "Hello: " << clientVersion << "V[" << protocolVersion << "]" << _id << showbase << capslog.str() << dec << listenPort;
 
 	// create session so disconnects are managed
-	shared_ptr<SessionFace> ps = make_shared<Session>(this, move(_io), _s, p, PeerSessionInfo({ _id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(), protocolVersion }));
+	shared_ptr<SessionFace> ps = make_shared<Session>(this, nullptr, nullptr, p, PeerSessionInfo({ _id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(), protocolVersion }));
 	if (protocolVersion < dev::p2p::c_protocolVersion - 1)
 	{
 		ps->disconnect(IncompatibleProtocol);
@@ -261,6 +260,132 @@ void FakeHost::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<R
 	clog(NetP2PNote) << "p2p.host.peer.register" << _id;
 }
 
+void FakeHost::CreatPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s)
+{
+	// session maybe ingress or egress so m_peers and node table entries may not exist
+	shared_ptr<Peer> p;
+	DEV_RECURSIVE_GUARDED(x_sessions)
+	{
+		if (m_peers.count(_id))
+			p = m_peers[_id];
+		else
+		{
+			// peer doesn't exist, try to get port info from node table
+			if (Node n = nodeFromNodeTable(_id))
+				p = make_shared<FakePeer>(n);
+
+			if (!p)
+				p = make_shared<FakePeer>(Node(_id, UnspecifiedNodeIPEndpoint));
+
+			m_peers[_id] = p;
+		}
+	}
+	if (p->isOffline())
+		p->m_lastConnected = std::chrono::system_clock::now();
+    boost::asio::ip::address address(bi::address_v4::from_string("127.0.0.1"));
+	p->endpoint.address = address;
+
+	unsigned protocolVersion = 4;
+	string clientVersion = "eth/v1.3.0/Linux/g++/Interpreter/RelWithDebInfo/af98af3c*/";
+	vector<CapDesc> caps;
+	caps.push_back(std::pair<std::string, u256>("eth", u256(62)));
+	unsigned short listenPort = 30303;
+
+	//if (pub != _id)
+	//{
+	//	cdebug << "Wrong ID: " << pub << " vs. " << _id;
+	//	return;
+	//}
+
+	// clang error (previously: ... << hex << caps ...)
+	// "'operator<<' should be declared prior to the call site or in an associated namespace of one of its arguments"
+	stringstream capslog;
+
+	// leave only highset mutually supported capability version
+	caps.erase(remove_if(caps.begin(), caps.end(), [&](CapDesc const& _r) { return !haveCapability(_r) || any_of(caps.begin(), caps.end(), [&](CapDesc const& _o) { return _r.first == _o.first && _o.second > _r.second && haveCapability(_o); }); }), caps.end());
+
+	for (auto cap : caps)
+		capslog << "(" << cap.first << "," << dec << cap.second << ")";
+
+	clog(NetMessageSummary) << "Hello: " << clientVersion << "V[" << protocolVersion << "]" << _id << showbase << capslog.str() << dec << listenPort;
+	set<CapDesc> caps_set;
+	caps_set.insert(std::pair<std::string, u256>("eth", u256(62)));
+	// create session so disconnects are managed
+	shared_ptr<SessionFace> ps = make_shared<FakeSession>(this, p, PeerSessionInfo({ _id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), caps_set, 0, map<string, string>(), protocolVersion }));
+	if (protocolVersion < dev::p2p::c_protocolVersion - 1)
+	{
+		ps->disconnect(IncompatibleProtocol);
+		return;
+	}
+	if (caps.empty())
+	{
+		ps->disconnect(UselessPeer);
+		return;
+	}
+
+	if (m_netPrefs.pin && !isRequiredPeer(_id))
+	{
+		cdebug << "Unexpected identity from peer (got" << _id << ", must be one of " << m_requiredPeers << ")";
+		ps->disconnect(UnexpectedIdentity);
+		return;
+	}
+
+	{
+		RecursiveGuard l(x_sessions);
+		if (m_sessions.count(_id) && !!m_sessions[_id].lock())
+			if (auto s = m_sessions[_id].lock())
+				if (s->isConnected())
+				{
+					// Already connected.
+					clog(NetWarn) << "Session already exists for peer with id" << _id;
+					ps->disconnect(DuplicatePeer);
+					return;
+				}
+
+		if (!peerSlotsAvailable())
+		{
+			ps->disconnect(TooManyPeers);
+			return;
+		}
+
+		unsigned offset = (unsigned)UserPacket;
+
+		// todo: mutex Session::m_capabilities and move for(:caps) out of mutex.
+		for (auto const& i : caps)
+		{
+			auto pcap = m_capabilities[i];
+			if (!pcap)
+				return ps->disconnect(IncompatibleProtocol);
+
+			pcap->newPeerCapability(ps, offset, i);
+			offset += pcap->messageCount();
+		}
+
+		//ps->start();
+		m_sessions[_id] = ps;
+	}
+
+	clog(NetP2PNote) << "p2p.host.peer.register" << _id;
+}
+
+void FakeHost::connectToHost(NodeID const& _id)
+{
+
+	NodeID  m_remote("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
+
+	CreatPeerSession(_id, RLP(), nullptr, nullptr);
+
+}
+
+void FakeHost::sendToHost(NodeID const& _id, uint16_t _capId, PacketType _t, bytes const& _r)
+{
+	m_sessions[_id].lock()->readPacket(_capId, _t,RLP(_r));
+}
+void FakeHost::recvFromHost(NodeID const& _id, uint16_t _capId, PacketType _t, bytes const& _r)
+{
+	m_sessions[_id].lock()->sendPacket(_capId, _t, RLP(_r));
+}
+
 void FakeHost::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
 {
 	if (_e == NodeEntryAdded)
@@ -278,7 +403,7 @@ void FakeHost::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
 				}
 				else
 				{
-					p = make_shared<Peer>(n);
+					p = make_shared<FakePeer>(n);
 					m_peers[_n] = p;
 					clog(NetP2PNote) << "p2p.host.peers.events.peerAdded " << _n << p->endpoint;
 				}
@@ -441,7 +566,7 @@ void FakeHost::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 			}
 			else
 			{
-				p = make_shared<Peer>(node);
+				p = make_shared<FakePeer>(node);
 				m_peers[_n] = p;
 			}
 		// required for discovery
@@ -473,8 +598,8 @@ void FakeHost::relinquishPeer(NodeID const& _node)
 
 void FakeHost::connect(std::shared_ptr<Peer> const& _p)
 {
-	if (!m_run)
-		return;
+	//if (!m_run)
+	//	return;
 
 	if (havePeerSession(_p->id))
 	{
@@ -486,7 +611,7 @@ void FakeHost::connect(std::shared_ptr<Peer> const& _p)
 		return;
 
 	// prevent concurrently connecting to a node
-	Peer *nptr = _p.get();
+	FakePeer *nptr = dynamic_cast<FakePeer *>(_p.get());
 	{
 		Guard l(x_pendingNodeConns);
 		if (m_pendingPeerConns.count(nptr))
@@ -496,35 +621,35 @@ void FakeHost::connect(std::shared_ptr<Peer> const& _p)
 
 	_p->m_lastAttempted = std::chrono::system_clock::now();
 
-	bi::tcp::endpoint ep(_p->endpoint);
-	clog(NetConnect) << "Attempting connection to node" << _p->id << "@" << ep << "from" << id();
-	auto socket = make_shared<RLPXSocket>(m_ioService);
-	socket->ref().async_connect(ep, [=](boost::system::error_code const& ec)
-	{
-		_p->m_lastAttempted = std::chrono::system_clock::now();
-		_p->m_failedAttempts++;
+	//bi::tcp::endpoint ep(_p->endpoint);
+	//clog(NetConnect) << "Attempting connection to node" << _p->id << "@" << ep << "from" << id();
+	//auto socket = make_shared<RLPXSocket>(m_ioService);
+	//socket->ref().async_connect(ep, [=](boost::system::error_code const& ec)
+	//{
+	//	_p->m_lastAttempted = std::chrono::system_clock::now();
+	//	_p->m_failedAttempts++;
 
-		if (ec)
-		{
-			clog(NetConnect) << "Connection refused to node" << _p->id << "@" << ep << "(" << ec.message() << ")";
-			// Manually set error (session not present)
-			_p->m_lastDisconnect = TCPError;
-		}
-		else
-		{
-			clog(NetConnect) << "Connecting to" << _p->id << "@" << ep;
-			auto handshake = make_shared<RLPXHandshake>(this, socket, _p->id);
-			{
-				Guard l(x_connecting);
-				m_connecting.push_back(handshake);
-			}
+	//	if (ec)
+	//	{
+	//		clog(NetConnect) << "Connection refused to node" << _p->id << "@" << ep << "(" << ec.message() << ")";
+	//		// Manually set error (session not present)
+	//		_p->m_lastDisconnect = TCPError;
+	//	}
+	//	else
+	//	{
+	//		clog(NetConnect) << "Connecting to" << _p->id << "@" << ep;
+	//		auto handshake = make_shared<RLPXHandshake>(this, socket, _p->id);
+	//		{
+	//			Guard l(x_connecting);
+	//			m_connecting.push_back(handshake);
+	//		}
 
-			handshake->start();
-		}
+	//		handshake->start();
+	//	}
 
-		Guard l(x_pendingNodeConns);
-		m_pendingPeerConns.erase(nptr);
-	});
+	//	Guard l(x_pendingNodeConns);
+	//	m_pendingPeerConns.erase(nptr);
+	//});
 }
 
 PeerSessionInfos FakeHost::peerSessionInfo() const
@@ -674,12 +799,18 @@ void FakeHost::startedWorking()
 	run(boost::system::error_code());
 }
 
+
 void FakeHost::doWork()
 {
 	try
 	{
-		if (m_run)
-			m_ioService.run();
+		Sleep(10);
+		NodeID  m_remote("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
+
+		connectToHost(m_remote);
+
+		/*if (m_run)
+			m_ioService.run();*/
 	}
 	catch (std::exception const& _e)
 	{
@@ -812,7 +943,7 @@ void FakeHost::restoreNetwork(bytesConstRef _b)
 					n.peerType = i[4].toInt<bool>() ? PeerType::Required : PeerType::Optional;
 					if (!n.endpoint.isAllowed() && n.peerType == PeerType::Optional)
 						continue;
-					shared_ptr<Peer> p = make_shared<Peer>(n);
+					shared_ptr<FakePeer> p = make_shared<FakePeer>(n);
 					p->m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
 					p->m_lastAttempted = chrono::system_clock::time_point(chrono::seconds(i[6].toInt<unsigned>()));
 					p->m_failedAttempts = i[7].toInt<unsigned>();
@@ -836,7 +967,7 @@ void FakeHost::restoreNetwork(bytesConstRef _b)
 					n.peerType = i[3].toInt<bool>() ? PeerType::Required : PeerType::Optional;
 					if (!n.endpoint.isAllowed() && n.peerType == PeerType::Optional)
 						continue;
-					shared_ptr<Peer> p = make_shared<Peer>(n);
+					shared_ptr<FakePeer> p = make_shared<FakePeer>(n);
 					p->m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[4].toInt<unsigned>()));
 					p->m_lastAttempted = chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
 					p->m_failedAttempts = i[6].toInt<unsigned>();

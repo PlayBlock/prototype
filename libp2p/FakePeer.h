@@ -55,7 +55,7 @@ class FakePeer: public Peer
 {
 	friend class FakeSession;		/// Allows Session to update score and rating.
 	friend class Host;		/// For Host: saveNetwork(), restoreNetwork()
-
+	friend class FakeHost;
 	friend class RLPXHandshake;
 
 public:

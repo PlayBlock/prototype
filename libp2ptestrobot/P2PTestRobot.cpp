@@ -10,14 +10,16 @@
 #include <libp2p/common.h>
 
 #include <boost/chrono.hpp>
-#include <boost/thread/thread.hpp> 
+#include <boost/thread/thread.hpp>
+//#include <libp2p/FakeHost.h>
+
 
 using namespace P2PTest;
 using namespace dev;
 using namespace dev::eth;
 using namespace dev::p2p;
 
-P2PTestRobot::P2PTestRobot()
+P2PTestRobot::P2PTestRobot(dev::p2p::FakeHost& _host) : m_host(_host)
 {
 	m_idOffset = UserPacket;
 }
@@ -67,12 +69,12 @@ void P2PTestRobot::sealAndSend(RLPStream& _s)
 
 void P2PTestRobot::sendToHost(bytes& _s)
 {
-
+	m_host.sendToHost(_s);
 }
 
 void P2PTestRobot::recvFromHost(bytes& _s)
 {
-
+	m_host.recvFromHost();
 }
 
 void P2PTestRobot::run()
