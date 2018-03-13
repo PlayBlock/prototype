@@ -564,8 +564,10 @@ void EthereumHost::foreachPeerByLastIrr(std::function<bool(std::shared_ptr<Ether
 		std::shared_ptr<EthereumPeer> pPeer =
 			capabilityFromSession<EthereumPeer>(*s.first);
 		peerIDs.push_back(pPeer->id());
-		ratings.push_back(s.first->rating());
+		ratings.push_back(pPeer->getLastIrrBlock());
 	}
+
+	ctrace << "foreachPeer LastIrr:" << ratings;
 
 	for (auto s : sessions)
 		if (!_f(capabilityFromSession<EthereumPeer>(*s.first)))
