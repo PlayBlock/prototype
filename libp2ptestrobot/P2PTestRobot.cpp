@@ -1,10 +1,10 @@
 #include "P2PTestRobot.hpp"
 #include <string>
 
-#include <utils/json_spirit/json_spirit_value.h>
-#include <utils/json_spirit/json_spirit_reader_template.h>
-#include <utils/json_spirit/json_spirit_writer_template.h>
-#include <libweb3jsonrpc/JsonHelper.h>
+//#include <utils/json_spirit/json_spirit_value.h>
+//#include <utils/json_spirit/json_spirit_reader_template.h>
+//#include <utils/json_spirit/json_spirit_writer_template.h>
+//#include <libweb3jsonrpc/JsonHelper.h>
 
 #include <libethereum/CommonNet.h>
 #include <libp2p/common.h>
@@ -80,11 +80,12 @@ void P2PTestRobot::recvFromHost(bytes& _s)
 
 void P2PTestRobot::run()
 {
+	const BlockChain& bc = m_client.getBlockChain();
 	u256 _hostNetworkId = u256();
-	u256 _chainTotalDifficulty = u256();
-	h256 _chainCurrentHash = h256();
-	h256 _chainGenesisHash = h256();
-	u256 _lastIrrBlock = u256();
+	u256 _chainTotalDifficulty = bc.details().totalDifficulty;
+	h256 _chainCurrentHash = bc.currentHash();
+	h256 _chainGenesisHash = bc.genesisHash();
+	u256 _lastIrrBlock = bc.getIrreversibleBlock();
 
 	NodeID  m_remote("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
 
@@ -97,27 +98,27 @@ void P2PTestRobot::run()
 	}
 }
 
-void P2PTestRobot::loadConfig()
-{
-	std::string configPath = "P2PTestRobotConfig.json";
-	boost::filesystem::path _path(configPath);
-	if (_path.is_relative())
-	{
-		std::string filePath(boost::filesystem::current_path().string());
-		_path = boost::filesystem::path(filePath + "/" + configPath);
-	}
-	std::string s = dev::contentsString(_path);
-	if (s.size() == 0)
-	{
-		BOOST_THROW_EXCEPTION(std::runtime_error("Config file doesn't exist!"));
-	}
-	json_spirit::mValue v;
-	json_spirit::read_string(s, v);
-	json_spirit::mObject& json_config = v.get_obj();
-
-	if (!json_config.count("attackType") || !json_config.count("interval"))
-	{
-		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid config file!"));
-	}
-}
+//void P2PTestRobot::loadConfig()
+//{
+//	std::string configPath = "P2PTestRobotConfig.json";
+//	boost::filesystem::path _path(configPath);
+//	if (_path.is_relative())
+//	{
+//		std::string filePath(boost::filesystem::current_path().string());
+//		_path = boost::filesystem::path(filePath + "/" + configPath);
+//	}
+//	std::string s = dev::contentsString(_path);
+//	if (s.size() == 0)
+//	{
+//		BOOST_THROW_EXCEPTION(std::runtime_error("Config file doesn't exist!"));
+//	}
+//	json_spirit::mValue v;
+//	json_spirit::read_string(s, v);
+//	json_spirit::mObject& json_config = v.get_obj();
+//
+//	if (!json_config.count("attackType") || !json_config.count("interval"))
+//	{
+//		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid config file!"));
+//	}
+//}
 

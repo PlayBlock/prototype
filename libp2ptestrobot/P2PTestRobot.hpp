@@ -2,7 +2,7 @@
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/RLP.h>
 #include <libp2p/FakeHost.h>
-
+#include "P2PTestClient.hpp"
 //class dev::p2p::FakeHost;
 
 
@@ -15,7 +15,7 @@ class P2PTestRobot
 public:
 	P2PTestRobot(dev::p2p::FakeHost& _host);
 	~P2PTestRobot();
-	void P2PTestRobot::loadConfig();
+	//void P2PTestRobot::loadConfig();
 	void requestBlockHeaders(dev::h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse);
 	RLPStream& prep(RLPStream& _s, unsigned _id, unsigned _args);
 
@@ -30,6 +30,7 @@ public:
 
 	unsigned m_idOffset;
 	dev::p2p::FakeHost& m_host;
+	P2PTestClient m_client;
 };
 
 

@@ -42,6 +42,8 @@ namespace test {
 
 eth::Network ChainBranch::s_tempBlockchainNetwork = eth::Network::MainNetwork;
 eth::Network TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
+
+
 json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
 {
 	json_spirit::mObject tests;

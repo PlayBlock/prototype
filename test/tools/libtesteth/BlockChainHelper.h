@@ -122,7 +122,9 @@ private:
 class TestBlockChain
 {
 public:
-	TestBlockChain(): TestBlockChain(defaultGenesisBlock()) {}
+	TestBlockChain() : TestBlockChain(defaultGenesisBlock()) {}
+	// for P2PTest
+	TestBlockChain(TestBlock const& _genesisBlock, bool);
 	TestBlockChain(TestBlock const& _genesisBlock);
 
 	void reset(TestBlock const& _genesisBlock);
@@ -137,6 +139,7 @@ public:
 	static json_spirit::mObject defaultGenesisBlockJson();
 	static TestBlock defaultGenesisBlock(u256 const& _gasLimit = DefaultBlockGasLimit);
 	static TestBlock defaultDposGenesisBlock(u256 const& _gasLimit = DefaultBlockGasLimit);
+	static TestBlock P2PTestGenesisBlock(u256 const& _gasLimit = DefaultBlockGasLimit);
 	static AccountMap defaultAccountMap();
 	static eth::Network s_sealEngineNetwork;
 private:
