@@ -9,6 +9,9 @@
 #include <libethereum/CommonNet.h>
 #include <libp2p/common.h>
 
+#include <boost/chrono.hpp>
+#include <boost/thread/thread.hpp> 
+
 using namespace P2PTest;
 using namespace dev;
 using namespace dev::eth;
@@ -28,10 +31,26 @@ void P2PTestRobot::requestBlockHeaders(dev::h256 const& _startHash, unsigned _co
 {
 	RLPStream s;
 	//s.appendRaw(bytes(1, GetBlockHeadersPacket + 4)).appendList(_args) << _startHash << _count << _skip << (_reverse ? 1 : 0);
-	//prep(s, GetBlockHeadersPacket, 4) << _startHash << _count << _skip << (_reverse ? 1 : 0);
+	prep(s, GetBlockHeadersPacket, 4) << _startHash << _count << _skip << (_reverse ? 1 : 0);
 	//clog(NetMessageDetail) << "Requesting " << _count << " block headers starting from " << _startHash << (_reverse ? " in reverse" : "");
 	ctrace << "Requesting " << _count << " block headers starting from " << _startHash << (_reverse ? " in reverse" : "");
-	//sealAndSend(s);
+	sealAndSend(s);
+}
+
+void P2PTestRobot::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock)
+{
+	const unsigned m_hostProtocolVersion = 63;
+
+	RLPStream s;
+	prep(s, StatusPacket, 6)
+		<< m_hostProtocolVersion
+		<< _hostNetworkId
+		<< _chainTotalDifficulty
+		<< _chainCurrentHash
+		<< _chainGenesisHash
+		<< _lastIrrBlock
+		;
+	sealAndSend(s);
 }
 
 RLPStream& P2PTestRobot::prep(RLPStream& _s, unsigned _id, unsigned _args)
@@ -51,6 +70,25 @@ void P2PTestRobot::sendToHost(bytes& _s)
 
 }
 
+void P2PTestRobot::recvFromHost(bytes& _s)
+{
+
+}
+
+void P2PTestRobot::run()
+{
+	u256 _hostNetworkId = u256();
+	u256 _chainTotalDifficulty = u256();
+	h256 _chainCurrentHash = h256();
+	h256 _chainGenesisHash = h256();
+	u256 _lastIrrBlock = u256();
+
+	while (true)
+	{
+		requestStatus(_hostNetworkId, _chainTotalDifficulty, _chainCurrentHash, _chainGenesisHash, _lastIrrBlock);
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(100000));
+	}
+}
 
 void P2PTestRobot::loadConfig()
 {
@@ -76,8 +114,3 @@ void P2PTestRobot::loadConfig()
 	}
 }
 
-
-void requestBlockHeaders(dev::h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse)
-{
-
-}
