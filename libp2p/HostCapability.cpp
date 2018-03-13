@@ -22,8 +22,7 @@
 #include "HostCapability.h"
 
 #include "Session.h"
-#include "Host.h"
-#include "libethereum\EthereumPeer.h"
+#include "Host.h" 
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
