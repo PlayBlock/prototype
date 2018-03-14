@@ -32,7 +32,7 @@
 #include "TransactionReceipt.h"
 #include "GasPricer.h"
 
-#define MultiThreadImport 0
+#define MultiThreadImport 1
 namespace dev
 {
 
