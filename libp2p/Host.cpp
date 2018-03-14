@@ -959,16 +959,16 @@ bool Host::peerSlotsAvailable(Host::PeerSlotType _type)
 		Guard l(x_pendingNodeConns);
 		peerNodeConns = m_pendingPeerConns.size();
 	}
-	clog(NetConnect) << "peerCount(): " << peerCount();
-	clog(NetConnect) << "peerNodeConns: " << peerNodeConns;
-	clog(NetConnect) << "peerSlots(_type): " << peerSlots(_type);
+	clog(NetP2PNote) << "peerCount(): " << peerCount();
+	clog(NetP2PNote) << "peerNodeConns: " << peerNodeConns;
+	clog(NetP2PNote) << "peerSlots(_type): " << peerSlots(_type);
 	for (auto it = m_pendingPeerConns.begin(); it != m_pendingPeerConns.end(); it++)
 	{
 		auto peer = *it;
-		clog(NetConnect) << "IP:     " << peer->endpoint.address.to_string();
-		clog(NetConnect) << "udpPort:" << peer->endpoint.udpPort;
-		clog(NetConnect) << "tcpPort:" << peer->endpoint.tcpPort;
-		clog(NetConnect) << "id:     " << toHex(peer->id);
+		clog(NetP2PNote) << "IP:     " << peer->endpoint.address.to_string();
+		clog(NetP2PNote) << "udpPort:" << peer->endpoint.udpPort;
+		clog(NetP2PNote) << "tcpPort:" << peer->endpoint.tcpPort;
+		clog(NetP2PNote) << "id:     " << toHex(peer->id);
 	}
 	return peerCount() + peerNodeConns < peerSlots(_type);
 }
