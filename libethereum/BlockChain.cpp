@@ -49,7 +49,7 @@ using namespace dev::eth;
 namespace fs = boost::filesystem;
 
 #define ETH_TIMED_IMPORTS 1
-#define MultiThreadVerifyOneBlock 0
+#define MultiThreadVerifyOneBlock 1
 namespace
 {
 
