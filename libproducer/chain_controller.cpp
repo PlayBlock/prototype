@@ -738,8 +738,11 @@ void chain_controller::update_last_irreversible_block()
 
 void chain_controller::databaseReversion(uint32_t _firstvalid)
 {
+	ctrace << "=======>chain_controller::databaseReversion";
+	ctrace << "_firstvalid = " << _firstvalid;
 	while (head_block_num() != _firstvalid)
 	{
+		ctrace << "undo:" << head_block_num();
 		_db.undo();
 	}
 }
