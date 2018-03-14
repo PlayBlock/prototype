@@ -585,7 +585,13 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, bool)
 	ChainParams p = ChainParams(genesisInfo(eth::Network::MainNetwork));
 
 	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
-
+	//if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.bytes())))
+	//{
+	//	cdebug << "Not known:" << BlockHeader::headerHashFromBlock(_genesisBlock.bytes()) << BlockHeader(p.genesisBlock()).hash();
+	//	cdebug << "Genesis block not known!";
+	//	cdebug << "This should never happen.";
+	//	assert(false);
+	//}
 	m_lastBlock = m_genesisBlock = _genesisBlock;
 
 	m_producer_plugin = make_shared<producer_plugin>(getInterface());

@@ -294,16 +294,6 @@ void FakeSession::drop(DisconnectReason _reason)
 {
 	if (m_dropped)
 		return;
-	bi::tcp::socket& socket = m_socket->ref();
-	if (socket.is_open())
-		try
-		{
-			boost::system::error_code ec;
-			clog(NetConnect) << "Closing " << socket.remote_endpoint(ec) << "(" << reasonOf(_reason) << ")";
-			socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-			socket.close();
-		}
-		catch (...) {}
 
 	m_peer->m_lastDisconnect = _reason;
 	if (_reason == BadProtocol)
@@ -318,7 +308,7 @@ void FakeSession::disconnect(DisconnectReason _reason)
 {
 	clog(NetConnect) << "Disconnecting (our reason:" << reasonOf(_reason) << ")";
 
-	if (m_socket->ref().is_open())
+	//if (m_socket->ref().is_open())
 	{
 		RLPStream s;
 		prep(s, DisconnectPacket, 1) << (int)_reason;
