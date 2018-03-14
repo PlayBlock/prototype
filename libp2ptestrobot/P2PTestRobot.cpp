@@ -75,7 +75,8 @@ void P2PTestRobot::sendToHost(bytes& _s)
 
 void P2PTestRobot::recvFromHost(bytes& _s)
 {
-	m_host.recvFromHost(_s);
+	NodeID id;
+	m_host.recvFromHost(id,_s);
 }
 
 void P2PTestRobot::run()

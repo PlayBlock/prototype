@@ -285,13 +285,13 @@ void FakeHost::CreatPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<R
 	}
 	if (p->isOffline())
 		p->m_lastConnected = std::chrono::system_clock::now();
-    boost::asio::ip::address address(bi::address_v4::from_string("127.0.0.1"));
+    boost::asio::ip::address address(bi::address_v4::from_string("192.168.1.111"));
 	p->endpoint.address = address;
 
-	unsigned protocolVersion = 4;
+	unsigned protocolVersion = 63;
 	string clientVersion = "eth/v1.3.0/Linux/g++/Interpreter/RelWithDebInfo/af98af3c*/";
 	vector<CapDesc> caps;
-	caps.push_back(std::pair<std::string, u256>("eth", u256(62)));
+	caps.push_back(std::pair<std::string, u256>("eth", u256(63)));
 	unsigned short listenPort = 30303;
 
 	//if (pub != _id)
@@ -411,16 +411,11 @@ void FakeHost::sendToHost(bytes const& _r)
 		if (!ok)
 			clog(NetWarn) << "Couldn't interpret packet." << RLP(r);
 	}
-
-
-	
 }
-void FakeHost::recvFromHost(bytes const& _r)
+void FakeHost::recvFromHost(NodeID& _id, bytes const & _r)
 {
-	NodeID  _id;
-	uint16_t _capId;
-	PacketType _t;
-	m_sessions[_id].lock()->sendPacket(_capId, _t, RLP(_r));
+	bytes r(_r);
+	m_testRobot->recvFromHost(r);
 }
 
 void FakeHost::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)

@@ -41,6 +41,7 @@
 #include <libdevcore/Guards.h>
 namespace ba = boost::asio;
 namespace bi = boost::asio::ip;
+#define USE_FAKE_HOST 1
 
 namespace dev
 {

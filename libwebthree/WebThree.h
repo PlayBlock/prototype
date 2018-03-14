@@ -35,7 +35,6 @@
 #include <libp2p/FakeHost.h>
 #include <libethereum/Client.h>
 #include <libethereum/ChainParams.h>
-#define USE_FAKE_HOST 1
 namespace dev
 {
 

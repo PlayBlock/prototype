@@ -81,7 +81,7 @@ public:
 
 	virtual bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r) { return false; };
 
-	virtual bool sendPacket(uint16_t _capId, PacketType _t, RLP const& _r) { return false; };
+	virtual bool sendPacket(bytes const& _r) { return false; };
 };
 
 /**

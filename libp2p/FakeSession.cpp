@@ -26,8 +26,11 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
+#include <libethereum/CommonNet.h>
 #include "Host.h"
 #include "Capability.h"
+#include "FakeHost.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -128,11 +131,18 @@ bool FakeSession::readPacket(uint16_t _capId, PacketType _t, RLP const& _r)
 }
 
 
-bool FakeSession::sendPacket(uint16_t _capId, PacketType _t, RLP const& _r)
+bool FakeSession::sendPacket(bytes const& _r)
 {
-	m_lastReceived = chrono::steady_clock::now();
-	clog(NetRight) << _t << _r;
+	bytesConstRef frame(_r.data(), _r.size());
+	auto packetType = (PacketType)RLP(frame.cropped(0, 1)).toInt<unsigned>();
+	//if(packetType == dev::eth::SubprotocolPacketType::StatusPacket)
+	{ 
+		FakeHost* fh = dynamic_cast<FakeHost*>(m_server);
+		//bytes b;
 
+		NodeID  id = m_info.id;
+		fh->recvFromHost(id, _r);
+	}
 
 	return true;
 }
@@ -193,7 +203,8 @@ void FakeSession::sealAndSend(RLPStream& _s)
 {
 	bytes b;
 	_s.swapOut(b);
-	send(move(b));
+	//send(move(b));
+	sendPacket(b);
 }
 
 bool FakeSession::checkPacket(bytesConstRef _msg)
@@ -212,10 +223,11 @@ void FakeSession::send(bytes&& _msg)
 	if (!checkPacket(msg))
 		clog(NetWarn) << "INVALID PACKET CONSTRUCTED!";
 
+
 	//if (!m_socket->ref().is_open())
 	//	return;
 
-	bool doWrite = false;
+	/*bool doWrite = false;
 	DEV_GUARDED(x_framing)
 	{
 		m_writeQueue.push_back(std::move(_msg));
@@ -223,7 +235,7 @@ void FakeSession::send(bytes&& _msg)
 	}
 
 	if (doWrite)
-		write();
+		write();*/
 }
 
 void FakeSession::write()

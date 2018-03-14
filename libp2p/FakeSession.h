@@ -109,7 +109,7 @@ private:
 	/// Deliver RLPX packet to FakeSession or Capability for interpretation.
 	bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r)override;
 
-	bool sendPacket(uint16_t _capId, PacketType _t, RLP const& _r)override;
+	bool sendPacket(bytes const& _r)override;
 
 	/// Interpret an incoming FakeSession packet.
 	bool interpret(PacketType _t, RLP const& _r);

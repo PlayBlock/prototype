@@ -3,7 +3,6 @@
 #include<libp2p/Host.h>
 //#include<libp2ptestrobot/P2PTestRobot.hpp>
 
-
 namespace P2PTest {
 	class P2PTestRobot;
 }
@@ -128,7 +127,7 @@ public:
 
 	void FakeHost::connectToHost(NodeID const& _id);
 	void FakeHost::sendToHost(bytes const& _r);
-	void FakeHost::recvFromHost(bytes const& _r);
+	void FakeHost::recvFromHost(NodeID& _id, bytes const& _r);
 	bool FakeHost::checkPacket(bytesConstRef _msg);
 protected:
 	void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);
@@ -179,8 +178,6 @@ private:
 	bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
 	///< Set by constructor and used to set Host key and restore network peers & nodes.
 	void CreatPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
-
-	mutable std::unordered_map<NodeID, std::weak_ptr<SessionFace>> m_sessions;
 
 	P2PTest::P2PTestRobot* m_testRobot;
 
