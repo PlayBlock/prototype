@@ -219,7 +219,7 @@ void Executive::initialize(Transaction const& _transaction)
 #endif // BenchMarkFlag	
 		if (m_t.nonce() != nonceReq)
 		{			
-			clog(ExecutiveWarnChannel) << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
+			ctrace << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
 			m_excepted = TransactionException::InvalidNonce;
 			BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
 		}
