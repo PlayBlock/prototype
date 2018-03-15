@@ -76,15 +76,16 @@ namespace P2PTest {
 
 	public: //测试用例注册
 		void registerUnitTest(P2PUnitTest* _unit);
-		void switchUnitTest(int i);
+		static void switchUnitTest(int i);
 		unsigned unitTestCount() const { return m_unitTestList.size(); }
 		int currUnitTest() const { return m_currTest; }
 		P2PUnitTest* getCurrUnitTest() const; 
 
 #if defined(_WIN32)
 		static BOOL P2PHostProxy::CtrlHandler(DWORD fdwCtrlType);
+
 #else
-		static void switchSignalHandler(int) { ctrace << "switchSignalHandler"; }
+		static void switchSignalHandler(int signum);
 #endif
 		//TODO:后续需要干掉
 		void registerAllUnitTest();
@@ -98,9 +99,9 @@ namespace P2PTest {
 	protected:
 		dev::p2p::FakeHost& m_host; 
 
-		std::vector<P2PUnitTest*> m_unitTestList;
+		static std::vector<P2PUnitTest*> m_unitTestList;
 
-		int m_currTest;
+		static int m_currTest;
 	};
 
 	

@@ -9,6 +9,10 @@ using namespace dev;
 using namespace dev::eth;
 namespace P2PTest {
 
+int P2PHostProxy::m_currTest = -1;
+std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
+
+#if defined(_WIN32)
 	BOOL P2PHostProxy::CtrlHandler(DWORD fdwCtrlType)
 	{
 		switch (fdwCtrlType)
@@ -16,6 +20,7 @@ namespace P2PTest {
 			/* Handle the CTRL-C signal. */
 		case CTRL_C_EVENT:
 			printf("CTRL_C_EVENT \n");
+			switchUnitTest((m_currTest+1) % m_unitTestList.size());
 			break;
 		case CTRL_BREAK_EVENT:
 			printf("CTRL_BREAK_EVENT \n");
@@ -25,15 +30,22 @@ namespace P2PTest {
 		}
 		return (TRUE);
 	}
+#else
+	void switchSignalHandler(int signum) 
+	{ 
+		ctrace << "switchSignalHandler"; 
+		switchUnitTest((m_currTest + 1) % m_unitTestList.size());
+	}
 
-	P2PHostProxy::P2PHostProxy(dev::p2p::FakeHost& _h) : m_host(_h), m_currTest(-1)
+#endif
+
+	P2PHostProxy::P2PHostProxy(dev::p2p::FakeHost& _h) : m_host(_h)
 	{
 
 #if defined(_WIN32)
 		SetConsoleCtrlHandler((PHANDLER_ROUTINE)P2PHostProxy::CtrlHandler, TRUE);
 #else
 		signal(SIGBREAK, &P2PHostProxy::switchSignalHandler);
-
 #endif
 	}
 
@@ -139,7 +151,7 @@ namespace P2PTest {
 
 		if (i >= m_unitTestList.size())
 			return;
-
+		ctrace << "switch from " << m_currTest << " to " << i;
 		if (m_currTest != -1)
 		{//Àë¿ª¾ÉµÄUnitTest
 			m_unitTestList[m_currTest]->destroy();
