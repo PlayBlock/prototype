@@ -7,8 +7,35 @@
 
 using namespace dev;
 using namespace dev::eth;
-
 namespace P2PTest {
+
+	BOOL P2PHostProxy::CtrlHandler(DWORD fdwCtrlType)
+	{
+		switch (fdwCtrlType)
+		{
+			/* Handle the CTRL-C signal. */
+		case CTRL_C_EVENT:
+			printf("CTRL_C_EVENT \n");
+			break;
+		case CTRL_BREAK_EVENT:
+			printf("CTRL_BREAK_EVENT \n");
+			break;
+		default:
+			return FALSE;
+		}
+		return (TRUE);
+	}
+
+	P2PHostProxy::P2PHostProxy(dev::p2p::FakeHost& _h) : m_host(_h), m_currTest(-1)
+	{
+
+#if defined(_WIN32)
+		SetConsoleCtrlHandler((PHANDLER_ROUTINE)P2PHostProxy::CtrlHandler, TRUE);
+#else
+		signal(SIGBREAK, &P2PHostProxy::switchSignalHandler);
+
+#endif
+	}
 
 	P2PUnitTest* P2PHostProxy::getCurrUnitTest() const
 	{
@@ -23,7 +50,9 @@ namespace P2PTest {
 	void P2PHostProxy::registerAllUnitTest()
 	{
 		//注册用例TestDrive
-		registerUnitTest(new P2PTestDriveUnitTest(*this));  
+		registerUnitTest(new P2PTestDriveUnitTest(*this));
+		registerUnitTest(new P2PTestRequestHeaderAttack(*this));
+
 		switchUnitTest(0);
 	}
 
@@ -34,8 +63,8 @@ namespace P2PTest {
 
 	void P2PHostProxy::requestBlockHeaders(dev::h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse)
 	{
-		RLPStream s; 
-		prep(s, GetBlockHeadersPacket, 4) << _startHash << _count << _skip << (_reverse ? 1 : 0); 
+		RLPStream s;
+		prep(s, GetBlockHeadersPacket, 4) << _startHash << _count << _skip << (_reverse ? 1 : 0);
 		ctrace << "Requesting " << _count << " block headers starting from " << _startHash << (_reverse ? " in reverse" : "");
 		sealAndSend(s);
 	}
@@ -44,7 +73,7 @@ namespace P2PTest {
 	{
 		RLPStream s;
 		prep(s, GetBlockHeadersPacket, 4) << _startNumber << _count << _skip << (_reverse ? 1 : 0);
-		ctrace << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "") << " to: " << m_host.id(); 
+		ctrace << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "") << " to: " << m_host.id();
 		sealAndSend(s);
 	}
 
@@ -66,13 +95,13 @@ namespace P2PTest {
 	}
 
 	void P2PHostProxy::recvFromHost(bytes& _s)
-	{ 
-		bytesConstRef frame(_s.data(), _s.size()); 
-		auto packetType = (PacketType)RLP(frame.cropped(0, 1)).toInt<unsigned>(); 
+	{
+		bytesConstRef frame(_s.data(), _s.size());
+		auto packetType = (PacketType)RLP(frame.cropped(0, 1)).toInt<unsigned>();
 		if (packetType < UserPacket)
-			return; 
+			return;
 		RLP r(frame.cropped(1));
-		interpret(packetType - UserPacket, r); 
+		interpret(packetType - UserPacket, r);
 	}
 
 	void P2PHostProxy::connectToHost(NodeID const& _id)
@@ -107,18 +136,18 @@ namespace P2PTest {
 	{
 		if (i == -1)
 			return;
-		
+
 		if (i >= m_unitTestList.size())
 			return;
 
 		if (m_currTest != -1)
 		{//离开旧的UnitTest
 			m_unitTestList[m_currTest]->destroy();
-		} 
+		}
 
 		//进入新的UnitTest
 		m_currTest = i;
-		m_unitTestList[m_currTest]->init(); 
+		m_unitTestList[m_currTest]->init();
 	}
 
 	std::string P2PTestDriveUnitTest::name() const
@@ -148,7 +177,89 @@ namespace P2PTest {
 	{
 		m_hostProxy.requestBlockHeaders(1, 1, 0, false);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
-		ctrace << "P2PTestDriveUnitTest::run()"; 
+		ctrace << "P2PTestDriveUnitTest::run()";
+	}
+
+
+	//用例名称
+	std::string P2PTestRequestHeaderAttack::name() const
+	{
+		return "P2PTestRequestHeaderAttack";
+	}
+
+	//用于用例初始化
+	void P2PTestRequestHeaderAttack::init()
+	{
+		NodeID id = NodeID("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
+		m_hostProxy.connectToHost(id);
+
+		ctrace << "P2PTestRequestHeaderAttack::init";
+	}
+
+	//用例销毁
+	void P2PTestRequestHeaderAttack::destroy()
+	{
+		ctrace << "P2PTestRequestHeaderAttack::destroy";
+	}
+
+	//用来解析传来的协议包
+	void P2PTestRequestHeaderAttack::interpret(unsigned _id, RLP const& _r)
+	{
+		ctrace << "P2PTestRequestHeaderAttack::interpret";
+		try
+		{
+			switch (_id)
+			{
+			case StatusPacket:
+			{
+				unsigned _protocolVersion = _r[0].toInt<unsigned>();
+				u256 _networkId = _r[1].toInt<u256>();
+				u256 _totalDifficulty = _r[2].toInt<u256>();
+				h256 _latestHash = _r[3].toHash<h256>();
+				h256 _genesisHash = _r[4].toHash<h256>();
+				uint32_t _lastIrrBlock = _r[5].toInt<u256>().convert_to<uint32_t>();
+
+				break;
+			}
+			case BlockHeadersPacket:
+			{
+				size_t itemCount = _r.itemCount();
+				ctrace << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
+				BlockHeader header(_r[0].data(), HeaderData);
+				unsigned blockNumber = static_cast<unsigned>(header.number());
+
+				ctrace << "start blockNumber: " << blockNumber;
+				break;
+			}
+			case NewBlockPacket:
+			{
+				//observer->onPeerNewBlock(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
+				break;
+			}
+			default:
+				return;
+			}
+		}
+		catch (Exception const&)
+		{
+			clog(NetWarn) << "Peer causing an Exception:" << boost::current_exception_diagnostic_information() << _r;
+		}
+		catch (std::exception const& _e)
+		{
+			clog(NetWarn) << "Peer causing an exception:" << _e.what() << _r;
+		}
+
+
+	}
+
+
+
+	//在host线程
+	void P2PTestRequestHeaderAttack::step()
+	{
+		m_hostProxy.requestBlockHeaders(1, 1, 0, false);
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+		ctrace << "P2PTestRequestHeaderAttack::step()";
 	}
 
 }
