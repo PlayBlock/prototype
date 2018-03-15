@@ -30,6 +30,7 @@
 #include "BlockChain.h"
 #include "Block.h"
 #include "BenchMark.h"
+#include <iostream>
 
 
 using namespace std;
@@ -219,7 +220,7 @@ void Executive::initialize(Transaction const& _transaction)
 #endif // BenchMarkFlag	
 		if (m_t.nonce() != nonceReq)
 		{			
-			ctrace << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
+			std::cout << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
 			m_excepted = TransactionException::InvalidNonce;
 			BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
 		}
