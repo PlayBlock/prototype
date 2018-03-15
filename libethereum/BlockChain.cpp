@@ -1806,8 +1806,8 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 		RLP const& txRLP = r[1];
 		std::vector<std::thread> threads;
 
-		auto rlpIterator = txRLP.begin();
-		auto rlpEnd = txRLP.end();
+		unsigned totalNum = txRLP.itemCount();
+		res.transactions.resize(totalNum);
 
 		mutex x_rlp;
 		mutex x_transaction;
@@ -1823,14 +1823,18 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 					{
 						break;
 					}
+
+					unsigned pos;
+
 					UniqueGuard lock_rlp(x_rlp);
-					if (rlpIterator == rlpEnd)
+					if (i == totalNum)
 					{
 						break;
 					}
-					bytesConstRef d = (*rlpIterator).data();
-					rlpIterator++;
+					bytesConstRef d = txRLP[i].data();
+					pos = i++;
 					lock_rlp.unlock();
+
 					try
 					{
 						Transaction t(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None);
@@ -1838,8 +1842,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 
 
 						UniqueGuard lock_transaction(x_transaction);
-						res.transactions.push_back(t);
-						++i;
+						res.transactions[pos] = std::move(t);
 						lock_transaction.unlock();
 					}
 					catch (Exception& ex)
@@ -1848,7 +1851,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 						if (hasException.compare_exchange_strong(flag, true))
 						{
 							ex << errinfo_phase(1);
-							ex << errinfo_transactionIndex(i);
+							ex << errinfo_transactionIndex(pos);
 							ex << errinfo_transaction(d.toBytes());
 							addBlockInfo(ex, h, _block.toBytes());
 							if (_onBad)
