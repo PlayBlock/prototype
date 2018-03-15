@@ -315,7 +315,7 @@ void P2PTestRobot::run()
 	{
 		requestBlockHeaders(1, 1, 0, false);
 
-		boost::this_thread::sleep_for(boost::chrono::milliseconds(100000));
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
 		cout << "P2PTestRobot::run()" << endl;
 	}
 }

@@ -55,13 +55,13 @@ std::chrono::milliseconds const c_keepAliveTimeOut = std::chrono::milliseconds(1
 FakeHost::FakeHost(string const& _clientVersion, KeyPair const& _alias, NetworkPreferences const& _n)
 	: Host(_clientVersion, _alias, _n)
 {
-	m_testRobot = new P2PTest::P2PTestRobot(*this);
+	m_hostProxy = new P2PTest::P2PHostProxy(*this);
 }
 
 FakeHost::FakeHost(string const& _clientVersion, NetworkPreferences const& _n, bytesConstRef _restoreNetwork) :
 	Host(_clientVersion, _n, _restoreNetwork)
 {
-	m_testRobot = new P2PTest::P2PTestRobot(*this);
+	m_hostProxy = new P2PTest::P2PHostProxy(*this);
 }
 
 FakeHost::~FakeHost()
@@ -263,7 +263,7 @@ void FakeHost::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<R
 	clog(NetP2PNote) << "p2p.host.peer.register" << _id;
 }
 
-void FakeHost::CreatPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s)
+void FakeHost::CreatePeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s)
 {
 	// session maybe ingress or egress so m_peers and node table entries may not exist
 	shared_ptr<Peer> p;
@@ -376,7 +376,7 @@ void FakeHost::connectToHost(NodeID const& _id)
 
 	NodeID  m_remote("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
 
-	CreatPeerSession(_id, RLP(), nullptr, nullptr);
+	CreatePeerSession(_id, RLP(), nullptr, nullptr);
 
 }
 
@@ -415,7 +415,7 @@ void FakeHost::sendToHost(bytes const& _r)
 void FakeHost::recvFromHost(NodeID& _id, bytes const & _r)
 {
 	bytes r(_r);
-	m_testRobot->recvFromHost(r);
+	m_hostProxy->recvFromHost(r);
 }
 
 void FakeHost::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
@@ -828,23 +828,20 @@ void FakeHost::startedWorking()
 
 	clog(NetP2PNote) << "p2p.started id:" << id();
 
+	
+
 	run(boost::system::error_code());
+
+	m_hostProxy->registerAllUnitTest();
 }
 
 
 void FakeHost::doWork()
 {
 	try
-	{
+	{ 
+		m_hostProxy->step(); 
 		Sleep(10);
-		NodeID  m_remote("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
-
-		// connectToHost(m_remote);
-
-		m_testRobot->run();
-
-		/*if (m_run)
-			m_ioService.run();*/
 	}
 	catch (std::exception const& _e)
 	{

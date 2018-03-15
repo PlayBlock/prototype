@@ -1,10 +1,11 @@
 #pragma once
 
 #include<libp2p/Host.h>
+#include "libp2ptestrobot/P2PUnitTest.h"
 //#include<libp2ptestrobot/P2PTestRobot.hpp>
 
 namespace P2PTest {
-	class P2PTestRobot;
+	class P2PHostProxy;
 }
 
 namespace dev
@@ -177,9 +178,9 @@ private:
 	Node nodeFromNodeTable(Public const& _id) const;
 	bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
 	///< Set by constructor and used to set Host key and restore network peers & nodes.
-	void CreatPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
+	void CreatePeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
 
-	P2PTest::P2PTestRobot* m_testRobot;
+	P2PTest::P2PHostProxy* m_hostProxy;
 
 	std::shared_ptr<SessionFace> m_ps;
 
