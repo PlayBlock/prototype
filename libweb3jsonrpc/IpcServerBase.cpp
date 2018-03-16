@@ -31,7 +31,7 @@ using namespace std;
 using namespace jsonrpc;
 using namespace dev;
 
-int const c_bufferSize = 10240;
+int const c_bufferSize = 102400;
 
 struct IpcSendChannel: public LogChannel { static const char* name() { return "I>"; } static const int verbosity = 10; };
 struct IpcReceiveChannel: public LogChannel { static const char* name() { return "I<"; } static const int verbosity = 10; };
