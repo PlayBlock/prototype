@@ -78,7 +78,7 @@ public:
 	void sendTestMessage(NodeID const& _id, int _x)
 	{
 		for (auto i: peerSessions())
-			if (_id == i.second.id())
+			if (_id == i.second->id())
 				capabilityFromSession<TestCapability>(*i.first)->sendTestMessage(_x);
 	}
 
@@ -87,7 +87,7 @@ public:
 		int cnt = 0;
 		int checksum = 0;
 		for (auto i: peerSessions())
-			if (_id == i.second.id())
+			if (_id == i.second->id())
 			{
 				cnt += capabilityFromSession<TestCapability>(*i.first)->countReceivedMessages();
 				checksum += capabilityFromSession<TestCapability>(*i.first)->testSum();
