@@ -63,14 +63,15 @@ namespace P2PTest {
 	class P2PHostProxy
 	{
 	public:
-		P2PHostProxy(dev::p2p::FakeHost& _h);
+		P2PHostProxy(dev::p2p::FakeHost& _h, boost::asio::io_service& _ioService);
+
 		~P2PHostProxy() {} 
 		 
 		RLPStream& prep(RLPStream& _s, unsigned _id, unsigned _args);  
 		void sealAndSend(dev::RLPStream& _s);   
 		void interpret(unsigned _id, RLP const& _r); 
 		void interpretProtocolPacket(PacketType _t, RLP const& _r);
-		void step();
+		void run(boost::system::error_code const&);
 
 		void connectToHost(NodeID const& _id);
 		void sendToHost(bytes& _s);
@@ -106,6 +107,8 @@ namespace P2PTest {
 		static std::vector<P2PUnitTest*> m_unitTestList;
 
 		static int m_currTest;
+		boost::asio::io_service& m_ioService;
+		shared_ptr<boost::asio::deadline_timer> m_timer;
 	};
 
 	

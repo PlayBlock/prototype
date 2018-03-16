@@ -39,8 +39,10 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 
 #endif
 
-	P2PHostProxy::P2PHostProxy(dev::p2p::FakeHost& _h) : m_host(_h)
+	P2PHostProxy::P2PHostProxy(dev::p2p::FakeHost& _h, boost::asio::io_service& _ioService) : m_host(_h), m_ioService(_ioService)
 	{
+		m_timer = make_shared<boost::asio::deadline_timer>(m_ioService);
+		m_timer->expires_from_now(boost::posix_time::milliseconds(100));
 
 #if defined(_WIN32)
 		SetConsoleCtrlHandler((PHANDLER_ROUTINE)P2PHostProxy::CtrlHandler, TRUE);
@@ -148,13 +150,17 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		}
 	}
 
-	void P2PHostProxy::step()
+	void P2PHostProxy::run(boost::system::error_code const&)
 	{
 		auto pUnitTest = getCurrUnitTest();
 		if (nullptr != pUnitTest)
 		{
 			pUnitTest->step();
 		}
+
+		auto runcb = [this](boost::system::error_code const& error) { run(error); };
+		m_timer->expires_from_now(boost::posix_time::milliseconds(500));
+		m_timer->async_wait(runcb);
 	}
 
 	void P2PHostProxy::registerUnitTest(P2PUnitTest* _unit)

@@ -55,13 +55,13 @@ std::chrono::milliseconds const c_keepAliveTimeOut = std::chrono::milliseconds(1
 FakeHost::FakeHost(string const& _clientVersion, KeyPair const& _alias, NetworkPreferences const& _n)
 	: Host(_clientVersion, _alias, _n)
 {
-	m_hostProxy = new P2PTest::P2PHostProxy(*this);
+	m_hostProxy = new P2PTest::P2PHostProxy(*this, m_ioService);
 }
 
 FakeHost::FakeHost(string const& _clientVersion, NetworkPreferences const& _n, bytesConstRef _restoreNetwork) :
 	Host(_clientVersion, _n, _restoreNetwork)
 {
-	m_hostProxy = new P2PTest::P2PHostProxy(*this);
+	m_hostProxy = new P2PTest::P2PHostProxy(*this, m_ioService);
 }
 
 FakeHost::~FakeHost()
@@ -840,8 +840,8 @@ void FakeHost::doWork()
 {
 	try
 	{ 
-		m_hostProxy->step(); 
-		//m_ioService.run();
+		m_hostProxy->run(boost::system::error_code());
+		m_ioService.run();
 	}
 	catch (std::exception const& _e)
 	{
