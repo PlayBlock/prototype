@@ -125,6 +125,12 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		m_host.connectToHost(_id);
 	}
 
+	void P2PHostProxy::onSessionClosed(NodeID const& _id)
+	{
+		ctrace << "P2PHostProxy::onSessionClosed";
+	}
+
+
 	bool P2PHostProxy::interpretProtocolPacket(PacketType _t, RLP const& _r)
 	{
 		switch (_t)

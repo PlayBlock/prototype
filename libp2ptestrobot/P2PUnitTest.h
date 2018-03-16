@@ -75,6 +75,8 @@ namespace P2PTest {
 		void sendToHost(bytes& _s);
 		void recvFromHost(bytes& _s);
 
+		void onSessionClosed(NodeID const& _id);
+
 	public: //≤‚ ‘”√¿˝◊¢≤·
 		void registerUnitTest(P2PUnitTest* _unit);
 		static void switchUnitTest(int i);

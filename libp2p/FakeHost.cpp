@@ -841,7 +841,7 @@ void FakeHost::doWork()
 	try
 	{ 
 		m_hostProxy->step(); 
-		Sleep(10);
+		m_ioService.run();
 	}
 	catch (std::exception const& _e)
 	{
@@ -863,7 +863,10 @@ void FakeHost::keepAlivePeers()
 			++it;
 		}
 		else
+		{
+			m_hostProxy->onSessionClosed(it->first);
 			it = m_sessions.erase(it);
+		}
 
 	m_lastPing = chrono::steady_clock::now();
 }

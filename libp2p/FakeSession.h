@@ -65,7 +65,7 @@ public:
 
 	void ping() override;
 
-	bool isConnected() const override { return m_socket->ref().is_open(); }
+	bool isConnected() const override { return true; }
 
 	NodeID id() const override;
 
@@ -120,7 +120,7 @@ private:
 	Host* m_server;							///< The host that owns us. Never null.
 
 	std::unique_ptr<RLPXFrameCoder> m_io;	///< Transport over which packets are sent.
-	std::shared_ptr<RLPXSocket> m_socket;		///< Socket of peer's connection.
+	//std::shared_ptr<RLPXSocket> m_socket;		///< Socket of peer's connection.
 	Mutex x_framing;						///< Mutex for the write queue.
 	std::deque<bytes> m_writeQueue;			///< The write queue.
 	std::vector<byte> m_data;			    ///< Buffer for ingress packet data.
