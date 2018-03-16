@@ -29,6 +29,7 @@ namespace P2PTest {
 
 		//用来解析传来的协议包
 		virtual void interpret(unsigned _id, RLP const& _r) = 0;
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r) = 0;
 
 		//在host线程
 		virtual void step() = 0;
@@ -68,7 +69,7 @@ namespace P2PTest {
 		RLPStream& prep(RLPStream& _s, unsigned _id, unsigned _args);  
 		void sealAndSend(dev::RLPStream& _s);   
 		void interpret(unsigned _id, RLP const& _r); 
-		bool interpretProtocolPacket(PacketType _t, RLP const& _r);
+		void interpretProtocolPacket(PacketType _t, RLP const& _r);
 		void step();
 
 		void connectToHost(NodeID const& _id);
@@ -79,7 +80,7 @@ namespace P2PTest {
 
 	public: //测试用例注册
 		void registerUnitTest(P2PUnitTest* _unit);
-		static void switchUnitTest(int i);
+		static void switchUnitTest(int i = m_currTest);
 		unsigned unitTestCount() const { return m_unitTestList.size(); }
 		int currUnitTest() const { return m_currTest; }
 		P2PUnitTest* getCurrUnitTest() const; 
@@ -125,6 +126,7 @@ namespace P2PTest {
 
 		//用来解析传来的协议包
 		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
 
 		//在host线程
 		virtual void step();
@@ -148,6 +150,7 @@ namespace P2PTest {
 
 		//用来解析传来的协议包
 		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
 
 		//在host线程
 		virtual void step();

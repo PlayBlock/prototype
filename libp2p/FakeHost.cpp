@@ -841,7 +841,7 @@ void FakeHost::doWork()
 	try
 	{ 
 		m_hostProxy->step(); 
-		m_ioService.run();
+		//m_ioService.run();
 	}
 	catch (std::exception const& _e)
 	{

@@ -130,33 +130,13 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		ctrace << "P2PHostProxy::onSessionClosed";
 	}
 
-
-	bool P2PHostProxy::interpretProtocolPacket(PacketType _t, RLP const& _r)
+	void P2PHostProxy::interpretProtocolPacket(PacketType _t, RLP const& _r)
 	{
-		switch (_t)
+		auto pUnitTest = getCurrUnitTest();
+		if (nullptr != pUnitTest)
 		{
-		case DisconnectPacket:
-		{
-			string reason = "Unspecified";
-			auto r = (DisconnectReason)_r[0].toInt<int>();
-			if (!_r[0].isInt())
-				ctrace << "Disconnect (reason: no reason)";
-			else
-			{
-				reason = reasonOf(r);
-				ctrace << "Disconnect (reason: " << reason << ")";
-			}
-			switchUnitTest(m_currTest);
-			break;
+			pUnitTest->interpretProtocolPacket(_t, _r);
 		}
-		
-		case GetPeersPacket:
-		case PeersPacket:
-			break;
-		default:
-			return false;
-		}
-		return true;
 	}
 
 	void P2PHostProxy::interpret(unsigned _id, RLP const& _r)
@@ -218,6 +198,11 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		ctrace << "P2PTestDriveUnitTest::destroy";
 	}
 
+	void P2PTestDriveUnitTest::interpretProtocolPacket(PacketType _t, RLP const& _r)
+	{
+		ctrace << "P2PTestDriveUnitTest::interpretProtocolPacket";
+	}
+
 	void P2PTestDriveUnitTest::interpret(unsigned _id, RLP const& _r)
 	{
 		ctrace << "P2PTestDriveUnitTest::interpret";
@@ -253,6 +238,34 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 	}
 
 	//用来解析传来的协议包
+	void P2PTestRequestHeaderAttack::interpretProtocolPacket(PacketType _t, RLP const& _r)
+	{
+		switch (_t)
+		{
+		case DisconnectPacket:
+		{
+			string reason = "Unspecified";
+			auto r = (DisconnectReason)_r[0].toInt<int>();
+			if (!_r[0].isInt())
+				ctrace << "Disconnect (reason: no reason)";
+			else
+			{
+				reason = reasonOf(r);
+				ctrace << "Disconnect (reason: " << reason << ")";
+			}
+			//m_hostProxy.switchUnitTest();
+			break;
+		}
+
+		case GetPeersPacket:
+		case PeersPacket:
+			break;
+		default:
+			return;
+		}
+		return;
+	}
+
 	void P2PTestRequestHeaderAttack::interpret(unsigned _id, RLP const& _r)
 	{
 		ctrace << "P2PTestRequestHeaderAttack::interpret";
