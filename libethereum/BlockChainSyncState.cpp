@@ -1353,7 +1353,7 @@ namespace dev
 
 		void FindingCommonBlockSyncState::requestNextCommonHeader()
 		{
-			host().foreachPeer([this](std::shared_ptr<EthereumPeer> _p)
+			host().foreachPeerByLastIrr([this](std::shared_ptr<EthereumPeer> _p)
 			{
 				if (_p->m_asking != Asking::Nothing)
 				{
