@@ -110,15 +110,47 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 	{
 		bytesConstRef frame(_s.data(), _s.size());
 		auto packetType = (PacketType)RLP(frame.cropped(0, 1)).toInt<unsigned>();
-		if (packetType < UserPacket)
-			return;
 		RLP r(frame.cropped(1));
+
+		if (packetType < UserPacket)
+		{
+			interpretProtocolPacket(packetType, r);
+			return;
+		}
 		interpret(packetType - UserPacket, r);
 	}
 
 	void P2PHostProxy::connectToHost(NodeID const& _id)
 	{
 		m_host.connectToHost(_id);
+	}
+
+	bool P2PHostProxy::interpretProtocolPacket(PacketType _t, RLP const& _r)
+	{
+		switch (_t)
+		{
+		case DisconnectPacket:
+		{
+			string reason = "Unspecified";
+			auto r = (DisconnectReason)_r[0].toInt<int>();
+			if (!_r[0].isInt())
+				ctrace << "Disconnect (reason: no reason)";
+			else
+			{
+				reason = reasonOf(r);
+				ctrace << "Disconnect (reason: " << reason << ")";
+			}
+			switchUnitTest(m_currTest);
+			break;
+		}
+		
+		case GetPeersPacket:
+		case PeersPacket:
+			break;
+		default:
+			return false;
+		}
+		return true;
 	}
 
 	void P2PHostProxy::interpret(unsigned _id, RLP const& _r)

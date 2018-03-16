@@ -68,6 +68,7 @@ namespace P2PTest {
 		RLPStream& prep(RLPStream& _s, unsigned _id, unsigned _args);  
 		void sealAndSend(dev::RLPStream& _s);   
 		void interpret(unsigned _id, RLP const& _r); 
+		bool interpretProtocolPacket(PacketType _t, RLP const& _r);
 		void step();
 
 		void connectToHost(NodeID const& _id);
