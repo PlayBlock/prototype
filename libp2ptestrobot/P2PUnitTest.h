@@ -65,7 +65,7 @@ namespace P2PTest {
 	public:
 		P2PHostProxy(dev::p2p::FakeHost& _h, boost::asio::io_service& _ioService);
 
-		~P2PHostProxy() {} 
+		~P2PHostProxy() { for (auto& p : m_unitTestList) { if (p != nullptr) delete p; } }
 		 
 		RLPStream& prep(RLPStream& _s, unsigned _id, unsigned _args);  
 		void sealAndSend(dev::RLPStream& _s);   

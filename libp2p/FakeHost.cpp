@@ -66,6 +66,8 @@ FakeHost::FakeHost(string const& _clientVersion, NetworkPreferences const& _n, b
 
 FakeHost::~FakeHost()
 {
+	if (m_hostProxy != nullptr)
+		delete m_hostProxy;
 }
 
 void FakeHost::start()
