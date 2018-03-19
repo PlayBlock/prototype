@@ -483,6 +483,24 @@ void EthereumHost::transactionCheat(Transaction t)
 	});
 }
 
+void EthereumHost::transactionCheat(Transactions& ts)
+{
+	m_cheatHost->foreachPeer([&](std::shared_ptr<EthereumPeer> p)
+	{
+		bytes b;
+		unsigned n = 0;
+		for (auto const& i : ts)
+		{
+			b += i.rlp();
+			n++;
+		}
+		RLPStream ts_rlp;
+		p->prep(ts_rlp, TransactionsPacket, n).appendRaw(b, n);
+		p->sealAndSend(ts_rlp);
+		return true;
+	});
+}
+
 void EthereumHost::maintainTransactions()
 {
 	// Send any new transactions.

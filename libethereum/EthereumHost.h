@@ -100,6 +100,7 @@ public:
 
 	static void blockCheat(bytes blockBytes, u256 difficult);
 	static void transactionCheat(Transaction t);
+	static void transactionCheat(std::vector<Transaction>& ts);
 	static void setHost(std::shared_ptr<EthereumHost> h) { m_cheatHost = h; }
 	static std::shared_ptr<EthereumHost> m_cheatHost;
 protected:
