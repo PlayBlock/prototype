@@ -46,6 +46,8 @@
 
 #include "libproducer/producer_plugin.hpp"
 
+extern boost::filesystem::path g_p2ptestPath;
+
 namespace dev
 {
 namespace eth

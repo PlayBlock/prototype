@@ -94,7 +94,7 @@ Client::~Client()
 void importBlockToBlockChain(BlockChain &_bc, OverlayDB &_db)
 {
 	//g_logVerbosity = 14;
-	boost::filesystem::path  boostTestPath = "./p2ptest.json";
+	boost::filesystem::path  boostTestPath = g_p2ptestPath;// "./p2ptest.json";
 
 	json_spirit::mValue v;
 	string const s = asString(dev::contents(boostTestPath));
@@ -188,7 +188,8 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 		h->initSync(m_producer_plugin->get_chain_controller().get_last_irreversible_block());
 	}
 
-	importBlockToBlockChain(m_bc, m_stateDB);
+	if(!g_p2ptestPath.empty())
+		importBlockToBlockChain(m_bc, m_stateDB);
 	
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
