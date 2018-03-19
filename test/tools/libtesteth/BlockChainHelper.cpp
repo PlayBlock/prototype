@@ -662,7 +662,6 @@ bool TestBlockChain::addBlock(TestBlock const& _block)
 
 	return false;
 }
-
 vector<TestBlock> TestBlockChain::syncUncles(vector<TestBlock> const& uncles)
 {	
 	vector<TestBlock> validUncles;

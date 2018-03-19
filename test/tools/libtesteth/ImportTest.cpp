@@ -338,9 +338,9 @@ void ImportTest::importState(json_spirit::mObject const& _o, State& _state)
 	AccountMaskMap mask;
 	importState(_o, _state, mask);
 	//check that every parameter was declared in state object
-	for (auto const& i: mask)
+	/*for (auto const& i: mask)
 		if (!i.second.allSet())
-			BOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));
+			BOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));*/
 }
 
 void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr)

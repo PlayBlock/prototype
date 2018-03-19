@@ -33,6 +33,7 @@
 #include "TransactionQueue.h"
 #include <libethashseal/ETIProofOfWork.h>
 #include "BenchMark.h"
+#include <test/tools/libtesteth/JsonSpiritHeaders.h>
 
 using namespace std;
 using namespace dev;
@@ -69,10 +70,10 @@ Client::Client(
 	fs::path const& _dbPath,
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _l
-):
+) :
 	ClientBase(),
 	Worker("eth", 0),
-	m_bc(_params, _dbPath, _forceAction, [](unsigned d, unsigned t){ ctrace<< "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
+	m_bc(_params, _dbPath, _forceAction, [](unsigned d, unsigned t) { ctrace << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
 	m_tq(_l),
 	m_gp(_gpForAdoption ? _gpForAdoption : make_shared<TrivialGasPricer>()),
 	m_preSeal(chainParams().accountStartNonce),
@@ -90,6 +91,51 @@ Client::~Client()
 	terminate();
 }
 
+void importBlockToBlockChain(BlockChain &_bc, OverlayDB &_db)
+{
+	//g_logVerbosity = 14;
+	boost::filesystem::path  boostTestPath = "./p2ptest.json";
+
+	json_spirit::mValue v;
+	string const s = asString(dev::contents(boostTestPath));
+	json_spirit::read_string(s, v);
+
+	for (auto const& i : v.get_obj())
+	{
+		string const& testname = i.first;
+		json_spirit::mObject const& inputTest = i.second.get_obj();
+
+		//判断_bc中的genesis与预导入块的json中的是否相同
+		/*auto gsRLP = inputTest.at("genesisRLP").get_str();
+		bytes paramGenesis = _bc.chainParams().genesisBlock();
+		ctrace << RLP(paramGenesis);
+
+		bytes ll = fromHex(gsRLP.substr(0, 2) == "0x" ? gsRLP.substr(2) : gsRLP, WhenError::Throw);
+		ctrace << RLP(ll);*/
+
+		for (auto const& bl : inputTest.at("blocks").get_array())
+		{
+			json_spirit::mObject blObj = bl.get_obj();
+			//TestBlock blockFromRlp;
+			try
+			{
+				string str = blObj["rlp"].get_str();
+				
+				//bytesConstRef blRlp((byte*)str.data(), str.size());
+				bytes ss = fromHex(str.substr(0, 2) == "0x" ? str.substr(2) : str, WhenError::Throw);
+				BlockHeader  bh(ss);
+
+				_bc.import(ss, _db);
+
+			}
+			catch (Exception const& _e)
+			{
+				cnote << "state sync or block import did throw an exception: " << diagnostic_information(_e);
+			}
+		}
+
+	}
+}
 bool Client::m_cheat;
 //void EthereumHost::setHost(std::shared_ptr<EthereumHost> h);
 void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _forceAction, u256 _networkId)
@@ -142,7 +188,8 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 		h->initSync(m_producer_plugin->get_chain_controller().get_last_irreversible_block());
 	}
 
-
+	importBlockToBlockChain(m_bc, m_stateDB);
+	
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	doWork(false);
