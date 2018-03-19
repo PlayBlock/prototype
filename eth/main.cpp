@@ -72,6 +72,7 @@ namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
 boost::filesystem::path g_p2ptestPath;
+std::string  g_BlockChainName;
 namespace
 {
 
@@ -293,7 +294,7 @@ int main(int argc, char** argv)
 		("test", "Testing mode: Disable PoW and provide test rpc interface.")
 		("config", po::value<string>()->value_name("<file>"), "Configure specialised blockchain using given JSON information.\n")
 		("p2pfiller-path", po::value<string>()->value_name("<file>"), "Filler specialised P2P test using given JSON information.\n")
-		("chain-name", po::value<string>()->value_name("<file>"), "Filler specialised P2P test using given JSON information.\n")
+		("chainname", po::value<string>()->value_name("<file>"), "Import the chain name .\n")
 		("genesis", po::value<string>()->value_name("<file>"), "Set genesis JSON file.")
 		("mode,o", po::value<string>()->value_name("<full/peer>"), "Start a full node or a peer node (default: full).\n")
 		("ipc", "Enable IPC server (default: on).")
@@ -545,6 +546,8 @@ int main(int argc, char** argv)
 		setIpcPath(vm["ipcpath"].as<string>());
 	if (vm.count("p2pfiller-path"))
 		g_p2ptestPath = vm["p2pfiller-path"].as<string>();
+	if (vm.count("chainname"))
+		g_BlockChainName = vm["chainname"].as<string>();
 	if (vm.count("genesis"))
 	{
 		try

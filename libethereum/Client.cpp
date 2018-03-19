@@ -116,21 +116,24 @@ void importBlockToBlockChain(BlockChain &_bc, OverlayDB &_db)
 		for (auto const& bl : inputTest.at("blocks").get_array())
 		{
 			json_spirit::mObject blObj = bl.get_obj();
-			//TestBlock blockFromRlp;
-			try
+			if (g_BlockChainName.size() > 0 && blObj["chainname"] == g_BlockChainName)
 			{
-				string str = blObj["rlp"].get_str();
-				
-				//bytesConstRef blRlp((byte*)str.data(), str.size());
-				bytes ss = fromHex(str.substr(0, 2) == "0x" ? str.substr(2) : str, WhenError::Throw);
-				BlockHeader  bh(ss);
+				//TestBlock blockFromRlp;
+				try
+				{
+					string str = blObj["rlp"].get_str();
 
-				_bc.import(ss, _db);
+					//bytesConstRef blRlp((byte*)str.data(), str.size());
+					bytes ss = fromHex(str.substr(0, 2) == "0x" ? str.substr(2) : str, WhenError::Throw);
+					BlockHeader  bh(ss);
 
-			}
-			catch (Exception const& _e)
-			{
-				cnote << "state sync or block import did throw an exception: " << diagnostic_information(_e);
+					_bc.import(ss, _db);
+
+				}
+				catch (Exception const& _e)
+				{
+					cnote << "state sync or block import did throw an exception: " << diagnostic_information(_e);
+				}
 			}
 		}
 
