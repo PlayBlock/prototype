@@ -4,6 +4,7 @@
 #include <libp2p/common.h> 
 #include <boost/chrono.hpp>
 #include <boost/thread/thread.hpp> 
+#include <libdevcore/SHA3.h>
 
 using namespace dev;
 using namespace dev::eth;
@@ -67,8 +68,9 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		registerUnitTest(new P2PTestDriveUnitTest(*this));
 		registerUnitTest(new P2PTestRequestHeaderAttack(*this));
 		registerUnitTest(new P2PTestStatusPacketAttack(*this));
+		registerUnitTest(new P2PTestNewBlockHashesAttack(*this));
 		
-		switchUnitTest(2);
+		switchUnitTest(3);
 	}
 
 	void P2PHostProxy::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock)
@@ -102,6 +104,18 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		prep(s, GetBlockHeadersPacket, 4) << _startNumber << _count << _skip << (_reverse ? 1 : 0);
 		ctrace << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "") << " to: " << m_host.id();
 		sealAndSend(s);
+	}
+
+	void P2PHostProxy::sendNewBlockHash(h256& block, unsigned number)
+	{
+		RLPStream ts;
+		prep(ts, NewBlockHashesPacket, 1);
+
+		ts.appendList(2);
+		ts.append(block);
+		ts.append(number);
+
+		sealAndSend(ts);
 	}
 
 	dev::RLPStream& P2PHostProxy::prep(RLPStream& _s, unsigned _id, unsigned _args)
@@ -566,6 +580,124 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		m_hostProxy.requestStatus(u256(), u256(), h256(), h256(), u256());
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 		ctrace << "P2PTestStatusPacketAttack::step()";
+	}
+
+	/*
+	* UnitTest: P2PTestNewBlockHashesAttack
+	*/
+
+	//用例名称
+	std::string P2PTestNewBlockHashesAttack::name() const
+	{
+		return "P2PTestNewBlockHashesAttack";
+	}
+
+	//用于用例初始化
+	void P2PTestNewBlockHashesAttack::init()
+	{
+		NodeID id = NodeID("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
+		m_hostProxy.connectToHost(id);
+
+		ctrace << "P2PTestNewBlockHashesAttack::init";
+	}
+
+	//用例销毁
+	void P2PTestNewBlockHashesAttack::destroy()
+	{
+		ctrace << "P2PTestNewBlockHashesAttack::destroy";
+	}
+
+	//用来解析传来的协议包
+	void P2PTestNewBlockHashesAttack::interpretProtocolPacket(PacketType _t, RLP const& _r)
+	{
+		switch (_t)
+		{
+		case DisconnectPacket:
+		{
+			string reason = "Unspecified";
+			auto r = (DisconnectReason)_r[0].toInt<int>();
+			if (!_r[0].isInt())
+				ctrace << "Disconnect (reason: no reason)";
+			else
+			{
+				reason = reasonOf(r);
+				ctrace << "Disconnect (reason: " << reason << ")";
+			}
+			//m_hostProxy.switchUnitTest();
+			break;
+		}
+
+		case GetPeersPacket:
+		case PeersPacket:
+			break;
+		default:
+			return;
+		}
+		return;
+	}
+
+	void P2PTestNewBlockHashesAttack::interpret(unsigned _id, RLP const& _r)
+	{
+		ctrace << "P2PTestNewBlockHashesAttack::interpret";
+		try
+		{
+			switch (_id)
+			{
+			case StatusPacket:
+			{
+				unsigned _protocolVersion = _r[0].toInt<unsigned>();
+				u256 _networkId = _r[1].toInt<u256>();
+				u256 _totalDifficulty = _r[2].toInt<u256>();
+				h256 _latestHash = _r[3].toHash<h256>();
+				h256 _genesisHash = _r[4].toHash<h256>();
+				uint32_t _lastIrrBlock = _r[5].toInt<u256>().convert_to<uint32_t>();
+
+				break;
+			}
+			case BlockHeadersPacket:
+			{
+				size_t itemCount = _r.itemCount();
+				ctrace << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
+				BlockHeader header(_r[0].data(), HeaderData);
+				unsigned blockNumber = static_cast<unsigned>(header.number());
+
+				ctrace << "start blockNumber: " << blockNumber;
+				break;
+			}
+			case NewBlockPacket:
+			{
+				//observer->onPeerNewBlock(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
+				break;
+			}
+			default:
+				return;
+			}
+		}
+		catch (Exception const&)
+		{
+			clog(NetWarn) << "Peer causing an Exception:" << boost::current_exception_diagnostic_information() << _r;
+		}
+		catch (std::exception const& _e)
+		{
+			clog(NetWarn) << "Peer causing an exception:" << _e.what() << _r;
+		}
+
+
+	}
+
+	//在host线程
+	void P2PTestNewBlockHashesAttack::step()
+	{
+		auto tid = std::this_thread::get_id();
+
+		static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
+
+		uint64_t number = s_eng();
+
+		m_hostProxy.sendNewBlockHash(dev::sha3(to_string(number)), number);
+
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+		ctrace << "P2PTestNewBlockHashesAttack::step()";
 	}
 
 }
