@@ -183,4 +183,28 @@ namespace P2PTest {
 		virtual void step();
 
 	};
+
+	class P2PTestStatusPacketAttack : public P2PUnitTest
+	{
+	public:
+		P2PTestStatusPacketAttack(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestStatusPacketAttack() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+
+	};
 }

@@ -66,13 +66,26 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		//注册用例TestDrive
 		registerUnitTest(new P2PTestDriveUnitTest(*this));
 		registerUnitTest(new P2PTestRequestHeaderAttack(*this));
-
-		switchUnitTest(0);
+		registerUnitTest(new P2PTestStatusPacketAttack(*this));
+		
+		switchUnitTest(2);
 	}
 
 	void P2PHostProxy::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock)
 	{
+		const unsigned hostProtocolVersion = 63;
 
+		RLPStream s;
+		prep(s, StatusPacket, 6)
+			<< hostProtocolVersion
+			<< _hostNetworkId
+			<< _chainTotalDifficulty
+			<< _chainCurrentHash
+			<< _chainGenesisHash
+			<< _lastIrrBlock
+			;
+
+		sealAndSend(s);
 	}
 
 	void P2PHostProxy::requestBlockHeaders(dev::h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse)
@@ -221,6 +234,9 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		ctrace << "P2PTestDriveUnitTest::run()";
 	}
 
+	/*
+	* UnitTest: P2PTestRequestHeaderAttack
+	*/
 
 	//用例名称
 	std::string P2PTestRequestHeaderAttack::name() const
@@ -329,6 +345,11 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		ctrace << "P2PTestNewBlockAttack::step()";
 	}
 
+
+	/*
+	* UnitTest: P2PTestNewBlockAttack
+	*/
+
 	//用例名称
 	std::string P2PTestNewBlockAttack::name() const
 	{
@@ -434,6 +455,117 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		m_hostProxy.requestBlockHeaders(1, 1, 0, false);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 		ctrace << "P2PTestNewBlockAttack::step()";
+	}
+
+	/*
+	* UnitTest: P2PTestStatusPacketAttack
+	*/
+
+	//用例名称
+	std::string P2PTestStatusPacketAttack::name() const
+	{
+		return "P2PTestStatusPacketAttack";
+	}
+
+	//用于用例初始化
+	void P2PTestStatusPacketAttack::init()
+	{
+		NodeID id = NodeID("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
+		m_hostProxy.connectToHost(id);
+
+		ctrace << "P2PTestStatusPacketAttack::init";
+	}
+
+	//用例销毁
+	void P2PTestStatusPacketAttack::destroy()
+	{
+		ctrace << "P2PTestStatusPacketAttack::destroy";
+	}
+
+	//用来解析传来的协议包
+	void P2PTestStatusPacketAttack::interpretProtocolPacket(PacketType _t, RLP const& _r)
+	{
+		switch (_t)
+		{
+		case DisconnectPacket:
+		{
+			string reason = "Unspecified";
+			auto r = (DisconnectReason)_r[0].toInt<int>();
+			if (!_r[0].isInt())
+				ctrace << "Disconnect (reason: no reason)";
+			else
+			{
+				reason = reasonOf(r);
+				ctrace << "Disconnect (reason: " << reason << ")";
+			}
+			//m_hostProxy.switchUnitTest();
+			break;
+		}
+
+		case GetPeersPacket:
+		case PeersPacket:
+			break;
+		default:
+			return;
+		}
+		return;
+	}
+
+	void P2PTestStatusPacketAttack::interpret(unsigned _id, RLP const& _r)
+	{
+		ctrace << "P2PTestStatusPacketAttack::interpret";
+		try
+		{
+			switch (_id)
+			{
+			case StatusPacket:
+			{
+				unsigned _protocolVersion = _r[0].toInt<unsigned>();
+				u256 _networkId = _r[1].toInt<u256>();
+				u256 _totalDifficulty = _r[2].toInt<u256>();
+				h256 _latestHash = _r[3].toHash<h256>();
+				h256 _genesisHash = _r[4].toHash<h256>();
+				uint32_t _lastIrrBlock = _r[5].toInt<u256>().convert_to<uint32_t>();
+
+				break;
+			}
+			case BlockHeadersPacket:
+			{
+				size_t itemCount = _r.itemCount();
+				ctrace << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
+				BlockHeader header(_r[0].data(), HeaderData);
+				unsigned blockNumber = static_cast<unsigned>(header.number());
+
+				ctrace << "start blockNumber: " << blockNumber;
+				break;
+			}
+			case NewBlockPacket:
+			{
+				//observer->onPeerNewBlock(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
+				break;
+			}
+			default:
+				return;
+			}
+		}
+		catch (Exception const&)
+		{
+			clog(NetWarn) << "Peer causing an Exception:" << boost::current_exception_diagnostic_information() << _r;
+		}
+		catch (std::exception const& _e)
+		{
+			clog(NetWarn) << "Peer causing an exception:" << _e.what() << _r;
+		}
+
+
+	}
+
+	//在host线程
+	void P2PTestStatusPacketAttack::step()
+	{
+		m_hostProxy.requestStatus(u256(), u256(), h256(), h256(), u256());
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+		ctrace << "P2PTestStatusPacketAttack::step()";
 	}
 
 }
