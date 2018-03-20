@@ -43,6 +43,9 @@ namespace fs = boost::filesystem;
 
 static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
+boost::filesystem::path g_p2ptestPath;
+std::string  g_BlockChainName;
+
 std::ostream& dev::eth::operator<<(std::ostream& _out, ActivityReport const& _r)
 {
 	_out << "Since " << toString(_r.since) << " (" << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - _r.since).count();
@@ -106,17 +109,17 @@ void importBlockToBlockChain(BlockChain &_bc, OverlayDB &_db)
 		json_spirit::mObject const& inputTest = i.second.get_obj();
 
 		//判断_bc中的genesis与预导入块的json中的是否相同
-		/*auto gsRLP = inputTest.at("genesisRLP").get_str();
+		auto gsRLP = inputTest.at("genesisRLP").get_str();
 		bytes paramGenesis = _bc.chainParams().genesisBlock();
 		ctrace << RLP(paramGenesis);
 
 		bytes ll = fromHex(gsRLP.substr(0, 2) == "0x" ? gsRLP.substr(2) : gsRLP, WhenError::Throw);
-		ctrace << RLP(ll);*/
+		ctrace << RLP(ll);
 
 		for (auto const& bl : inputTest.at("blocks").get_array())
 		{
 			json_spirit::mObject blObj = bl.get_obj();
-			if (g_BlockChainName.size() > 0 && blObj["chainname"] == g_BlockChainName)
+			if (g_BlockChainName.size() > 0 && (blObj.count("chainname") == 0 || blObj["chainname"].get_str() == g_BlockChainName))
 			{
 				//TestBlock blockFromRlp;
 				try

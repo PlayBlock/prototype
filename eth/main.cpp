@@ -71,8 +71,6 @@ using namespace boost::algorithm;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-boost::filesystem::path g_p2ptestPath;
-std::string  g_BlockChainName;
 namespace
 {
 
