@@ -79,6 +79,8 @@ namespace P2PTest {
 
 		void onSessionClosed(NodeID const& _id);
 
+		P2PTestClient& getClient() { return m_client; }
+
 	public: //测试用例注册
 		void registerUnitTest(P2PUnitTest* _unit);
 		static void switchUnitTest(int i = m_currTest);
@@ -117,6 +119,7 @@ namespace P2PTest {
 		static int m_currTest;
 		boost::asio::io_service& m_ioService;
 		shared_ptr<boost::asio::deadline_timer> m_timer;
+		P2PTestClient m_client;
 	};
 
 	
@@ -213,9 +216,6 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
-	private:
-		P2PTestClient m_client;
-
 	};
 
 	class P2PTestNewBlockHashesAttack : public P2PUnitTest
@@ -239,9 +239,6 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
-	private:
-		P2PTestClient m_client;
-
 	};
 
 	class P2PTestGetBlockBodiesPacket : public P2PUnitTest
@@ -265,9 +262,6 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
-	private:
-		P2PTestClient m_client;
-
 	};
 
 	class P2PTestBlockBodiesPacket : public P2PUnitTest
@@ -291,9 +285,6 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
-	private:
-		P2PTestClient m_client;
-
 	};
 
 	class P2PTestSendNewBlockPacket : public P2PUnitTest
@@ -317,8 +308,6 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
-	private:
-		P2PTestClient m_client;
 
 	};
 
@@ -343,8 +332,6 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
-	private:
-		P2PTestClient m_client;
 
 	};
 
@@ -369,8 +356,6 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
-	private:
-		P2PTestClient m_client;
 
 	};
 
@@ -395,8 +380,6 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
-	private:
-		P2PTestClient m_client;
 
 	};
 
@@ -421,8 +404,6 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
-	private:
-		P2PTestClient m_client;
 
 	};
 
