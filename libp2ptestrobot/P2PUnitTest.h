@@ -100,7 +100,13 @@ namespace P2PTest {
 		void requestBlockHeaders(dev::h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse);
 		void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse);
 		void sendNewBlockHash(h256& block, unsigned number);
-
+		void getBlockBodiesPacket(h256& block, unsigned number);
+		void sendBlockBodiesPacket(h256& block, unsigned number);
+		void sendNewBlockPacket(h256& block, unsigned number);
+		void sendReceiptsPacket(h256& block, unsigned number);
+		void getReceiptsPacket(h256& block, unsigned number);
+		void getNodeDataPacket(h256& block, unsigned number);
+		void sendNodeDataPacket(h256& block, unsigned number);
 
 
 	protected:
@@ -233,8 +239,191 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
-
 	private:
 		P2PTestClient m_client;
+
 	};
+
+	class P2PTestGetBlockBodiesPacket : public P2PUnitTest
+	{
+	public:
+		P2PTestGetBlockBodiesPacket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestGetBlockBodiesPacket() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		P2PTestClient m_client;
+
+	};
+
+	class P2PTestBlockBodiesPacket : public P2PUnitTest
+	{
+	public:
+		P2PTestBlockBodiesPacket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestBlockBodiesPacket() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		P2PTestClient m_client;
+
+	};
+
+	class P2PTestSendNewBlockPacket : public P2PUnitTest
+	{
+	public:
+		P2PTestSendNewBlockPacket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestSendNewBlockPacket() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		P2PTestClient m_client;
+
+	};
+
+	class P2PTestGetNodeDataPacket : public P2PUnitTest
+	{
+	public:
+		P2PTestGetNodeDataPacket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestGetNodeDataPacket() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		P2PTestClient m_client;
+
+	};
+
+	class P2PTestNodeDataPacket : public P2PUnitTest
+	{
+	public:
+		P2PTestNodeDataPacket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestNodeDataPacket() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		P2PTestClient m_client;
+
+	};
+
+	class P2PTestGetReceiptsPacket : public P2PUnitTest
+	{
+	public:
+		P2PTestGetReceiptsPacket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestGetReceiptsPacket() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		P2PTestClient m_client;
+
+	};
+
+	class P2PTestReceiptsPacket : public P2PUnitTest
+	{
+	public:
+		P2PTestReceiptsPacket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestReceiptsPacket() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		P2PTestClient m_client;
+
+	};
+
 }
