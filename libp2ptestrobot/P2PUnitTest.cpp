@@ -577,7 +577,8 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 	//ÔÚhostÏß³Ì
 	void P2PTestStatusPacketAttack::step()
 	{
-		m_hostProxy.requestStatus(u256(), u256(), h256(), h256(), u256());
+		m_hostProxy.requestStatus(m_client.m_hostNetworkId, m_client.m_chainTotalDifficulty, 
+			m_client.m_chainCurrentHash,m_client.m_chainGenesisHash, m_client.m_lastIrrBlock);
 		boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 		ctrace << "P2PTestStatusPacketAttack::step()";
 	}
@@ -597,6 +598,8 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 	{
 		NodeID id = NodeID("8620a3dafd797199dfe24f1378fabc7de62c01569e4b1c4953cc0fef60cf89b6b4bd69fac1462c8c4f549e0c934ce11f5d85f1dfb4e62c4f57779a89d6964fe6");
 		m_hostProxy.connectToHost(id);
+		m_hostProxy.requestStatus(m_client.m_hostNetworkId, m_client.m_chainTotalDifficulty,
+			m_client.m_chainCurrentHash, m_client.m_chainGenesisHash, m_client.m_lastIrrBlock);
 
 		ctrace << "P2PTestNewBlockHashesAttack::init";
 	}

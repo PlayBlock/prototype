@@ -207,6 +207,8 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
+	private:
+		P2PTestClient m_client;
 
 	};
 
@@ -232,5 +234,7 @@ namespace P2PTest {
 		//在host线程
 		virtual void step();
 
+	private:
+		P2PTestClient m_client;
 	};
 }
