@@ -585,6 +585,10 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, bool)
 	ChainParams p = ChainParams(genesisInfo(eth::Network::FrontierTest));
 
 	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
+	// for testing genesis RLP
+	//bytes tgb = m_blockChain->chainParams().genesisBlock();
+	//cdebug << RLP(tgb);
+	//cdebug << RLP(_genesisBlock.bytes());
 	if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.bytes())))
 	{
 		cdebug << "Not known:" << BlockHeader::headerHashFromBlock(_genesisBlock.bytes()) << BlockHeader(p.genesisBlock()).hash();
@@ -852,6 +856,14 @@ TestBlock TestBlockChain::P2PTestGenesisBlock(u256 const& _gasLimit)
 	accountMapObj["0x0000000000000000000000000000000000000020"] = accountVote;
 	accountMapObj["0x0000000000000000000000000000000000000021"] = accountVote;
 	accountMapObj["0x000000000000000000000000000000000000002b"] = accountVote;
+
+	json_spirit::mObject account;
+	account["nonce"] = "0";					//=1for nonce too low exception check
+	account["code"] = "0x";
+	account["storage"] = json_spirit::mObject();
+	account["balance"] = "0x09184e72a000";
+
+	accountMapObj["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"] = account;
 
 	return TestBlock(blockObj, accountMapObj);
 }

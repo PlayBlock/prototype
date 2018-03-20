@@ -20,9 +20,8 @@ public:
 	const BlockChain& getBlockChain() { return m_tbc->getInterface(); }
 
 private:
-	void importBlocksFromFile(boost::filesystem::path& _path, string& _chainName=string());
+	void importBlocksFromFile(boost::filesystem::path& _path, string& _notChainName=string());
 
-	bool addBlock(bytes const& _block);
 	bytes produceBlock();
 
 	const private_key& get_private_key(const AccountName& address) const;

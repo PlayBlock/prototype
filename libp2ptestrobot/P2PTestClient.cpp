@@ -1,5 +1,6 @@
 #include "P2PTestClient.hpp"
 #include <libp2p/Common.h>
+#include <libethereum/Client.h>
 
 using namespace P2PTest;
 using namespace dev::p2p;
@@ -12,6 +13,9 @@ P2PTestClient::P2PTestClient()
 	m_tbc = std::make_shared<TestBlockChain>(tb, true);
 	m_producer_plugin = m_tbc->getProducerPluginPtr();
 	m_chain_controller = &m_producer_plugin->get_chain_controller();
+
+	if (!g_p2ptestPath.empty() && !g_BlockChainName.empty())
+		importBlocksFromFile(g_p2ptestPath, g_BlockChainName);
 
 	m_idOffset = UserPacket;
 
@@ -29,7 +33,7 @@ P2PTestClient::~P2PTestClient()
 
 }
 
-void P2PTestClient::importBlocksFromFile(boost::filesystem::path& _path, string& _chainName)
+void P2PTestClient::importBlocksFromFile(boost::filesystem::path& _path, string& _notChainName)
 {
 	//g_logVerbosity = 14;
 	//boost::filesystem::path  boostTestPath = g_p2ptestPath;// "./p2ptest.json";
@@ -54,18 +58,13 @@ void P2PTestClient::importBlocksFromFile(boost::filesystem::path& _path, string&
 		for (auto const& bl : inputTest.at("blocks").get_array())
 		{
 			json_spirit::mObject blObj = bl.get_obj();
-			if (_chainName.size() > 0 && blObj["chainname"] == _chainName)
+			if (_notChainName.size() > 0 && !(blObj["chainname"].get_str() == _notChainName))
 			{
 				//TestBlock blockFromRlp;
 				try
 				{
-					string str = blObj["rlp"].get_str();
-
-					//bytesConstRef blRlp((byte*)str.data(), str.size());
-					bytes ss = fromHex(str.substr(0, 2) == "0x" ? str.substr(2) : str, WhenError::Throw);
-					//BlockHeader  bh(ss);
-
-					addBlock(ss);
+					string blockStr = blObj["rlp"].get_str();
+					m_tbc->addBlock(blockStr);
 
 				}
 				catch (Exception const& _e)
@@ -76,14 +75,6 @@ void P2PTestClient::importBlocksFromFile(boost::filesystem::path& _path, string&
 		}
 
 	}
-}
-
-bool P2PTestClient::addBlock(bytes const& _block)
-{
-	TestBlock tb(RLP(_block).toString());
-	m_tbc->addBlock(tb);
-
-	return true;
 }
 
 bytes P2PTestClient::produceBlock()
