@@ -582,16 +582,17 @@ void TestBlock::populateFrom(TestBlock const& _original)
 TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, bool)
 {
 	m_tempDirBlockchain.reset(new TransientDirectory);
-	ChainParams p = ChainParams(genesisInfo(eth::Network::MainNetwork));
+	ChainParams p = ChainParams(genesisInfo(eth::Network::FrontierTest));
 
 	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
-	//if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.bytes())))
-	//{
-	//	cdebug << "Not known:" << BlockHeader::headerHashFromBlock(_genesisBlock.bytes()) << BlockHeader(p.genesisBlock()).hash();
-	//	cdebug << "Genesis block not known!";
-	//	cdebug << "This should never happen.";
-	//	assert(false);
-	//}
+	if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.bytes())))
+	{
+		cdebug << "Not known:" << BlockHeader::headerHashFromBlock(_genesisBlock.bytes()) << BlockHeader(p.genesisBlock()).hash();
+		cdebug << "Genesis block not known!";
+		cdebug << "This should never happen.";
+		assert(false);
+	}
+
 	m_lastBlock = m_genesisBlock = _genesisBlock;
 
 	m_producer_plugin = make_shared<producer_plugin>(getInterface());
@@ -821,16 +822,16 @@ TestBlock TestBlockChain::P2PTestGenesisBlock(u256 const& _gasLimit)
 {
 	json_spirit::mObject blockObj;
 	blockObj["bloom"] = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-	blockObj["coinbase"] = "0x8888f1f195afa192cfee860698584c030f4c9db1";
-	blockObj["difficulty"] = "131072";
-	blockObj["extraData"] = "0x42";
-	blockObj["gasLimit"] = toString(_gasLimit);
+	blockObj["coinbase"] = "0x0000000000000000000000000000000000000000";
+	blockObj["difficulty"] = "0x0400";
+	blockObj["extraData"] = "0x";
+	blockObj["gasLimit"] = "215040000";
 	blockObj["gasUsed"] = "0";
 	blockObj["number"] = "0";
 	blockObj["parentHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
 	blockObj["receiptTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-	blockObj["stateRoot"] = "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a";
-	blockObj["timestamp"] = "0x54c98c81";
+	blockObj["stateRoot"] = "0xe149f192a01802ce629f6f2a21d41cdb877ec205a018aa665db0eef791008bcb";
+	blockObj["timestamp"] = "0x0";
 	blockObj["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 	blockObj["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
 	blockObj["runningVersion"] = "0x00";
@@ -840,25 +841,17 @@ TestBlock TestBlockChain::P2PTestGenesisBlock(u256 const& _gasLimit)
 	blockObj["s"] = "0x00";
 	blockObj["v"] = "0x1b";
 
+	json_spirit::mObject accountMapObj;
+
 	json_spirit::mObject accountVote;
-	accountVote["balance"] = "1000000000000000000"; // =1 eth
+	accountVote["balance"] = "1"; // =1 eth
 	accountVote["nonce"] = "0";					//=1for nonce too low exception check
 	accountVote["code"] = "0x00";
 	accountVote["storage"] = json_spirit::mObject();
 
-	json_spirit::mObject accountGenesis;
-	accountGenesis["balance"] = "123000000000000000000000000";
-	accountGenesis["nonce"] = "0";					//=1for nonce too low exception check
-	accountGenesis["code"] = "";
-	accountGenesis["storage"] = json_spirit::mObject();
-
-	json_spirit::mObject accountMapObj;
-
 	accountMapObj["0x0000000000000000000000000000000000000020"] = accountVote;
 	accountMapObj["0x0000000000000000000000000000000000000021"] = accountVote;
 	accountMapObj["0x000000000000000000000000000000000000002b"] = accountVote;
-
-	accountMapObj["0x110e3e0a01EcE3a91e04a818F840E9E3D17B3C8f"] = accountGenesis;
 
 	return TestBlock(blockObj, accountMapObj);
 }

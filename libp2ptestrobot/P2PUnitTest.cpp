@@ -70,7 +70,7 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		registerUnitTest(new P2PTestStatusPacketAttack(*this));
 		registerUnitTest(new P2PTestNewBlockHashesAttack(*this));
 		
-		switchUnitTest(3);
+		switchUnitTest(2);
 	}
 
 	void P2PHostProxy::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock)

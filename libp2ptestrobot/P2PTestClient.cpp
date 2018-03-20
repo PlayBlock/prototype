@@ -8,7 +8,7 @@ using fc::ecc::private_key;
 
 P2PTestClient::P2PTestClient() 
 {
-	TestBlock tb(TestBlockChain::defaultDposGenesisBlock());
+	TestBlock tb(TestBlockChain::P2PTestGenesisBlock());
 	m_tbc = std::make_shared<TestBlockChain>(tb, true);
 	m_producer_plugin = m_tbc->getProducerPluginPtr();
 	m_chain_controller = &m_producer_plugin->get_chain_controller();
