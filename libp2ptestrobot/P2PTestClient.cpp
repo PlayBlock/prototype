@@ -112,12 +112,12 @@ bytes P2PTestClient::produceBlock(uint64_t time)
 	auto slot = m_chain_controller->get_slot_at_time(fc::time_point_sec(time));
 
 	auto producer = m_chain_controller->get_scheduled_producer(slot);
-	while (producer == AccountName())
-		producer = m_chain_controller->get_scheduled_producer(++slot);
+	if (producer == AccountName())
+		return bytes();
 
 	//auto producer =  _chain.get_scheduled_producer(slot);
 	auto& private_key = get_private_key(producer);
-	m_working.dposMine(*m_tbc, fc::time_point_sec(time), producer, private_key);
+	m_working.dposMine(*m_tbc, m_chain_controller->get_slot_time(slot), producer, private_key);
 	m_tbc->addBlock(m_working);
 
 	bytes retBytes = m_working.bytes();
