@@ -269,6 +269,7 @@ namespace P2PTest {
 		virtual void step();
 	private:
 		bool m_passTest;
+		bool m_needSync;
 	};
 
 	class P2PTestNewBlockHashesAttack : public P2PUnitTest
