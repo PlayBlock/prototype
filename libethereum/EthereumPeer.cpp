@@ -73,6 +73,7 @@ void EthereumPeer::init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256
 	m_observer = _observer;
 	m_hostProtocolVersion = _hostProtocolVersion;
 	m_lastIrrBlock = _lastIrrBlock.convert_to<uint32_t>();
+	m_lastIrrBlockHash = _lastIrrBlockHash;
 	requestStatus(_hostNetworkId, _chainTotalDifficulty, _chainCurrentHash, _chainGenesisHash,_lastIrrBlock,_lastIrrBlockHash);
 }
 
@@ -258,6 +259,12 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 	{
 	case StatusPacket:
 	{
+		if (_r.itemCount() != 7)
+		{
+			disable("Bad status packet!!!");
+			break;
+		}
+
 		m_protocolVersion = _r[0].toInt<unsigned>();
 		m_networkId = _r[1].toInt<u256>();
 		m_totalDifficulty = _r[2].toInt<u256>();
@@ -348,8 +355,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		break;
 	}
 	case NewBlockPacket:
-	{ 
-
+	{  
 		observer->onPeerNewBlock(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		break;
 	}
