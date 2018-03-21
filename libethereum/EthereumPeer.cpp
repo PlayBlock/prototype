@@ -245,6 +245,11 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 	if (!observer || !hostData)
 		return false;
 
+	if (_id != StatusPacket && !isLlegal())
+	{//当Peer未通过验证时，屏蔽此Peer传来的除Status以外的所有消息
+		return true;
+	}
+
 	m_lastAsk = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
 	try
 	{
@@ -269,12 +274,12 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		break;
 	}
 	case TransactionsPacket:
-	{
+	{   
 		observer->onPeerTransactions(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())), _r);
 		break;
 	}
 	case GetBlockHeadersPacket:
-	{
+	{ 
 		/// Packet layout:
 		/// [ block: { P , B_32 }, maxHeaders: P, skip: P, reverse: P in { 0 , 1 } ]
 		const auto blockId = _r[0];
@@ -299,7 +304,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		break;
 	}
 	case BlockHeadersPacket:
-	{
+	{  
 		if (m_asking != Asking::BlockHeaders)
 			clog(NetImpolite) << "Peer giving us block headers when we didn't ask for them.";
 		else
@@ -310,7 +315,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		break;
 	}
 	case GetBlockBodiesPacket:
-	{
+	{  
 		unsigned count = static_cast<unsigned>(_r.itemCount());
 		clog(NetMessageSummary) << "GetBlockBodies (" << dec << count << "entries)";
 
@@ -330,7 +335,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		break;
 	}
 	case BlockBodiesPacket:
-	{
+	{  
 		if (m_asking != Asking::BlockBodies)
 			clog(NetImpolite) << "Peer giving us block bodies when we didn't ask for them.";
 		else
@@ -341,12 +346,13 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		break;
 	}
 	case NewBlockPacket:
-	{
+	{ 
+
 		observer->onPeerNewBlock(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		break;
 	}
 	case NewBlockHashesPacket:
-	{
+	{ 
 		unsigned itemCount = _r.itemCount();
 
 		clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHashes");
@@ -365,7 +371,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		break;
 	}
 	case GetNodeDataPacket:
-	{
+	{ 
 		unsigned count = static_cast<unsigned>(_r.itemCount());
 		if (!count)
 		{
@@ -386,7 +392,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		break;
 	}
 	case GetReceiptsPacket:
-	{
+	{ 
 		unsigned count = static_cast<unsigned>(_r.itemCount());
 		if (!count)
 		{
@@ -405,7 +411,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		break;
 	}
 	case NodeDataPacket:
-	{
+	{ 
 		if (m_asking != Asking::NodeData)
 			clog(NetImpolite) << "Peer giving us node data when we didn't ask for them.";
 		else
@@ -416,7 +422,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		break;
 	}
 	case ReceiptsPacket:
-	{
+	{ 
 		if (m_asking != Asking::Receipts)
 			clog(NetImpolite) << "Peer giving us receipts when we didn't ask for them.";
 		else
