@@ -17,12 +17,13 @@ public:
 
 	P2PTestClient();
 	~P2PTestClient();
+	void loadPrivateKeys();
 	const BlockChain& getBlockChain() { return m_tbc->getInterface(); }
+	bytes produceBlock(uint32_t slot = 1);
+	bytes produceBlock(uint64_t time);
 
 private:
 	void importBlocksFromFile(boost::filesystem::path& _path, string& _notChainName=string());
-
-	bytes produceBlock();
 
 	const private_key& get_private_key(const AccountName& address) const;
 

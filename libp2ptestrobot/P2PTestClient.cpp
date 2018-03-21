@@ -26,11 +26,24 @@ P2PTestClient::P2PTestClient()
 	m_chainGenesisHash = bc.genesisHash();
 	m_lastIrrBlock = bc.getIrreversibleBlock();
 
+	//load private keys
+	loadPrivateKeys();
 }
 
 P2PTestClient::~P2PTestClient()
 {
 
+}
+
+void P2PTestClient::loadPrivateKeys()
+{
+	// read all prikey-address pair
+
+	auto& params = m_tbc->getInterface().chainParams();
+	for (auto& key : params.privateKeys)
+	{
+		m_private_keys.insert(key);
+	}
 }
 
 void P2PTestClient::importBlocksFromFile(boost::filesystem::path& _path, string& _notChainName)
@@ -77,9 +90,8 @@ void P2PTestClient::importBlocksFromFile(boost::filesystem::path& _path, string&
 	}
 }
 
-bytes P2PTestClient::produceBlock()
+bytes P2PTestClient::produceBlock(uint32_t slot)
 {
-	auto slot = 1;
 	auto producer = m_chain_controller->get_scheduled_producer(slot);
 	while (producer == AccountName())
 		producer = m_chain_controller->get_scheduled_producer(++slot);
@@ -89,6 +101,25 @@ bytes P2PTestClient::produceBlock()
 	m_working.dposMine(*m_tbc, m_chain_controller->get_slot_time(slot), producer, private_key);
 	m_tbc->addBlock(m_working);
 	
+	bytes retBytes = m_working.bytes();
+	m_working = TestBlock();
+
+	return retBytes;
+}
+
+bytes P2PTestClient::produceBlock(uint64_t time)
+{
+	auto slot = m_chain_controller->get_slot_at_time(fc::time_point_sec(time));
+
+	auto producer = m_chain_controller->get_scheduled_producer(slot);
+	while (producer == AccountName())
+		producer = m_chain_controller->get_scheduled_producer(++slot);
+
+	//auto producer =  _chain.get_scheduled_producer(slot);
+	auto& private_key = get_private_key(producer);
+	m_working.dposMine(*m_tbc, fc::time_point_sec(time), producer, private_key);
+	m_tbc->addBlock(m_working);
+
 	bytes retBytes = m_working.bytes();
 	m_working = TestBlock();
 

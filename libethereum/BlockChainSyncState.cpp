@@ -165,10 +165,12 @@ namespace dev
 
 					m_sync.m_expectBlockHashForFindingCommon = _peer->m_latestHash;
 					m_sync.m_expectBlockForFindingCommon = 0;
-					requestPeerLatestBlockHeader(_peer); 
 
 					//开启不中断同步
 					switchState(SyncState::FindingCommonBlock);
+
+					requestPeerLatestBlockHeader(_peer); 
+
 				}
 			}
 		}
