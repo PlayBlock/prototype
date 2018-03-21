@@ -1076,10 +1076,7 @@ int main(int argc, char** argv)
 	if (bootstrap || !remoteHost.empty() || enableDiscovery || listenSet)
 	{
 		web3.startNetwork();
-		ctrace << "Node ID: " << web3.enode() << "\n";
-		cout << "Node ID: " << web3.enode() << "\n";
-
-	
+		cwarn << "Node ID: " << web3.enode() << "\n";  
 	}
 	else
 		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host.\n";
