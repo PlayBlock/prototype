@@ -98,7 +98,7 @@ namespace P2PTest {
 		void registerAllUnitTest();
 
 	public: //请求协议助手函数
-		void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock);
+		void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, unsigned hostProtocolVersion = 63);
 		void requestBlockHeaders(dev::h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse);
 		void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse);
 		void sendNewBlockHash(h256& block, unsigned number);
@@ -223,6 +223,31 @@ namespace P2PTest {
 	public:
 		P2PTestInvalidStatusPacket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
 		~P2PTestInvalidStatusPacket() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		bool m_passTest;
+	};
+	
+	class P2PTestBlockChainIrrket : public P2PUnitTest
+	{
+	public:
+		P2PTestBlockChainIrrket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestBlockChainIrrket() {}
 
 		//用例名称
 		virtual std::string name() const;

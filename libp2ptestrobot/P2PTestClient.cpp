@@ -58,7 +58,7 @@ void P2PTestClient::importBlocksFromFile(boost::filesystem::path& _path, string&
 		for (auto const& bl : inputTest.at("blocks").get_array())
 		{
 			json_spirit::mObject blObj = bl.get_obj();
-			if (_notChainName.size() > 0 && !(blObj["chainname"].get_str() == _notChainName))
+			if (_notChainName.size() > 0 && (blObj.count("chainname") == 0 || !(blObj["chainname"].get_str() == _notChainName)))
 			{
 				//TestBlock blockFromRlp;
 				try
