@@ -483,7 +483,7 @@ namespace P2PTest {
 		virtual void step();
 	private:
 		bool m_recvNewBlock;
-
+		bool m_testPass;
 	};
 
 }
