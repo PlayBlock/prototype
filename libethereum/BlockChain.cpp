@@ -221,6 +221,11 @@ const uint32_t BlockChain::getIrreversibleBlock() const
 	return (*m_producer_plugin).get_chain_controller().get_last_irreversible_block();
 }
 
+const h256 BlockChain::getIrreversibleBlockHash() const
+{
+	return (*m_producer_plugin).get_chain_controller().get_last_irreversible_block_hash();
+}
+
 
 
 BlockHeader const& BlockChain::genesis() const
@@ -1155,7 +1160,11 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 		noteCanonChanged();
 
 	if (isImportedAndBest && m_onBlockImport)
-		m_onBlockImport(_block.info, m_producer_plugin->get_chain_controller().get_last_irreversible_block());
+		m_onBlockImport(
+			_block.info, 
+			m_producer_plugin->get_chain_controller().get_last_irreversible_block(), 
+			m_producer_plugin->get_chain_controller().get_last_irreversible_block_hash()
+		);
 
 	h256s fresh;
 	h256s dead;

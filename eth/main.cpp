@@ -165,7 +165,9 @@ void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mini
 class ExitHandler
 {
 public:
-	static void exitHandler(int) { s_shouldExit = true; }
+	static void exitHandler(int) { 
+		s_shouldExit = true; 
+	}
 	bool shouldExit() const { return s_shouldExit; }
 
 private:

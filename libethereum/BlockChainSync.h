@@ -55,7 +55,7 @@ public:
 	~BlockChainSync();
 
 	//目前用来初始化最新不可逆转块号
-	void init(const uint32_t _last_irr_block);
+	void init(const uint32_t _last_irr_block,const h256& _last_irr_block_hash);
 
 	void abortSync(); ///< Abort all sync activity
 
@@ -87,7 +87,7 @@ public:
 	void onPeerAborting();
 
 	/// Called when a blockchain has imported a new block onto the DB
-	void onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block);
+	void onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block, const h256& _last_irr_block_hash);
 
 	/// @returns Synchonization status
 	SyncStatus status() const;
@@ -96,9 +96,7 @@ public:
 
 	void switchState(SyncState _s);
 
-private:
-	/// Resume downloading after witing state
-	void continueSync();
+private: 
 
 	/// Enter waiting state
 	void pauseSync();
@@ -106,9 +104,7 @@ private:
 	EthereumHost& host() { return m_host; }
 	EthereumHost const& host() const { return m_host; }
 
-	void resetSync();
-	void syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force);
-	void requestBlocks(std::shared_ptr<EthereumPeer> _peer);
+	void resetSync(); 
 	void clearPeerDownload(std::shared_ptr<EthereumPeer> _peer);
 	void clearPeerDownload();
 	void collectBlocks();  
@@ -162,6 +158,7 @@ private:
 	unsigned m_lastImportedBlock = 0; 			///< Last imported block number
 	h256 m_lastImportedBlockHash;				///< Last imported block hash 
 	unsigned m_lastIrreversibleBlock = 0;		///<当前链最新不可逆转块
+	h256 m_lastIrreversibleBlockHash;			///<当前链最新不可逆转块 hash
 
 	/*用于同步任务的状态变量*/
 	unsigned m_syncStartBlock = 0;				

@@ -166,9 +166,9 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 	m_bqReady = m_bq.onReady([=](){ this->onBlockQueueReady(); });			// TODO: should read m_bq->onReady(thisThread, syncBlockQueue);
 	m_bq.setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
 	bc().setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
-	bc().setOnBlockImport([=](BlockHeader const& _info, const unsigned _last_irr_block){
+	bc().setOnBlockImport([=](BlockHeader const& _info, const unsigned _last_irr_block, const h256& _last_irr_block_hash){
 		if (auto h = m_host.lock())
-			h->onBlockImported(_info, _last_irr_block);
+			h->onBlockImported(_info, _last_irr_block,_last_irr_block_hash);
 	});
 
 	if (_forceAction == WithExisting::Rescue)
@@ -191,7 +191,9 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 	//此处用来初始化同步逻辑类的不可逆转块
 	if (auto h = m_host.lock()) 
 	{
-		h->initSync(m_producer_plugin->get_chain_controller().get_last_irreversible_block());
+		h->initSync(
+			m_producer_plugin->get_chain_controller().get_last_irreversible_block(), 
+			m_producer_plugin->get_chain_controller().get_last_irreversible_block_hash());
 	}
 
 	if(!g_p2ptestPath.empty())
@@ -855,6 +857,7 @@ void Client::generate_block(
 	m_sealingInfo.streamRLP(blockHeaderRLP);
 
 	uint32_t lastIrrBlock = bc().getIrreversibleBlock();
+	h256 lastIrrBlockHash = bc().getIrreversibleBlockHash();
 
 	if (!submitSealed(blockHeaderRLP.out()))
 	{
@@ -863,7 +866,7 @@ void Client::generate_block(
 
 		if (auto h = m_host.lock())
 		{
-			h->pushEarlyBlock(m_sealingInfo.hash(), m_working.blockData(), lastIrrBlock);
+			h->pushEarlyBlock(m_sealingInfo.hash(), m_working.blockData(), lastIrrBlock, lastIrrBlockHash);
 		}
 
 	}

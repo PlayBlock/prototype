@@ -111,7 +111,7 @@ public:
 	/// How many message types do we have?
 	static unsigned messageCount() { return PacketCount; }
 
-	void init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, std::shared_ptr<EthereumHostDataFace> _hostData, std::shared_ptr<EthereumPeerObserverFace> _observer);
+	void init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, h256 _lastIrrBlockHash, std::shared_ptr<EthereumHostDataFace> _hostData, std::shared_ptr<EthereumPeerObserverFace> _observer);
 
 	p2p::NodeID id() const { return session()->id(); }
 
@@ -148,6 +148,9 @@ public:
 
 	void setLastIrrBlock(uint32_t _lastIrrBlock) { m_lastIrrBlock = _lastIrrBlock; }
 
+	h256 getLastIrrBlockHash() const { return m_lastIrrBlockHash; }
+
+	void setLastIrrBlockHash(h256 _lastIrrBlockHash) { m_lastIrrBlockHash = _lastIrrBlockHash; }
 
 	void releasePeerKnownBlockList();
 
@@ -163,7 +166,7 @@ private:
 	virtual bool interpret(unsigned _id, RLP const& _r);
 
 	/// Request status. Called from constructor
-	void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock);
+	void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, h256 _lastIrrBlockHash);
 
 	/// Clear all known transactions.
 	void clearKnownTransactions() { std::lock_guard<std::mutex> l(x_knownTransactions); m_knownTransactions.clear(); }
@@ -204,6 +207,7 @@ private:
 	u256 m_totalDifficulty;					///< Peer's latest block's total difficulty.
 	h256 m_genesisHash;						///< Peer's genesis hash
 	uint32_t m_lastIrrBlock;					///< Peer的最新不可逆转块
+	h256 m_lastIrrBlockHash;					///< Peer的最新不可逆转块Hash
 	u256 const m_peerCapabilityVersion;			///< Protocol version this peer supports received as capability
 	/// Have we received a GetTransactions packet that we haven't yet answered?
 	bool m_requireTransactions = false;

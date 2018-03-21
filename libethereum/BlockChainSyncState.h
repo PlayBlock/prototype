@@ -31,7 +31,7 @@ namespace dev
 			virtual void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) = 0; 
 			virtual void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes) = 0; 
 			virtual void onPeerAborting() = 0; 
-			virtual void onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block) = 0;
+			virtual void onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block, const h256& _last_irr_block_hash) = 0;
 
 			virtual void onEnter() = 0;
 			virtual void onLeave() = 0;
@@ -51,7 +51,7 @@ namespace dev
 			virtual void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 			virtual void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes);
 			virtual void onPeerAborting();
-			virtual void onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block);
+			virtual void onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block, const h256& _last_irr_block_hash);
 
 			virtual void onEnter() { updateLastUpdateTime(); }
 			virtual void onLeave() {}
@@ -113,9 +113,7 @@ namespace dev
 
 			/*==============Peer同步相关函数==================*/
 
-			virtual void requestPeerLatestBlockHeader(std::shared_ptr<EthereumPeer> _peer);
-
-			void requestBlocks(std::shared_ptr<EthereumPeer> _peer);
+			virtual void requestPeerLatestBlockHeader(std::shared_ptr<EthereumPeer> _peer); 
 
 			virtual void continueSync() {}
 

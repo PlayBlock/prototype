@@ -300,7 +300,7 @@ public:
 	void setOnBad(std::function<void(Exception&)> _t) { m_onBad = _t; }
 
 	/// Change the function that is called when a new block is imported
-	void setOnBlockImport(std::function<void(BlockHeader const&,const unsigned )> _t) { m_onBlockImport = _t; }
+	void setOnBlockImport(std::function<void(BlockHeader const&,const unsigned,const h256&)> _t) { m_onBlockImport = _t; }
 
 	/// Get a pre-made genesis State object.
 	Block genesisBlock(OverlayDB const& _db) const;
@@ -331,6 +331,8 @@ public:
 	bool isIrreversibleBlock(const uint32_t num) const;
 
 	const uint32_t getIrreversibleBlock() const;
+
+	const h256 getIrreversibleBlockHash() const;
 
 private:
 	static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
@@ -435,7 +437,7 @@ private:
 	mutable h256 m_genesisHash;		// mutable because they're effectively memos.
 
 	std::function<void(Exception&)> m_onBad;									///< Called if we have a block that doesn't verify.
-	std::function<void(BlockHeader const&,const unsigned)> m_onBlockImport;										///< Called if we have imported a new block into the db
+	std::function<void(BlockHeader const&,const unsigned,const h256&)> m_onBlockImport;										///< Called if we have imported a new block into the db
 
 	boost::filesystem::path m_dbPath;
 	

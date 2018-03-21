@@ -181,7 +181,7 @@ namespace dev
 		{ 
 			updateTimeout();
 
-			if (_r.itemCount() != 2)
+			if (_r.itemCount() != 3)
 			{
 				_peer->disable("NewBlock without 2 data fields.");
 				return;
@@ -195,10 +195,13 @@ namespace dev
 
 			//从数据包中获取此peer的不可逆转块号
 			uint32_t lastIrrBlock = _r[1].toInt<u256>().convert_to<uint32_t>();
+			h256	lastIrrBlockHash = _r[2].toHash<h256>();
+
 			ctrace << "LastIrr = " << lastIrrBlock;
 
 			//更新peer最新不可逆转块号
 			_peer->setLastIrrBlock(lastIrrBlock);
+			_peer->setLastIrrBlockHash(lastIrrBlockHash);
 
 			//更新Peer最新的Hash
 			_peer->m_latestHash = h;
@@ -276,12 +279,12 @@ namespace dev
 					}
 
 					//接到传来的块，做简单的检验则直接广播出去
-					host().pushDeliverBlock(h, _r[0].data().toBytes(), lastIrrBlock);
+					host().pushDeliverBlock(h, _r[0].data().toBytes(), lastIrrBlock, lastIrrBlockHash);
 					break;
 				case ImportResult::FutureTimeKnown:
 				 
 					//接到传来的块，做简单的检验则直接广播出去
-					host().pushDeliverBlock(h, _r[0].data().toBytes(), lastIrrBlock);
+					host().pushDeliverBlock(h, _r[0].data().toBytes(), lastIrrBlock, lastIrrBlockHash);
 					break;
 
 				case ImportResult::Malformed:
@@ -456,6 +459,16 @@ namespace dev
 				_peer->disable("Peer banned for unexpected status message.");
 			else
 			{
+				if (_peer->m_lastIrrBlock <= m_sync.m_lastIrreversibleBlock)
+				{
+					if( _peer->m_lastIrrBlockHash != host().chain().numberHash(_peer->m_lastIrrBlock) )
+					{//发现此Peer运行的链与当前链不同，直接断开链接
+						cwarn<< _peer->id()<<"|" << "Peer Last Irr Block Illegal!!!";
+						_peer->disable("Peer Last Irr Block Illegal!!!");
+						return false;
+					}
+				}
+
 				_peer->setLlegal(true);
 				return true;
 			}
@@ -528,11 +541,7 @@ namespace dev
 			_peer->m_requireTransactions = true; 
  
 		}
-
-		void DefaultSyncState::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
-		{
-			m_sync.requestBlocks(_peer);
-		}
+		 
 
 		void DefaultSyncState::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 		{
@@ -557,7 +566,7 @@ namespace dev
 		{ 
 			updateTimeout();
 
-			if (_r.itemCount() != 2)
+			if (_r.itemCount() != 3)
 			{
 				_peer->disable("NewBlock without 2 data fields.");
 				return;
@@ -568,9 +577,13 @@ namespace dev
 			ctrace << "onPeerNewBlock ==>" << h; 
 			//从数据包中获取此peer的不可逆转块号
 			uint32_t lastIrrBlock = _r[1].toInt<u256>().convert_to<uint32_t>();
+			h256 lastIrrBlockHash = _r[2].toHash<h256>();
+
 			ctrace << "LastIrr = " << lastIrrBlock;  
 			//更新peer最新不可逆转块号
 			_peer->setLastIrrBlock(lastIrrBlock);
+			_peer->setLastIrrBlockHash(lastIrrBlockHash);
+
 			//更新Peer最新的Hash
 			_peer->m_latestHash = h;
 
@@ -601,11 +614,11 @@ namespace dev
 				case ImportResult::Success:
 					_peer->addRating(100); 
 					//接到传来的块，做简单的检验则直接广播出去
-					host().pushDeliverBlock(h, _r[0].data().toBytes(), lastIrrBlock);
+					host().pushDeliverBlock(h, _r[0].data().toBytes(), lastIrrBlock, lastIrrBlockHash);
 					break;
 				case ImportResult::FutureTimeKnown: 
 					//接到传来的块，做简单的检验则直接广播出去
-					host().pushDeliverBlock(h, _r[0].data().toBytes(), lastIrrBlock);
+					host().pushDeliverBlock(h, _r[0].data().toBytes(), lastIrrBlock, lastIrrBlockHash);
 					break;
 
 				case ImportResult::Malformed:
@@ -639,7 +652,7 @@ namespace dev
 			updateTimeout();
 		}
 
-		void DefaultSyncState::onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block)
+		void DefaultSyncState::onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block, const h256& _last_irr_block_hash)
 		{
 			if (_info.number() > m_sync.m_lastImportedBlock)
 			{
@@ -651,6 +664,7 @@ namespace dev
 			if (_last_irr_block > m_sync.m_lastIrreversibleBlock)
 			{
 				m_sync.m_lastIrreversibleBlock = _last_irr_block;
+				m_sync.m_lastImportedBlockHash = _last_irr_block_hash;
 			}
 		}  
 

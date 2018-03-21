@@ -67,13 +67,13 @@ EthereumPeer::~EthereumPeer()
 	abortSync();
 }
 
-void EthereumPeer::init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, shared_ptr<EthereumHostDataFace> _hostData, shared_ptr<EthereumPeerObserverFace> _observer)
+void EthereumPeer::init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, h256 _lastIrrBlockHash, shared_ptr<EthereumHostDataFace> _hostData, shared_ptr<EthereumPeerObserverFace> _observer)
 {
 	m_hostData = _hostData;
 	m_observer = _observer;
 	m_hostProtocolVersion = _hostProtocolVersion;
 	m_lastIrrBlock = _lastIrrBlock.convert_to<uint32_t>();
-	requestStatus(_hostNetworkId, _chainTotalDifficulty, _chainCurrentHash, _chainGenesisHash,_lastIrrBlock);
+	requestStatus(_hostNetworkId, _chainTotalDifficulty, _chainCurrentHash, _chainGenesisHash,_lastIrrBlock,_lastIrrBlockHash);
 }
 
 bool EthereumPeer::isRude() const
@@ -124,20 +124,21 @@ void EthereumPeer::setIdle()
 	setAsking(Asking::Nothing);
 }
 
-void EthereumPeer::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock)
+void EthereumPeer::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, h256 _lastIrrBlockHash)
 {
 	assert(m_asking == Asking::Nothing);
 	setAsking(Asking::State);
 	m_requireTransactions = true;
 	RLPStream s;
 	bool latest = m_peerCapabilityVersion == m_hostProtocolVersion;
-	prep(s, StatusPacket, 6)
+	prep(s, StatusPacket, 7)
 					<< (latest ? m_hostProtocolVersion : EthereumHost::c_oldProtocolVersion)
 					<< _hostNetworkId
 					<< _chainTotalDifficulty
 					<< _chainCurrentHash
 					<< _chainGenesisHash
 					<< _lastIrrBlock
+					<< _lastIrrBlockHash
 					;
 	sealAndSend(s);
 }
@@ -263,6 +264,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		m_latestHash = _r[3].toHash<h256>();
 		m_genesisHash = _r[4].toHash<h256>();
 		m_lastIrrBlock = _r[5].toInt<u256>().convert_to<uint32_t>();
+		m_lastIrrBlockHash = _r[6].toHash<h256>();
 
 		if (m_peerCapabilityVersion == m_hostProtocolVersion)
 			m_protocolVersion = m_hostProtocolVersion;
