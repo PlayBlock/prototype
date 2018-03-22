@@ -855,6 +855,13 @@ bool EthereumHost::isSyncing() const
 	return m_sync->isSyncing();
 }
 
+
+bool EthereumHost::isLockBlockGen() const
+{
+	return m_sync->isBlockGenLocked();
+}
+
+
 SyncStatus EthereumHost::status() const
 {
 	return m_sync->status();

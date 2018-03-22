@@ -261,6 +261,9 @@ namespace dev
 				m_sync.m_expectBlockForFindingCommon = 0;
 				requestPeerLatestBlockHeader(_peer);
 
+				//此种情况下阻塞产块进程
+				m_sync.m_lockBlockGen = true;
+				cwarn << "Block Gen Locked!!!!!";
 				//尝试查找CommonBlock
 				switchState(SyncState::FindingCommonBlock);
 				return;

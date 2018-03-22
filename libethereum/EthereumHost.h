@@ -76,6 +76,7 @@ public:
 	void completeSync();
 
 	bool isSyncing() const;
+	bool isLockBlockGen() const;
 	bool isBanned(p2p::NodeID const& _id) const { return !!m_banned.count(_id); }
 
 	//用于初始化链同步逻辑的最新不可逆转块

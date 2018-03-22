@@ -62,6 +62,8 @@ public:
 	/// @returns true is Sync is in progress
 	bool isSyncing() const;
 
+	bool isBlockGenLocked() const;
+
 	/// Restart sync
 	void restartSync();
 
@@ -147,6 +149,7 @@ private:
 	Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
 	mutable RecursiveMutex x_sync; 
 	std::atomic<SyncState> m_state{SyncState::Idle};		///< Current sync state 
+	std::atomic<bool> m_lockBlockGen{ false };
 
 	std::unordered_set<unsigned> m_downloadingHeaders;		///< Set of block body numbers being downloaded
 	std::unordered_set<unsigned> m_downloadingBodies;		///< Set of block header numbers being downloaded

@@ -274,7 +274,7 @@ bool Client::isMajorSyncing() const
 {
 	if (auto h = m_host.lock())
 	{ 
-		return  h->bq().items().first > 10;
+		return h->isLockBlockGen() || h->bq().items().first > 10;
 	}
 	return false;
 }
