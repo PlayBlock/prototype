@@ -367,7 +367,10 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 #if ETH_TIMED_ENACTMENTS
 						time.restart();
 #endif
-						execute(_bc.lastBlockHashes(), t);
+						execute(
+							_bc.lastBlockHashes(),
+							_bc.infoSafe( m_currentBlock.parentHash()),
+							t);
 
 #if ETH_TIMED_ENACTMENTS
 						executetime += time.elapsed();
@@ -544,14 +547,15 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	BenchMark::record_2 = 0.0;
 	BenchMark::record_3 = 0.0;
 #endif
-	DEV_TIMED_ABOVE("txExec", 500)
+	DEV_TIMED_ABOVE("txExec", 500) 
+
 		for (Transaction const& tr: _block.transactions)
 		{
 			try
 			{
 				LogOverride<ExecutiveWarnChannel> o(false);
 //				cnote << "Enacting transaction: " << tr.nonce() << tr.from() << state().transactionsFrom(tr.from()) << tr.value();
-				execute(_bc.lastBlockHashes(), tr);
+				execute(_bc.lastBlockHashes(), _bc.infoSafe(_block.info.parentHash()), tr);
 //				cnote << "Now: " << tr.from() << state().transactionsFrom(tr.from());
 //				cnote << m_state;
 			}
@@ -629,7 +633,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	return tdIncrease;
 }
 
-ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
+ExecutionResult Block::execute(LastBlockHashesFace const& _lh, BlockHeader const& _prev, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
 {
 	if (isSealed())
 		BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
@@ -637,7 +641,7 @@ ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const
 	// Uncommitting is a non-trivial operation - only do it once we've verified as much of the
 	// transaction as possible.
 	uncommitToSeal();
-	std::pair<ExecutionResult, TransactionReceipt> resultReceipt = m_state.execute(EnvInfo(info(), _lh, gasUsed()), *m_sealEngine, _t, _p, _onOp);
+	std::pair<ExecutionResult, TransactionReceipt> resultReceipt = m_state.execute(EnvInfo(info(), _prev,_lh, gasUsed()), *m_sealEngine, _t, _p, _onOp);
 
 	if (_p == Permanence::Committed)
 	{

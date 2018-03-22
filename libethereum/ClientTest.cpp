@@ -101,7 +101,7 @@ void ClientTest::modifyTimestamp(u256 const& _timestamp)
 	auto& lastHashes = bc().lastBlockHashes();
 	assert(bc().currentHash() == block.info().parentHash());
 	for (auto const& t: transactions)
-		block.execute(lastHashes, t);
+		block.execute(lastHashes,bc().infoSafe(block.info().parentHash()), t);
 
 	DEV_WRITE_GUARDED(x_working)
 		m_working = block;

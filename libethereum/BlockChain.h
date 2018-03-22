@@ -152,6 +152,9 @@ public:
 	/// Get the partial-header of a block (or the most recent mined if none given). Thread-safe.
 	BlockHeader info(h256 const& _hash) const { return BlockHeader(headerData(_hash), HeaderData); }
 	BlockHeader info() const { return info(currentHash()); }
+	BlockHeader infoSafe(h256  const& _hash) const {
+		return info(_hash == h256() ? genesisHash() : _hash);
+	} 
 
 	/// Get a block (RLP format) for the given hash (or the most recent mined if none given). Thread-safe.
 	bytes block(h256 const& _hash) const;

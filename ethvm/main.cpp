@@ -315,7 +315,7 @@ int main(int argc, char** argv)
 
 	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
 	LastBlockHashes lastBlockHashes;
-	EnvInfo const envInfo(blockHeader, lastBlockHashes, 0);
+	EnvInfo const envInfo(blockHeader,blockHeader, lastBlockHashes, 0);
 	Executive executive(state, envInfo, *se);
 	ExecutionResult res;
 	executive.setResultRecipient(res);

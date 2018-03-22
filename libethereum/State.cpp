@@ -616,12 +616,12 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	return make_pair(res, receipt);
 }
 
-void State::executeBlockTransactions(Block const& _block, unsigned _txCount, LastBlockHashesFace const& _lastHashes, SealEngineFace const& _sealEngine)
+void State::executeBlockTransactions(Block const& _block, BlockHeader const& prevHeader, unsigned _txCount, LastBlockHashesFace const& _lastHashes, SealEngineFace const& _sealEngine)
 {
 	u256 gasUsed = 0;
 	for (unsigned i = 0; i < _txCount; ++i)
 	{
-		EnvInfo envInfo(_block.info(), _lastHashes, gasUsed);
+		EnvInfo envInfo(_block.info(),prevHeader, _lastHashes, gasUsed);
 
 		Executive e(*this, envInfo, _sealEngine);
 		executeTransaction(e, _block.pending()[i], OnOpFunc());
@@ -715,7 +715,10 @@ State& dev::eth::createIntermediateState(State& o_s, Block const& _block, unsign
 	else
 	{
 		o_s.setRoot(_block.stateRootBeforeTx(0));
-		o_s.executeBlockTransactions(_block, _txIndex, _bc.lastBlockHashes(), *_bc.sealEngine());
+		o_s.executeBlockTransactions(
+			_block,
+			_bc.infoSafe(_block.info().parentHash()),
+			_txIndex, _bc.lastBlockHashes(), *_bc.sealEngine());
 	}
 	return o_s;
 }

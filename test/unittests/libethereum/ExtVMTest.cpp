@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(BlockhashOutOfBoundsRetunsZero)
 	block.sync(blockchain);
 
 	TestLastBlockHashes lastBlockHashes({});
-	EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+	EnvInfo envInfo(block.info(),block.info(), lastBlockHashes, 0);
 	Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, bytesConstRef(), bytesConstRef(), h256());
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(BlockhashBeforeConstantinopleReliesOnLastHashes)
 	
 	h256s lastHashes{h256("0xaaabbbccc"), h256("0xdddeeefff")};
 	TestLastBlockHashes lastBlockHashes(lastHashes);
-	EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+	EnvInfo envInfo(block.info(), block.info(),lastBlockHashes, 0);
 	Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, bytesConstRef(), bytesConstRef(), h256());
 	h256 hash = extVM.blockHash(1);
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInConstantinople)
 	block.sync(blockchain);
 
 	TestLastBlockHashes lastBlockHashes({});
-	EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+	EnvInfo envInfo(block.info(),block.info(), lastBlockHashes, 0);
 	Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, bytesConstRef(), bytesConstRef(), h256());
 

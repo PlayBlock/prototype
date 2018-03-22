@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(bcBasicInsert)
 	Transaction t(1000, 10000, 100000, me.address(), bytes(), block.transactionsFrom(myMiner.address()), myMiner.secret());
 	assert(t.sender() == myMiner.address());
 	cnote << "Execute transaction";
-	block.execute(tcFull.bc().lastBlockHashes(), t);
+	block.execute(tcFull.bc().lastBlockHashes(),tcFull.bc().infoSafe(block.info().parentHash()), t);
 	cnote << block.state();
 
 	// Seal and import into both.

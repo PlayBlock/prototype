@@ -140,23 +140,25 @@ struct CallParameters
 class EnvInfo
 {
 public:
-	EnvInfo(BlockHeader const& _current, LastBlockHashesFace const& _lh, u256 const& _gasUsed):
+	EnvInfo(BlockHeader const& _current, BlockHeader const& _prev, LastBlockHashesFace const& _lh, u256 const& _gasUsed):
 		m_headerInfo(_current),
+		m_prevHeaderInfo(_prev),
 		m_lastHashes(_lh),
 		m_gasUsed(_gasUsed)
 	{}
 	// Constructor with custom gasLimit - used in some synthetic scenarios like eth_estimateGas	RPC method
-	EnvInfo(BlockHeader const& _current, LastBlockHashesFace const& _lh, u256 const& _gasUsed, u256 const& _gasLimit):
-		EnvInfo(_current, _lh, _gasUsed)
+	EnvInfo(BlockHeader const& _current, BlockHeader const& _prev, LastBlockHashesFace const& _lh, u256 const& _gasUsed, u256 const& _gasLimit):
+		EnvInfo(_current,_prev,_lh, _gasUsed)
 	{
 		m_headerInfo.setGasLimit(_gasLimit);
 	}
 
 	BlockHeader const& header() const { return m_headerInfo;  }
-
+	BlockHeader const& prevHeader() const { return m_prevHeaderInfo; }
 	u256 const& number() const { return m_headerInfo.number(); }
 	Address const& author() const { return m_headerInfo.author(); }
 	u256 const& timestamp() const { return m_headerInfo.timestamp(); }
+	u256 const& prevTimestamp() const { return m_prevHeaderInfo.timestamp(); }
 	u256 const& difficulty() const { return m_headerInfo.difficulty(); }
 	u256 const& gasLimit() const { return m_headerInfo.gasLimit(); }
 	LastBlockHashesFace const& lastHashes() const { return m_lastHashes; }
@@ -164,8 +166,9 @@ public:
 
 private:
 	BlockHeader m_headerInfo;
+	BlockHeader m_prevHeaderInfo;
 	LastBlockHashesFace const& m_lastHashes;
-	u256 m_gasUsed;
+	u256 m_gasUsed; 
 };
 
 /**
