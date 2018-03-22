@@ -186,9 +186,6 @@ namespace P2PTest {
 		//用例名称
 		virtual std::string name() const;
 
-		//用于用例初始化
-		virtual void init();
-
 		//用例销毁
 		virtual void destroy();
 
@@ -222,6 +219,8 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
+	private:
+		uint32_t m_latestBlockNum;
 
 	};
 
@@ -246,13 +245,67 @@ namespace P2PTest {
 
 		//在host线程
 		virtual void step();
+	private:
+		uint32_t m_lattBlockNum;
+		uint32_t m_lastIrrBlock;
+		h256	m_lastIrrBlockHash;
 	};
 
-	class P2PTestInvalidStatusPacket : public P2PUnitTest
+	class P2PTestInvalidNetworkIDStatus : public P2PUnitTest
 	{
 	public:
-		P2PTestInvalidStatusPacket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
-		~P2PTestInvalidStatusPacket() {}
+		P2PTestInvalidNetworkIDStatus(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestInvalidNetworkIDStatus() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		bool m_passTest;
+	};
+
+	class P2PTestInvalidGenesisHashStatus : public P2PUnitTest
+	{
+	public:
+		P2PTestInvalidGenesisHashStatus(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestInvalidGenesisHashStatus() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		bool m_passTest;
+	};
+
+	class P2PTestInvalidProtocolVersionStatus : public P2PUnitTest
+	{
+	public:
+		P2PTestInvalidProtocolVersionStatus(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestInvalidProtocolVersionStatus() {}
 
 		//用例名称
 		virtual std::string name() const;
