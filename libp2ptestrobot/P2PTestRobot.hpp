@@ -23,7 +23,7 @@ public:
 	
 	RLPStream& prep(RLPStream& _s, unsigned _id, unsigned _args);
 
-	void P2PTestRobot::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock);
+	void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock);
 
 	void sealAndSend(dev::RLPStream& _s);
 

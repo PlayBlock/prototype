@@ -126,10 +126,10 @@ public:
 	p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkPreferences().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkPreferences().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
 
 
-	void FakeHost::connectToHost(NodeID const& _id);
-	void FakeHost::sendToHost(bytes const& _r);
-	void FakeHost::recvFromHost(NodeID& _id, bytes const& _r);
-	bool FakeHost::checkPacket(bytesConstRef _msg);
+	void connectToHost(NodeID const& _id);
+	void sendToHost(bytes const& _r);
+	void recvFromHost(NodeID& _id, bytes const& _r);
+	bool checkPacket(bytesConstRef _msg);
 protected:
 	void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);
 

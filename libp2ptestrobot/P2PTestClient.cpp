@@ -46,7 +46,7 @@ void P2PTestClient::loadPrivateKeys()
 	}
 }
 
-void P2PTestClient::importBlocksFromFile(boost::filesystem::path& _path, string& _notChainName)
+void P2PTestClient::importBlocksFromFile(boost::filesystem::path& _path, string _notChainName)
 {
 	//g_logVerbosity = 14;
 	//boost::filesystem::path  boostTestPath = g_p2ptestPath;// "./p2ptest.json";

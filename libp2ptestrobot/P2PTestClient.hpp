@@ -23,7 +23,7 @@ public:
 	bytes produceBlock(uint64_t time);
 
 private:
-	void importBlocksFromFile(boost::filesystem::path& _path, string& _notChainName=string());
+	void importBlocksFromFile(boost::filesystem::path& _path, string _notChainName=string());
 
 	const private_key& get_private_key(const AccountName& address) const;
 

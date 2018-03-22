@@ -7,7 +7,7 @@
 //#include <libweb3jsonrpc/JsonHelper.h>
 
 #include <libethereum/CommonNet.h>
-#include <libp2p/common.h>
+#include <libp2p/Common.h>
 
 #include <boost/chrono.hpp>
 #include <boost/thread/thread.hpp>
@@ -84,7 +84,7 @@ void P2PTestRobot::sealAndSend(RLPStream& _s)
 {
 	bytes b;
 	_s.swapOut(b);
-	sendToHost(move(b));
+	sendToHost(b);
 }
 
 void P2PTestRobot::sendToHost(bytes& _s)
