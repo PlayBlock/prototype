@@ -83,6 +83,9 @@ namespace P2PTest {
 
 	public: //测试用例注册
 		void registerUnitTest(P2PUnitTest* _unit);
+		void registerUnitTest(const string& unitTestName);
+		void registerAttackUnitTest();
+
 		static void switchUnitTest(int i = m_currTest);
 		unsigned unitTestCount() const { return m_unitTestList.size(); }
 		int currUnitTest() const { return m_currTest; }
@@ -330,9 +333,6 @@ namespace P2PTest {
 		//用例名称
 		virtual std::string name() const;
 
-		//用于用例初始化
-		virtual void init();
-
 		//用例销毁
 		virtual void destroy();
 
@@ -357,9 +357,6 @@ namespace P2PTest {
 		//用例名称
 		virtual std::string name() const;
 
-		//用于用例初始化
-		virtual void init();
-
 		//用例销毁
 		virtual void destroy();
 
@@ -379,9 +376,6 @@ namespace P2PTest {
 
 		//用例名称
 		virtual std::string name() const;
-
-		//用于用例初始化
-		virtual void init();
 
 		//用例销毁
 		virtual void destroy();
@@ -403,9 +397,6 @@ namespace P2PTest {
 		//用例名称
 		virtual std::string name() const;
 
-		//用于用例初始化
-		virtual void init();
-
 		//用例销毁
 		virtual void destroy();
 
@@ -425,9 +416,6 @@ namespace P2PTest {
 
 		//用例名称
 		virtual std::string name() const;
-
-		//用于用例初始化
-		virtual void init();
 
 		//用例销毁
 		virtual void destroy();
@@ -450,9 +438,6 @@ namespace P2PTest {
 		//用例名称
 		virtual std::string name() const;
 
-		//用于用例初始化
-		virtual void init();
-
 		//用例销毁
 		virtual void destroy();
 
@@ -473,9 +458,6 @@ namespace P2PTest {
 
 		//用例名称
 		virtual std::string name() const;
-
-		//用于用例初始化
-		virtual void init();
 
 		//用例销毁
 		virtual void destroy();
@@ -498,9 +480,6 @@ namespace P2PTest {
 		//用例名称
 		virtual std::string name() const;
 
-		//用于用例初始化
-		virtual void init();
-
 		//用例销毁
 		virtual void destroy();
 
@@ -521,9 +500,6 @@ namespace P2PTest {
 
 		//用例名称
 		virtual std::string name() const;
-
-		//用于用例初始化
-		virtual void init();
 
 		//用例销毁
 		virtual void destroy();

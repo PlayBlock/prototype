@@ -45,6 +45,7 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 boost::filesystem::path g_p2ptestPath;
 std::string  g_BlockChainName;
+std::string g_P2PUnitTestName;
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, ActivityReport const& _r)
 {

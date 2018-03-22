@@ -295,6 +295,7 @@ int main(int argc, char** argv)
 		("config", po::value<string>()->value_name("<file>"), "Configure specialised blockchain using given JSON information.\n")
 		("p2pfiller-path", po::value<string>()->value_name("<file>"), "Filler specialised P2P test using given JSON information.\n")
 		("chainname", po::value<string>()->value_name("<file>"), "Import the chain name .\n")
+		("p2p-unit-test", po::value<string>()->value_name("<file>"), "specified the P2PUnitTest name.\n")
 		("genesis", po::value<string>()->value_name("<file>"), "Set genesis JSON file.")
 		("mode,o", po::value<string>()->value_name("<full/peer>"), "Start a full node or a peer node (default: full).\n")
 		("ipc", "Enable IPC server (default: on).")
@@ -548,6 +549,8 @@ int main(int argc, char** argv)
 		g_p2ptestPath = vm["p2pfiller-path"].as<string>();
 	if (vm.count("chainname"))
 		g_BlockChainName = vm["chainname"].as<string>();
+	if (vm.count("p2p-unit-test"))
+		g_P2PUnitTestName = vm["p2p-unit-test"].as<string>();
 	if (vm.count("genesis"))
 	{
 		try

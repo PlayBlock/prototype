@@ -44,12 +44,6 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 	{
 		m_timer = make_shared<boost::asio::deadline_timer>(m_ioService);
 		m_timer->expires_from_now(boost::posix_time::milliseconds(100));
-
-#if defined(_WIN32)
-		SetConsoleCtrlHandler((PHANDLER_ROUTINE)P2PHostProxy::CtrlHandler, TRUE);
-#else
-		signal(SIGBREAK, &P2PHostProxy::switchSignalHandler);
-#endif
 	}
 
 	P2PUnitTest* P2PHostProxy::getCurrUnitTest() const
@@ -61,6 +55,66 @@ std::vector<P2PUnitTest*> P2PHostProxy::m_unitTestList;
 		return nullptr;
 	}
 
+	void P2PHostProxy::registerAttackUnitTest()
+	{
+
+#if defined(_WIN32)
+		SetConsoleCtrlHandler((PHANDLER_ROUTINE)P2PHostProxy::CtrlHandler, TRUE);
+#else
+		signal(SIGBREAK, &P2PHostProxy::switchSignalHandler);
+#endif
+		/*
+		* 攻击测试
+		*/
+		///eth需要可以正常出块，config.json文件中需要有AccountName
+		///eth运行参数 --p2pfiller-path  P2PTestPackageAttack.json --chainname "A"
+		registerUnitTest(new P2PTestRequestHeaderAttack(*this));
+		registerUnitTest(new P2PTestSendHeaderAttack(*this));		
+		registerUnitTest(new P2PTestNewBlockAttack(*this));
+		registerUnitTest(new P2PTestStatusPacketAttack(*this));
+		registerUnitTest(new P2PTestNewBlockHashesAttack(*this));
+		registerUnitTest(new P2PTestGetBlockBodiesPacket(*this));
+		registerUnitTest(new P2PTestBlockBodiesPacket(*this));
+		registerUnitTest(new P2PTestGetNodeDataPacket(*this));
+		registerUnitTest(new P2PTestNodeDataPacket(*this));
+		registerUnitTest(new P2PTestGetReceiptsPacket(*this));
+		registerUnitTest(new P2PTestReceiptsPacket(*this));
+	}
+
+	void P2PHostProxy::registerUnitTest(const string& unitTestName)
+	{
+		if (unitTestName == "AttackUnitTest")
+		{
+			registerAttackUnitTest();
+		}
+		else if (unitTestName == "P2PTestInvalidStatusPacket")
+		{
+			registerUnitTest(new P2PTestInvalidStatusPacket(*this));
+		}
+		else if (unitTestName == "P2PTestIrrDifferentHashPacket")
+		{
+			registerUnitTest(new P2PTestIrrDifferentHashPacket(*this));
+		}
+		else if (unitTestName == "P2PTestIrrHashDifferent")
+		{
+			registerUnitTest(new P2PTestIrrHashDifferent(*this));
+		}
+		else if (unitTestName == "P2PTestChainASyncB")
+		{
+			registerUnitTest(new P2PTestChainASyncB(*this));
+		}
+		else if (unitTestName == "P2PTestNoProduceStart")
+		{
+			registerUnitTest(new P2PTestNoProduceStart(*this));
+		}
+		else
+		{
+			ctrace << "Error unit test name: " << unitTestName;
+			return;
+		}
+
+		switchUnitTest(0);
+	}
 
 	void P2PHostProxy::registerAllUnitTest()
 	{

@@ -41,6 +41,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include "FakePeer.h"
 #include "FakeSession.h"
 #include <libp2ptestrobot/P2PTestRobot.hpp>
+#include <libethereum/Client.h>
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -830,11 +831,16 @@ void FakeHost::startedWorking()
 
 	clog(NetP2PNote) << "p2p.started id:" << id();
 
-	
 
 	run(boost::system::error_code());
-
-	m_hostProxy->registerAllUnitTest();
+	if (g_P2PUnitTestName.empty())
+	{
+		m_hostProxy->registerAttackUnitTest();
+	}
+	else
+	{
+		m_hostProxy->registerUnitTest(g_P2PUnitTestName);
+	}
 }
 
 

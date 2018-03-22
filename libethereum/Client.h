@@ -48,6 +48,7 @@
 
 extern boost::filesystem::path g_p2ptestPath;
 extern std::string  g_BlockChainName;
+extern std::string g_P2PUnitTestName;
 
 namespace dev
 {
