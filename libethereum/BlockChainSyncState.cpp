@@ -753,6 +753,16 @@ namespace dev
 				}
 				else
 					m_sync.m_headerIdToNumber[headerId] = blockNumber; 
+
+				if (blockNumber == 19505)
+				{
+					for (auto it = m_sync.m_headerIdToNumber.begin();
+						it != m_sync.m_headerIdToNumber.end();
+						it++)
+					{
+						cwarn << "[" << it->second << "] : " << "id.root = " << it->first.transactionsRoot << " id.uncles = " << it->first.uncles;
+					}
+				}
 				 
 			}//end of for 
 			
@@ -952,6 +962,7 @@ namespace dev
 					continue;
 				}
 				m_sync.m_headerIdToNumber.erase(id);
+				cwarn << "erase(" << "root = " << id.transactionsRoot<<")";
 				mergeInto(m_sync.m_bodies, blockNumber, body.data().toBytes());
 			}
 
