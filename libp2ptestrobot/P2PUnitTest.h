@@ -326,11 +326,11 @@ namespace P2PTest {
 		bool m_passTest;
 	};
 
-	class P2PTestIrrDifferentHashPacket : public P2PUnitTest
+	class P2PTestIrrDifferentHashStatus : public P2PUnitTest
 	{
 	public:
-		P2PTestIrrDifferentHashPacket(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
-		~P2PTestIrrDifferentHashPacket() {}
+		P2PTestIrrDifferentHashStatus(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestIrrDifferentHashStatus() {}
 
 		//ÓÃÀýÃû³Æ
 		virtual std::string name() const;
