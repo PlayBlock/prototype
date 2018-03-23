@@ -924,7 +924,7 @@ namespace dev
 				auto iter = m_sync.m_headerIdToNumber.find(id);
 				if (iter == m_sync.m_headerIdToNumber.end() || !haveItem(m_sync.m_headers, iter->second))
 				{
-					clog(NetAllDetail) << "Ignored unknown block body";
+					cwarn << "Ignored unknown block body";
 					continue;
 				}
 				unsigned blockNumber = iter->second;
@@ -933,7 +933,7 @@ namespace dev
 
 				if (haveItem(m_sync.m_bodies, blockNumber))
 				{
-					clog(NetMessageSummary) << "Skipping already downloaded block body " << blockNumber;
+					cwarn << "Skipping already downloaded block body " << blockNumber;
 					continue;
 				}
 				m_sync.m_headerIdToNumber.erase(id);
