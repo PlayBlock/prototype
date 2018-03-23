@@ -689,7 +689,7 @@ namespace dev
 			cwarn << "onPeerBlockHeaders==============================";
 			//获取header数量
 			size_t itemCount = _r.itemCount();
-			clog(NetMessageSummary) << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
+			cwarn << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
 
 
 			clearPeerDownloadMarks(_peer); 
