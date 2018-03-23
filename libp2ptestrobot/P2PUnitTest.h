@@ -385,6 +385,7 @@ namespace P2PTest {
 
 		//用例名称
 		virtual std::string name() const;
+		virtual void init();
 
 		//用例销毁
 		virtual void destroy();
