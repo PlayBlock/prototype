@@ -206,7 +206,7 @@ namespace dev
 			//更新Peer最新的Hash
 			_peer->m_latestHash = h;
 
-			if (lastIrrBlock < m_sync.m_syncLastIrrBlock)
+			if (lastIrrBlock < m_sync.m_lastIrreversibleBlock)
 			{//拒绝接收不可逆转小于当前不可逆转块的客户端
 
 				cwarn << _peer->id() << "|" << lastIrrBlock << " < " << "m_lastIrreversibleBlock = " << m_sync.m_lastIrreversibleBlock << "ignore new block!!!!";
