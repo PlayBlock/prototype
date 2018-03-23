@@ -923,14 +923,14 @@ namespace dev
 				BlockChainSync::HeaderId id{ transactionRoot, uncles };
 				auto iter = m_sync.m_headerIdToNumber.find(id);
 				if (iter == m_sync.m_headerIdToNumber.end() || !haveItem(m_sync.m_headers, iter->second))
-				{
-					if (iter == m_sync.m_headerIdToNumber.end())
-					{
-						cwarn << "iter == m_sync.m_headerIdToNumber.end()";
-					}
-					if (!haveItem(m_sync.m_headers, iter->second))
+				{  
+					cwarn << "id.transactionRoot = " << id.transactionsRoot;
+					cwarn << "id.uncles = " << id.uncles;
+					for (auto it = m_sync.m_headerIdToNumber.begin(); 
+						it != m_sync.m_headerIdToNumber.end(); 
+						it++)
 					{ 
-						cwarn << "!haveItem(m_sync.m_headers, iter->second)";
+						cwarn << "[" << it->second << "] : " << "id.root = " << it->first.transactionsRoot << " id.uncles = " << it->first.uncles;
 					}
 
 					cwarn << "Ignored unknown block body";
