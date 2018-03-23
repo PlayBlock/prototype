@@ -735,6 +735,12 @@ namespace dev
 				BlockChainSync::Header hdr{ _r[i].data().toBytes(), header.hash(), header.parentHash() };
 				BlockChainSync::HeaderId headerId{ header.transactionsRoot(), header.sha3Uncles() };
 
+				if (blockNumber == 19505)
+				{
+					cwarn << "19505!!!!";
+					cwarn << "headerID.root = " << headerId.transactionsRoot << " uncles = " << headerId.uncles;
+				}
+
 				mergeInto(m_sync.m_headers, blockNumber, std::move(hdr));
 				if (headerId.transactionsRoot == EmptyTrie && headerId.uncles == EmptyListSHA3)
 				{//空交易体，则直接制造一个空块体即可
