@@ -144,7 +144,7 @@ namespace dev
 			{
 				if (_peer->getLastIrrBlock() < m_sync.m_lastIrreversibleBlock)
 				{
-					ctrace << "peer:" << _peer->id() << "|" << _peer->getLastIrrBlock() << " < " << "m_lastIrreversibleBlock = " << m_sync.m_lastIrreversibleBlock;
+					cwarn << "peer:" << _peer->id() << "|" << _peer->getLastIrrBlock() << " < " << "m_lastIrreversibleBlock = " << m_sync.m_lastIrreversibleBlock;
 					return;
 				}
 
@@ -191,13 +191,13 @@ namespace dev
 			auto h = info.hash();
 
 
-			ctrace << "onPeerNewBlock ==>" << h;
+			cwarn << "onPeerNewBlock ==>" << h;
 
 			//从数据包中获取此peer的不可逆转块号
 			uint32_t lastIrrBlock = _r[1].toInt<u256>().convert_to<uint32_t>();
 			h256	lastIrrBlockHash = _r[2].toHash<h256>();
 
-			ctrace << "LastIrr = " << lastIrrBlock;
+			cwarn << "LastIrr = " << lastIrrBlock;
 
 			//更新peer最新不可逆转块号
 			_peer->setLastIrrBlock(lastIrrBlock);
@@ -209,7 +209,7 @@ namespace dev
 			if (lastIrrBlock < m_sync.m_syncLastIrrBlock)
 			{//拒绝接收不可逆转小于当前不可逆转块的客户端
 
-				ctrace << _peer->id() << "|" << lastIrrBlock << " < " << "m_lastIrreversibleBlock = " << m_sync.m_lastIrreversibleBlock << "ignore new block!!!!";
+				cwarn << _peer->id() << "|" << lastIrrBlock << " < " << "m_lastIrreversibleBlock = " << m_sync.m_lastIrreversibleBlock << "ignore new block!!!!";
 				_peer->addRating(-10000);
 				return;
 			}
@@ -226,7 +226,7 @@ namespace dev
 			unsigned blockNumber = static_cast<unsigned>(info.number());
 			if (blockNumber > (m_sync.m_lastImportedBlock + 1))
 			{
-				ctrace << "Received unknown new block";
+				cwarn << "Received unknown new block";
 
 				if (host().bq().knownCount() < 10)
 				{ 
@@ -249,9 +249,9 @@ namespace dev
 				lastIrrBlock > m_sync.m_lastIrreversibleBlock
 				)
 			{//当前链不可逆有问题
-				ctrace << "blockNumber < m_lastImportedBlock" << blockNumber << " < " << m_sync.m_lastImportedBlock;
-				ctrace << "lastIrrBlock > m_lastIrreversibleBlock" << lastIrrBlock << " > " << m_sync.m_lastIrreversibleBlock;
-				ctrace << "back2LastIrrBlockAndResync";
+				cwarn << "blockNumber < m_lastImportedBlock" << blockNumber << " < " << m_sync.m_lastImportedBlock;
+				cwarn << "lastIrrBlock > m_lastIrreversibleBlock" << lastIrrBlock << " > " << m_sync.m_lastIrreversibleBlock;
+				cwarn << "back2LastIrrBlockAndResync";
 				
 				m_sync.m_syncStartBlock = m_sync.m_lastIrreversibleBlock;
 				m_sync.m_syncStartBlockHash = host().chain().numberHash(m_sync.m_syncStartBlock);
@@ -322,7 +322,7 @@ namespace dev
 					break;
 				}
 				case ImportResult::Irreversible: //遇到了未知的不可逆转块，说明某客户端与当前客户端链严重偏离
-					ctrace << "Unknown irreversible block founded!!! ignore and restart sync!";
+					cwarn << "Unknown irreversible block founded!!! ignore and restart sync!";
 					_peer->addRating(-10000);
 					_peer->disable("Unknown irreversible block founded!!!");
 					resetAllSyncData(); 
@@ -352,21 +352,21 @@ namespace dev
 				_peer->tryInsertPeerKnownBlockList(h);
 				auto status = host().bq().blockStatus(h);
 				if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(h)) {
-					ctrace << "---" << (unsigned)p.second << ":" << h << " known";
+					cwarn << "---" << (unsigned)p.second << ":" << h << " known";
 					knowns++;
 				}
 				else if (status == QueueStatus::Bad)
 				{
-					ctrace << "block hash bad!" << h << ". Bailing...";
+					cwarn << "block hash bad!" << h << ". Bailing...";
 					return;
 				}
 				else if (status == QueueStatus::Future) { //此处若为Future，则认为已知
-					ctrace << "have same future!";
+					cwarn << "have same future!";
 					knowns++;
 				}
 				else if (status == QueueStatus::Unknown)
 				{
-					ctrace << "---" << (unsigned)p.second << ":" << h << " unknown";
+					cwarn << "---" << (unsigned)p.second << ":" << h << " unknown";
 					unknowns++;
 					if (p.second > maxHeight)
 					{
@@ -380,7 +380,7 @@ namespace dev
 			clog(NetMessageSummary) << knowns << "knowns," << unknowns << "unknowns";
 			if (unknowns > 0)
 			{
-				ctrace << "Not syncing and new block hash discovered: syncing.";
+				cwarn << "Not syncing and new block hash discovered: syncing.";
 
 
 				if ( host().bq().knownCount() < 10 )
@@ -523,8 +523,8 @@ namespace dev
 
 			if (itemNums.size() > 0)
 			{
-				ctrace << "Header Nums:" << itemNums;
-				ctrace << "Header Hashes:" << itemHashes;
+				cwarn << "Header Nums:" << itemNums;
+				cwarn << "Header Hashes:" << itemHashes;
 			}
 		}
 
@@ -577,12 +577,12 @@ namespace dev
 
 			BlockHeader header(_r[0][0].data(), HeaderData);
 			auto h = header.hash();  
-			ctrace << "onPeerNewBlock ==>" << h; 
+			cwarn << "onPeerNewBlock ==>" << h; 
 			//从数据包中获取此peer的不可逆转块号
 			uint32_t lastIrrBlock = _r[1].toInt<u256>().convert_to<uint32_t>();
 			h256 lastIrrBlockHash = _r[2].toHash<h256>();
 
-			ctrace << "LastIrr = " << lastIrrBlock;  
+			cwarn << "LastIrr = " << lastIrrBlock;  
 			//更新peer最新不可逆转块号
 			_peer->setLastIrrBlock(lastIrrBlock);
 			_peer->setLastIrrBlockHash(lastIrrBlockHash);
@@ -593,7 +593,7 @@ namespace dev
 			if (lastIrrBlock < m_sync.m_syncLastIrrBlock)
 			{//拒绝接收不可逆转小于当前客户端的块
 
-				ctrace << _peer->id() << "|" << lastIrrBlock << " < " << "m_lastIrreversibleBlock = " << m_sync.m_lastIrreversibleBlock << "ignore new block!!!!";
+				cwarn << _peer->id() << "|" << lastIrrBlock << " < " << "m_lastIrreversibleBlock = " << m_sync.m_lastIrreversibleBlock << "ignore new block!!!!";
 				_peer->addRating(-10000); 
 				return;
 			}
@@ -637,7 +637,7 @@ namespace dev
 				case ImportResult::UnknownParent: 
 					break; 
 				case ImportResult::Irreversible: //遇到了未知的不可逆转块，说明某客户端与当前客户端链严重偏离
-					ctrace << "Unknown irreversible block founded!!!"; 
+					cwarn << "Unknown irreversible block founded!!!"; 
 					_peer->addRating(-10000);
 					_peer->disable("Unknown irreversible block founded!!!");
 					break;
@@ -686,7 +686,7 @@ namespace dev
 				return;
 			}
 
-			ctrace << "onPeerBlockHeaders==============================";
+			cwarn << "onPeerBlockHeaders==============================";
 			//获取header数量
 			size_t itemCount = _r.itemCount();
 			clog(NetMessageSummary) << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
@@ -696,7 +696,7 @@ namespace dev
 			 
 			if (itemCount == 0)
 			{
-				ctrace << "Peer does not have the blocks requested !";
+				cwarn << "Peer does not have the blocks requested !";
 				_peer->addRating(-100);
 			}
 
@@ -842,8 +842,8 @@ namespace dev
 			}
 			if (neededBodies.size() > 0)
 			{
-				ctrace << "request Block Nums:" << neededNumbers;
-				ctrace << "request Block Hashes:" << neededBodies;
+				cwarn << "request Block Nums:" << neededNumbers;
+				cwarn << "request Block Hashes:" << neededBodies;
 				m_sync.m_bodySyncPeers[_peer] = neededNumbers;
 				_peer->requestBlockBodies(neededBodies);
 			}
@@ -900,13 +900,13 @@ namespace dev
 			}
 
 			size_t itemCount = _r.itemCount();
-			ctrace << "BlocksBodies (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreBodies");
+			cwarn << "BlocksBodies (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreBodies");
 
 			clearPeerDownloadMarks(_peer); 
 
 			if (itemCount == 0)
 			{
-				ctrace << "Peer does not have the blocks requested";
+				cwarn << "Peer does not have the blocks requested";
 				_peer->addRating(-100);
 			}
 
@@ -940,7 +940,7 @@ namespace dev
 				mergeInto(m_sync.m_bodies, blockNumber, body.data().toBytes());
 			}
 
-			ctrace << "BlockBodies: " << bodies;
+			cwarn << "BlockBodies: " << bodies;
 
 			if (checkSyncComplete())
 			{
@@ -1023,16 +1023,16 @@ namespace dev
 				(prevBlock && prevBlock->hash != _h.parentHash()) ||
 				(blockNumber == m_sync.m_syncStartBlock + 1 && _h.parentHash() != m_sync.m_syncStartBlockHash))
 			{
-				ctrace << "Block header mismatching parent!!!";
+				cwarn << "Block header mismatching parent!!!";
 				if (prevBlock == NULL)
 				{
-					ctrace << "prevBlock == NULL";
+					cwarn << "prevBlock == NULL";
 				}
 				else {
-					ctrace << "prevBlock->hash = " << prevBlock->hash << " info.parentHash() = " << _h.parentHash();
+					cwarn << "prevBlock->hash = " << prevBlock->hash << " info.parentHash() = " << _h.parentHash();
 				}
 
-				ctrace << "blockNumber = " << blockNumber << " m_syncStartBlock = " << m_sync.m_syncStartBlock << " m_syncStartBlockHash = " << m_sync.m_syncStartBlockHash;
+				cwarn << "blockNumber = " << blockNumber << " m_syncStartBlock = " << m_sync.m_syncStartBlock << " m_syncStartBlockHash = " << m_sync.m_syncStartBlockHash;
 				// mismatching parent id, delete the previous block and don't add this one
 				clog(NetImpolite) << "Unknown block header " << blockNumber << " " << _h.hash() << " (Restart syncing)";
 
@@ -1044,7 +1044,7 @@ namespace dev
 			BlockChainSync::Header const* nextBlock = findItem(m_sync.m_headers, blockNumber + 1);
 			if (nextBlock && nextBlock->parent != _h.hash())
 			{
-				ctrace << "Block header mismatching next block!!!"; 
+				cwarn << "Block header mismatching next block!!!"; 
 				clog(NetImpolite) << "Unknown block header " << blockNumber + 1 << " " << nextBlock->hash;
 				// clear following headers
 				unsigned n = blockNumber + 1;
@@ -1126,7 +1126,7 @@ namespace dev
 					return true;
 
 				case ImportResult::Irreversible: //遇到了未知的不可逆转块，说明某客户端与当前客户端链严重偏离
-					ctrace << "Unknown irreversible block founded!!! ignore and restart sync!"; 
+					cwarn << "Unknown irreversible block founded!!! ignore and restart sync!"; 
 					resetAllSyncData();
 					return false;
 				default:;
@@ -1180,7 +1180,7 @@ namespace dev
 				return;
 			}
 
-			ctrace << "onPeerBlockHeaders==============================";
+			cwarn << "onPeerBlockHeaders==============================";
 			//获取header数量
 			size_t itemCount = _r.itemCount();
 
@@ -1194,7 +1194,7 @@ namespace dev
 
 			if (itemCount == 0)
 			{
-				ctrace << "Peer does not have the blocks requested !";
+				cwarn << "Peer does not have the blocks requested !";
 				_peer->addRating(-100);
 				return;
 			}
@@ -1241,7 +1241,7 @@ namespace dev
 					}
 
 				} else {//接到非预期块头 
-					ctrace << "recv unexpected block header!!!";
+					cwarn << "recv unexpected block header!!!";
 					m_unexpectTimes++;
 					if (m_unexpectTimes > 20)
 					{//有可能对方已切换分叉
@@ -1252,7 +1252,7 @@ namespace dev
 					}
 				}  
 			}else {//回传的Header数量超预期
-				ctrace << "Ignore peer unexpected block header !";
+				cwarn << "Ignore peer unexpected block header !";
 			} 
 			
 			continueSync();
@@ -1342,7 +1342,7 @@ namespace dev
 			auto status = host().bq().blockStatus(header.hash());
 			if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(header.hash()))
 			{//发现相同块
-				ctrace << "Block: " << header.hash() << "|" << blockNumber << " => common block header founded!";
+				cwarn << "Block: " << header.hash() << "|" << blockNumber << " => common block header founded!";
 				m_sync.m_syncStartBlock = (unsigned)header.number();
 				m_sync.m_syncStartBlockHash = header.hash();
 				return true;
