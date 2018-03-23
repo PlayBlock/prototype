@@ -924,6 +924,15 @@ namespace dev
 				auto iter = m_sync.m_headerIdToNumber.find(id);
 				if (iter == m_sync.m_headerIdToNumber.end() || !haveItem(m_sync.m_headers, iter->second))
 				{
+					if (iter == m_sync.m_headerIdToNumber.end())
+					{
+						cwarn << "iter == m_sync.m_headerIdToNumber.end()";
+					}
+					if (!haveItem(m_sync.m_headers, iter->second))
+					{ 
+						cwarn << "!haveItem(m_sync.m_headers, iter->second)";
+					}
+
 					cwarn << "Ignored unknown block body";
 					continue;
 				}
