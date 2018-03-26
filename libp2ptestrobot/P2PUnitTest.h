@@ -83,7 +83,7 @@ namespace P2PTest {
 
 	public: //测试用例注册
 		void registerUnitTest(P2PUnitTest* _unit);
-		void registerUnitTest(const string& unitTestName);
+		virtual void registerUnitTest(const string& unitTestName);
 		void registerAttackUnitTest();
 
 		static void switchUnitTest(int i = m_currTest);
@@ -106,7 +106,7 @@ namespace P2PTest {
 		void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse);
 		void sendNewBlockHash(h256& block, unsigned number);
 		void sendNewBlock(bytes& block);
-		void sendBlockHeader(bytes& block);
+		void sendBlockHeader(bytes& block, unsigned _count=1);
 
 		void getBlockBodiesPacket(h256& block, unsigned number);
 		void sendBlockBodiesPacket(h256& block, unsigned number);
@@ -567,6 +567,88 @@ namespace P2PTest {
 	private:
 		bool m_recvNewBlock;
 		bool m_testPass;
+	};
+
+
+	/*idle状态下*/
+	class P2PTestIdlChainASyncBNew : public P2PUnitTest
+	{
+	public:
+		P2PTestIdlChainASyncBNew(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestIdlChainASyncBNew() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		bool m_passTest;
+		bool m_needSync;
+	};
+
+	/*FindingCommon状态下*/
+	class P2PTestFindingCommonChainASyncBNew : public P2PUnitTest
+	{
+	public:
+		P2PTestFindingCommonChainASyncBNew(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestFindingCommonChainASyncBNew() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		bool m_passTest;
+		bool m_needSync;
+	};
+
+	class P2PTestFindingCommonBlockHeader : public P2PUnitTest
+	{
+	public:
+		P2PTestFindingCommonBlockHeader(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestFindingCommonBlockHeader() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		bool m_passTest;
+		bool m_needSync;
+		unsigned int steps;
 	};
 
 }
