@@ -171,6 +171,9 @@ private:
 	unsigned m_expectBlockForFindingCommon = 0;
 	h256	 m_expectBlockHashForFindingCommon = h256();
 
+	//等待状态目标时间点
+	fc::time_point m_waitingTarget;
+
 
 	///////////////>废弃字段
 	h256Hash m_knownNewHashes;

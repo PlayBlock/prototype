@@ -251,21 +251,28 @@ namespace dev
 			{//当前链不可逆有问题
 				cwarn << "blockNumber < m_lastImportedBlock" << blockNumber << " < " << m_sync.m_lastImportedBlock;
 				cwarn << "lastIrrBlock > m_lastIrreversibleBlock" << lastIrrBlock << " > " << m_sync.m_lastIrreversibleBlock;
-				cwarn << "back2LastIrrBlockAndResync";
-				
-				m_sync.m_syncStartBlock = m_sync.m_lastIrreversibleBlock;
-				m_sync.m_syncStartBlockHash = host().chain().numberHash(m_sync.m_syncStartBlock);
-				m_sync.m_syncLastIrrBlock = m_sync.m_lastIrreversibleBlock;
+				cwarn << "JUST WATING....";
 
-				m_sync.m_expectBlockHashForFindingCommon = _peer->m_latestHash;
-				m_sync.m_expectBlockForFindingCommon = 0;
-				requestPeerLatestBlockHeader(_peer);
-
+				double waitSecs = (m_sync.m_lastImportedBlock - blockNumber) * 3.0;  
+				m_sync.m_waitingTarget = fc::time_point::now() + fc::seconds(waitSecs); 
 				//此种情况下阻塞产块进程
 				m_sync.m_lockBlockGen = true;
-				cwarn << "Block Gen Locked!!!!!";
-				//尝试查找CommonBlock
-				switchState(SyncState::FindingCommonBlock);
+
+				switchState(SyncState::Waiting);
+				
+				//m_sync.m_syncStartBlock = m_sync.m_lastIrreversibleBlock;
+				//m_sync.m_syncStartBlockHash = host().chain().numberHash(m_sync.m_syncStartBlock);
+				//m_sync.m_syncLastIrrBlock = m_sync.m_lastIrreversibleBlock;
+
+				//m_sync.m_expectBlockHashForFindingCommon = _peer->m_latestHash;
+				//m_sync.m_expectBlockForFindingCommon = 0;
+				//requestPeerLatestBlockHeader(_peer);
+
+				////此种情况下阻塞产块进程
+				//m_sync.m_lockBlockGen = true;
+				//cwarn << "Block Gen Locked!!!!!";
+				////尝试查找CommonBlock
+				//switchState(SyncState::FindingCommonBlock);
 				return;
 			}
 
@@ -1430,6 +1437,59 @@ namespace dev
 		}
 
  
+
+		void WaitingSyncState::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
+		{
+			DefaultSyncState::onPeerStatus(_peer);
+			checkTime();
+		}
+
+		void WaitingSyncState::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+		{
+			DefaultSyncState::onPeerBlockHeaders(_peer, _r);
+			checkTime();
+		}
+
+		void WaitingSyncState::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+		{
+			DefaultSyncState::onPeerBlockBodies(_peer, _r);
+			checkTime();
+		}
+
+		void WaitingSyncState::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+		{
+			DefaultSyncState::onPeerNewBlock(_peer, _r);
+			checkTime();
+		}
+
+		void WaitingSyncState::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes)
+		{
+			DefaultSyncState::onPeerNewHashes(_peer, _hashes);
+			checkTime();
+		}
+
+		void WaitingSyncState::onPeerAborting()
+		{
+			DefaultSyncState::onPeerAborting();
+			checkTime();
+		}
+
+		void WaitingSyncState::onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block, const h256& _last_irr_block_hash)
+		{
+			DefaultSyncState::onBlockImported(_info, _last_irr_block, _last_irr_block_hash);
+			checkTime();
+		}
+
+		void WaitingSyncState::checkTime()
+		{
+			if (fc::time_point::now() > m_sync.m_waitingTarget)
+			{
+				switchState(SyncState::Idle);
+				return;
+			}
+
+			cwarn << "waiting " << (m_sync.m_waitingTarget - fc::time_point::now()).to_seconds() / 60.0f << " mins!!......";
+		}
 
 	}
 }

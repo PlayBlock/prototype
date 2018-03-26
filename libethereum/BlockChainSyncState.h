@@ -138,6 +138,26 @@ namespace dev
 				resetSyncTempData(); 
 			}
 		};
+
+		class WaitingSyncState : public DefaultSyncState
+		{
+		public:
+			WaitingSyncState(BlockChainSync& _sync) :DefaultSyncState(_sync) {}
+
+			virtual void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
+			virtual void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+			virtual void onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+			virtual void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+			virtual void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes);
+			virtual void onPeerAborting();
+			virtual void onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block, const h256& _last_irr_block_hash);
+
+			virtual void onEnter() {}
+			virtual void onLeave() {}
+
+			void checkTime();
+
+		};
 		
 		
 		class FindingCommonBlockSyncState : public DefaultSyncState
@@ -222,14 +242,8 @@ namespace dev
 		{
 		public:
 			NotSyncedState(BlockChainSync& _sync) :DefaultSyncState(_sync) {}
-		};
-
-		class WaitingSyncState : public DefaultSyncState
-		{
-		public:
-			WaitingSyncState(BlockChainSync& _sync) :DefaultSyncState(_sync) {}
-		};
-
+		}; 
+ 
 
 
 		class BlockSyncState : public DefaultSyncState
