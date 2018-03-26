@@ -1100,8 +1100,7 @@ namespace dev
 			unsigned unknown = 0;
 			size_t i = 0;
 			for (; i < headers.second.size() && i < bodies.second.size(); i++)
-			{
-				cwarn << "try block import : num = "<< headers.first + i << " hash = "<<headers.second[i].hash;
+			{ 
 				RLPStream blockStream(3);
 				blockStream.appendRaw(headers.second[i].data);
 				RLP body(bodies.second[i]);
