@@ -735,12 +735,6 @@ namespace dev
 				BlockChainSync::Header hdr{ _r[i].data().toBytes(), header.hash(), header.parentHash() };
 				BlockChainSync::HeaderId headerId{ header.transactionsRoot(), header.sha3Uncles() };
 
-				if (blockNumber == 19505)
-				{
-					cwarn << "19505!!!!";
-					cwarn << "headerID.root = " << headerId.transactionsRoot << " uncles = " << headerId.uncles;
-				}
-
 				mergeInto(m_sync.m_headers, blockNumber, std::move(hdr));
 				if (headerId.transactionsRoot == EmptyTrie && headerId.uncles == EmptyListSHA3)
 				{//空交易体，则直接制造一个空块体即可
@@ -753,16 +747,6 @@ namespace dev
 				}
 				else
 					m_sync.m_headerIdToNumber[headerId] = blockNumber; 
-
-				if (blockNumber == 19505)
-				{
-					for (auto it = m_sync.m_headerIdToNumber.begin();
-						it != m_sync.m_headerIdToNumber.end();
-						it++)
-					{
-						cwarn << "[" << it->second << "] : " << "id.root = " << it->first.transactionsRoot << " id.uncles = " << it->first.uncles;
-					}
-				}
 				 
 			}//end of for 
 			
@@ -836,6 +820,8 @@ namespace dev
 			auto header = m_sync.m_headers.begin();
 			h256s neededBodies;
 			vector<unsigned> neededNumbers;
+			vector<BlockChainSync::HeaderId> neededHeaderIds;
+
 			unsigned index = 0;
 
 			if (!m_sync.m_headers.empty() && m_sync.m_headers.begin()->first == m_sync.m_syncStartBlock + 1)
@@ -846,8 +832,13 @@ namespace dev
 					unsigned block = header->first + index;
 					if (m_sync.m_downloadingBodies.count(block) == 0 && !haveItem(m_sync.m_bodies, block))
 					{
+
 						neededBodies.push_back(header->second[index].hash);
 						neededNumbers.push_back(block);
+
+						BlockHeader h(header->second[index].data, HeaderData); 
+						neededHeaderIds.push_back(BlockChainSync::HeaderId{ h.transactionsRoot(), h.sha3Uncles() });
+
 						m_sync.m_downloadingBodies.insert(block);
 					}
 
@@ -860,6 +851,15 @@ namespace dev
 			{
 				cwarn << "request Block Nums:" << neededNumbers;
 				cwarn << "request Block Hashes:" << neededBodies;
+
+				for (int i = 0; i < neededHeaderIds.size(); i++)
+				{
+					if (m_sync.m_headerIdToNumber.find(neededHeaderIds[i]) == m_sync.m_headerIdToNumber.end())
+					{
+						m_sync.m_headerIdToNumber[neededHeaderIds[i]] = neededNumbers[i];
+					}
+				}
+
 				m_sync.m_bodySyncPeers[_peer] = neededNumbers;
 				_peer->requestBlockBodies(neededBodies);
 			}
@@ -939,16 +939,7 @@ namespace dev
 				BlockChainSync::HeaderId id{ transactionRoot, uncles };
 				auto iter = m_sync.m_headerIdToNumber.find(id);
 				if (iter == m_sync.m_headerIdToNumber.end() || !haveItem(m_sync.m_headers, iter->second))
-				{  
-					cwarn << "id.transactionRoot = " << id.transactionsRoot;
-					cwarn << "id.uncles = " << id.uncles;
-					for (auto it = m_sync.m_headerIdToNumber.begin(); 
-						it != m_sync.m_headerIdToNumber.end(); 
-						it++)
-					{ 
-						cwarn << "[" << it->second << "] : " << "id.root = " << it->first.transactionsRoot << " id.uncles = " << it->first.uncles;
-					}
-
+				{   
 					cwarn << "Ignored unknown block body";
 					continue;
 				}
@@ -961,8 +952,7 @@ namespace dev
 					cwarn << "Skipping already downloaded block body " << blockNumber;
 					continue;
 				}
-				m_sync.m_headerIdToNumber.erase(id);
-				cwarn << "erase(" << "root = " << id.transactionsRoot<<")";
+				m_sync.m_headerIdToNumber.erase(id); 
 				mergeInto(m_sync.m_bodies, blockNumber, body.data().toBytes());
 			}
 
