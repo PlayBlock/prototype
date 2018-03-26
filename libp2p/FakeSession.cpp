@@ -130,6 +130,10 @@ bool FakeSession::readPacket(uint16_t _capId, PacketType _t, RLP const& _r)
 	return true;
 }
 
+bool FakeSession::isConnected() const  {
+	for (auto const& i : m_capabilities)
+		return i.second->m_enabled;
+}
 
 bool FakeSession::sendPacket(bytes const& _r)
 {

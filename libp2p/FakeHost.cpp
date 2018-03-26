@@ -160,6 +160,14 @@ bool FakeHost::isRequiredPeer(NodeID const& _id) const
 	return m_requiredPeers.count(_id);
 }
 
+bool FakeHost::isEnabled(NodeID const& _id)
+{
+	if (m_sessions.count(_id) == 0)
+		return false;
+
+	return m_sessions[_id].lock()->isConnected();
+}
+
 void FakeHost::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s)
 {
 	// session maybe ingress or egress so m_peers and node table entries may not exist

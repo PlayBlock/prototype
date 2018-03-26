@@ -130,6 +130,7 @@ public:
 	void sendToHost(bytes const& _r);
 	void recvFromHost(NodeID& _id, bytes const& _r);
 	bool checkPacket(bytesConstRef _msg);
+	bool isEnabled(NodeID const& _id);
 protected:
 	void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);
 

@@ -65,7 +65,7 @@ public:
 
 	void ping() override;
 
-	bool isConnected() const override { return true; }
+	bool isConnected() const override;
 
 	NodeID id() const override;
 
