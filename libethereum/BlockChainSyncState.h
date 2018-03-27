@@ -152,8 +152,6 @@ namespace dev
 			virtual void onPeerAborting();
 			virtual void onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block, const h256& _last_irr_block_hash);
 
-			virtual void onEnter() {}
-			virtual void onLeave() {}
 
 			bool checkTime();
 
