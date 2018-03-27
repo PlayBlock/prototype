@@ -172,6 +172,10 @@ namespace dev
 					requestPeerLatestBlockHeader(_peer); 
 
 				}
+				else
+				{
+					ctrace << "New peeer is  know£¡£¡£¡" ;
+				}
 			}
 		}
 

@@ -571,6 +571,31 @@ namespace P2PTest {
 
 
 	/*idle状态下*/
+	class P2PTestIdlNewPeerConnected: public P2PUnitTest
+	{
+	public:
+		P2PTestIdlNewPeerConnected(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestIdlNewPeerConnected() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		//virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		bool m_passTest;
+		bool m_needSync;
+	};
 	class P2PTestIdlChainASyncBNew : public P2PUnitTest
 	{
 	public:
