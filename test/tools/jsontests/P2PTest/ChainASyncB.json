@@ -5,7 +5,12 @@
             "filledwith" : "cpp-1.3.0+commit.3a4eee45.Windows.msvc",
             "lllcversion" : "Error getting LLLC Version",
             "source" : "src\\DposBlockTestsFiller\\bcMultiChainTest\\ChainAtoChainBIrrFiller.json",
-            "sourceHash" : "b38b6a03eea469cd5b7aa782ab2f08069f876e02e2378497a744203967b4602b"
+            "sourceHash" : "b38b6a03eea469cd5b7aa782ab2f08069f876e02e2378497a744203967b4602b",
+			"ALength": 24,
+			"AIrreversible": 12,
+			"BLength": 32,
+			"BIrreversible": 21,
+			"Common": 19
         },
         "blocks" : [
             {
