@@ -551,6 +551,8 @@ int main(int argc, char** argv)
 		g_BlockChainName = vm["chainname"].as<string>();
 	if (vm.count("p2p-unit-test"))
 		g_P2PUnitTestName = vm["p2p-unit-test"].as<string>();
+	if (vm.count("p2p-sub-test"))
+		g_P2PSubTestName = vm["p2p-sub-test"].as<string>();
 	if (vm.count("genesis"))
 	{
 		try
