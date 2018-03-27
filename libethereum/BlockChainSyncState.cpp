@@ -1439,55 +1439,90 @@ namespace dev
 
 		void WaitingSyncState::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 		{
-			DefaultSyncState::onPeerStatus(_peer);
-			checkTime();
+			if (checkTime())
+			{
+				IdleSyncState::onPeerStatus(_peer);
+			}
+			else {
+				DefaultSyncState::onPeerStatus(_peer);
+			} 
 		}
 
 		void WaitingSyncState::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 		{
-			DefaultSyncState::onPeerBlockHeaders(_peer, _r);
-			checkTime();
+			if (checkTime())
+			{
+				IdleSyncState::onPeerBlockHeaders(_peer,_r);
+			}
+			else {
+				DefaultSyncState::onPeerBlockHeaders(_peer,_r);
+			}
 		}
 
 		void WaitingSyncState::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 		{
-			DefaultSyncState::onPeerBlockBodies(_peer, _r);
-			checkTime();
+			if (checkTime())
+			{
+				IdleSyncState::onPeerBlockBodies(_peer, _r);
+			}
+			else { 
+				DefaultSyncState::onPeerBlockBodies(_peer, _r);
+			} 
 		}
 
 		void WaitingSyncState::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 		{
-			DefaultSyncState::onPeerNewBlock(_peer, _r);
-			checkTime();
+			if (checkTime())
+			{
+				IdleSyncState::onPeerNewBlock(_peer, _r);
+			}
+			else { 
+				DefaultSyncState::onPeerNewBlock(_peer, _r);
+			}
 		}
 
 		void WaitingSyncState::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes)
 		{
-			DefaultSyncState::onPeerNewHashes(_peer, _hashes);
-			checkTime();
+			if (checkTime())
+			{
+				IdleSyncState::onPeerNewHashes(_peer, _hashes);
+			}
+			else {
+				DefaultSyncState::onPeerNewHashes(_peer, _hashes);
+			} 
 		}
 
 		void WaitingSyncState::onPeerAborting()
 		{
-			DefaultSyncState::onPeerAborting();
-			checkTime();
+			if (checkTime())
+			{
+				IdleSyncState::onPeerAborting();
+			}
+			else {
+				DefaultSyncState::onPeerAborting();
+			}
 		}
 
 		void WaitingSyncState::onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block, const h256& _last_irr_block_hash)
 		{
-			DefaultSyncState::onBlockImported(_info, _last_irr_block, _last_irr_block_hash);
-			checkTime();
+			if (checkTime())
+			{
+				IdleSyncState::onBlockImported(_info, _last_irr_block, _last_irr_block_hash);
+			}
+			else {
+				DefaultSyncState::onBlockImported(_info, _last_irr_block, _last_irr_block_hash);
+			} 
 		}
 
-		void WaitingSyncState::checkTime()
+		bool WaitingSyncState::checkTime()
 		{
 			if (fc::time_point::now() > m_sync.m_waitingTarget)
-			{
-				switchState(SyncState::Idle);
-				return;
+			{ 
+				return true;
 			}
 
 			cwarn << "waiting " << (m_sync.m_waitingTarget - fc::time_point::now()).to_seconds() / 60.0f << " mins!!......";
+			return false;
 		}
 
 	}

@@ -139,10 +139,10 @@ namespace dev
 			}
 		};
 
-		class WaitingSyncState : public DefaultSyncState
+		class WaitingSyncState : public IdleSyncState
 		{
 		public:
-			WaitingSyncState(BlockChainSync& _sync) :DefaultSyncState(_sync) {}
+			WaitingSyncState(BlockChainSync& _sync) :IdleSyncState(_sync) {}
 
 			virtual void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
 			virtual void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
@@ -155,7 +155,7 @@ namespace dev
 			virtual void onEnter() {}
 			virtual void onLeave() {}
 
-			void checkTime();
+			bool checkTime();
 
 		};
 		
