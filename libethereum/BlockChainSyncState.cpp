@@ -161,7 +161,6 @@ namespace dev
 						m_sync.m_bootFlag = false;
 						//此种情况下阻塞产块进程
 						m_sync.m_lockBlockGen = true;  
-						return;
 					}
 
 					//将当前链最后块作为导入起始块
