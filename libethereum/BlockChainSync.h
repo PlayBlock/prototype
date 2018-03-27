@@ -174,6 +174,9 @@ private:
 	//等待状态目标时间点
 	fc::time_point m_waitingTarget;
 
+	
+	//标明是否为客户端刚启动
+	bool m_bootFlag = true;
 
 	///////////////>废弃字段
 	h256Hash m_knownNewHashes;

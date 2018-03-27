@@ -156,7 +156,16 @@ namespace dev
 				auto status = bq().blockStatus(_peer->m_latestHash);
 				if (status == QueueStatus::Unknown)
 				{//当peer的laststHash为未知时，采取向其request块头  
-
+					if (m_sync.m_lastIrreversibleBlock < _peer->getLastIrrBlock() && m_sync.m_bootFlag)
+					{
+						m_sync.m_bootFlag = false; 
+						double waitSecs = 3.0;
+						m_sync.m_waitingTarget = fc::time_point::now() + fc::seconds(waitSecs);
+						//此种情况下阻塞产块进程
+						m_sync.m_lockBlockGen = true; 
+						switchState(SyncState::Waiting);
+						return;
+					}
 
 					//将当前链最后块作为导入起始块
 					m_sync.m_syncStartBlock = m_sync.m_lastImportedBlock;
