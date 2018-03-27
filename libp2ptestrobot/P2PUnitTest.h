@@ -116,6 +116,7 @@ namespace P2PTest {
 		void getNodeDataPacket(h256& block, unsigned number);
 		void sendNodeDataPacket(h256& block, unsigned number);
 
+		pair<bytes, unsigned> blockHeaders(RLP const& _blockId, unsigned _maxHeaders, u256 _skip, bool _reverse);
 
 	protected:
 		dev::p2p::FakeHost& m_host; 
