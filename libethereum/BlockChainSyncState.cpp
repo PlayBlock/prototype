@@ -1378,6 +1378,7 @@ namespace dev
 				mergeInto(m_sync.m_headers, blockNumber, std::move(hdr));
 				if (headerId.transactionsRoot == EmptyTrie && headerId.uncles == EmptyListSHA3)
 				{//空交易体，则直接制造一个空块体即可
+					cwarn <<"#"<< blockNumber<<" empty block!";
 					RLPStream r(2);
 					r.appendRaw(RLPEmptyList);
 					r.appendRaw(RLPEmptyList);
