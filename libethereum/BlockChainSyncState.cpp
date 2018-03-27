@@ -1453,7 +1453,7 @@ namespace dev
 		{
 			if (checkTime())
 			{
-				IdleSyncState::onPeerStatus(_peer);
+				switchState(SyncState::Idle);
 			}
 			else {
 				DefaultSyncState::onPeerStatus(_peer);
@@ -1464,7 +1464,7 @@ namespace dev
 		{
 			if (checkTime())
 			{
-				IdleSyncState::onPeerBlockHeaders(_peer,_r);
+				switchState(SyncState::Idle);
 			}
 			else {
 				DefaultSyncState::onPeerBlockHeaders(_peer,_r);
@@ -1475,7 +1475,7 @@ namespace dev
 		{
 			if (checkTime())
 			{
-				IdleSyncState::onPeerBlockBodies(_peer, _r);
+				switchState(SyncState::Idle);
 			}
 			else { 
 				DefaultSyncState::onPeerBlockBodies(_peer, _r);
@@ -1551,7 +1551,7 @@ namespace dev
 		{
 			if (checkTime())
 			{
-				IdleSyncState::onPeerNewHashes(_peer, _hashes);
+				switchState(SyncState::Idle);
 			}
 			else {
 				DefaultSyncState::onPeerNewHashes(_peer, _hashes);
@@ -1562,7 +1562,7 @@ namespace dev
 		{
 			if (checkTime())
 			{
-				IdleSyncState::onPeerAborting();
+				switchState(SyncState::Idle);
 			}
 			else {
 				DefaultSyncState::onPeerAborting();
@@ -1570,14 +1570,8 @@ namespace dev
 		}
 
 		void WaitingSyncState::onBlockImported(BlockHeader const& _info, const uint32_t _last_irr_block, const h256& _last_irr_block_hash)
-		{
-			if (checkTime())
-			{
-				IdleSyncState::onBlockImported(_info, _last_irr_block, _last_irr_block_hash);
-			}
-			else {
-				DefaultSyncState::onBlockImported(_info, _last_irr_block, _last_irr_block_hash);
-			} 
+		{ 
+			DefaultSyncState::onBlockImported(_info, _last_irr_block, _last_irr_block_hash); 
 		}
 
 		bool WaitingSyncState::checkTime()
