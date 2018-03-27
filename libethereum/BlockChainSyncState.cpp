@@ -158,12 +158,9 @@ namespace dev
 				{//当peer的laststHash为未知时，采取向其request块头  
 					if (m_sync.m_lastIrreversibleBlock < _peer->getLastIrrBlock() && m_sync.m_bootFlag)
 					{
-						m_sync.m_bootFlag = false; 
-						double waitSecs = 3.0;
-						m_sync.m_waitingTarget = fc::time_point::now() + fc::seconds(waitSecs);
+						m_sync.m_bootFlag = false;
 						//此种情况下阻塞产块进程
-						m_sync.m_lockBlockGen = true; 
-						switchState(SyncState::Waiting);
+						m_sync.m_lockBlockGen = true;  
 						return;
 					}
 
