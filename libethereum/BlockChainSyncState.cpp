@@ -464,9 +464,7 @@ namespace dev
 			else if (_peer->m_protocolVersion != host().protocolVersion() && _peer->m_protocolVersion != EthereumHost::c_oldProtocolVersion)
 				_peer->disable("Invalid protocol version.");
 			else if (_peer->m_networkId != host().networkId())
-				_peer->disable("Invalid network identifier.");
-			else if (session->info().clientVersion.find("/v0.7.0/") != string::npos)
-				_peer->disable("Blacklisted client version.");
+				_peer->disable("Invalid network identifier."); 
 			else if (host().isBanned(session->id()))
 				_peer->disable("Peer banned for previous bad behaviour.");
 			else if (_peer->m_asking != Asking::State && _peer->m_asking != Asking::Nothing)
