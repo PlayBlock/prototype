@@ -1475,7 +1475,61 @@ namespace dev
 		{
 			if (checkTime())
 			{
-				IdleSyncState::onPeerNewBlock(_peer, _r);
+				if (_r.itemCount() != 3)
+				{
+					_peer->disable("NewBlock without 2 data fields.");
+					return;
+				}
+
+				BlockHeader info(_r[0][0].data(), HeaderData);
+				auto h = info.hash();
+
+
+				cwarn << "onPeerNewBlock ==>" << h;
+
+				//从数据包中获取此peer的不可逆转块号
+				uint32_t lastIrrBlock = _r[1].toInt<u256>().convert_to<uint32_t>();
+				h256	lastIrrBlockHash = _r[2].toHash<h256>();
+
+				cwarn << "LastIrr = " << lastIrrBlock;
+
+				//更新peer最新不可逆转块号
+				_peer->setLastIrrBlock(lastIrrBlock);
+				_peer->setLastIrrBlockHash(lastIrrBlockHash);
+
+				//更新Peer最新的Hash
+				_peer->m_latestHash = h;
+
+				if (lastIrrBlock < m_sync.m_lastIrreversibleBlock)
+				{//拒绝接收不可逆转小于当前不可逆转块的客户端
+
+					cwarn << _peer->id() << "|" << lastIrrBlock << " < " << "m_lastIrreversibleBlock = " << m_sync.m_lastIrreversibleBlock << "ignore new block!!!!";
+					_peer->addRating(-10000);
+					return;
+				}
+
+				//只处理BlockQueue未知的块
+				auto status = host().bq().blockStatus(h);
+				if (status != QueueStatus::Unknown)
+				{
+					return;
+				}
+
+				_peer->tryInsertPeerKnownBlockList(h); 
+
+				m_sync.m_syncStartBlock = m_sync.m_lastIrreversibleBlock;
+				m_sync.m_syncStartBlockHash = host().chain().numberHash(m_sync.m_syncStartBlock);
+				m_sync.m_syncLastIrrBlock = m_sync.m_lastIrreversibleBlock;
+
+				m_sync.m_expectBlockHashForFindingCommon = _peer->m_latestHash;
+				m_sync.m_expectBlockForFindingCommon = 0;
+				requestPeerLatestBlockHeader(_peer);
+
+				//此种情况下阻塞产块进程
+				m_sync.m_lockBlockGen = true;
+				cwarn << "Block Gen Locked!!!!!";
+				//尝试查找CommonBlock
+				switchState(SyncState::FindingCommonBlock);
 			}
 			else { 
 				DefaultSyncState::onPeerNewBlock(_peer, _r);
