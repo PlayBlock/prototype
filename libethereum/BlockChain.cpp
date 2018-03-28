@@ -784,6 +784,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	
 	return res;
 #else
+	clog(BlockChainDebug) << "Block number:" << _block.info.number() << " size:" << _block.transactions.size();
 	return insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
 #endif // BenchMarkFlag
 
