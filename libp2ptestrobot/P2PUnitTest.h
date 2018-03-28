@@ -83,7 +83,7 @@ namespace P2PTest {
 
 	public: //≤‚ ‘”√¿˝◊¢≤·
 		void registerUnitTest(P2PUnitTest* _unit);
-		virtual void registerUnitTest(const string& unitTestName);
+		virtual void registerUnitTest(const string& unitTestName, const string& subTestName = string());
 		void registerAttackUnitTest();
 
 		static void switchUnitTest(int i = m_currTest);
@@ -118,6 +118,8 @@ namespace P2PTest {
 
 		pair<bytes, unsigned> blockHeaders(RLP const& _blockId, unsigned _maxHeaders, u256 _skip, bool _reverse, int32_t _invalidNum=-1);
 
+		const string& subTestName() const { return m_subTestName; }
+
 	protected:
 		dev::p2p::FakeHost& m_host; 
 
@@ -127,6 +129,7 @@ namespace P2PTest {
 		boost::asio::io_service& m_ioService;
 		shared_ptr<boost::asio::deadline_timer> m_timer;
 		P2PTestClient m_client;
+		string m_subTestName;
 	};
 
 	

@@ -847,7 +847,7 @@ void FakeHost::startedWorking()
 	}
 	else
 	{
-		m_hostProxy->registerUnitTest(g_P2PUnitTestName);
+		m_hostProxy->registerUnitTest(g_P2PUnitTestName, g_P2PSubTestName);
 	}
 }
 

@@ -111,13 +111,13 @@ void importBlockToBlockChain(BlockChain &_bc, OverlayDB &_db)
 		string const& testname = i.first;
 		json_spirit::mObject const& inputTest = i.second.get_obj();
 
-		//判断_bc中的genesis与预导入块的json中的是否相同
-		auto gsRLP = inputTest.at("genesisRLP").get_str();
-		bytes paramGenesis = _bc.chainParams().genesisBlock();
-		ctrace << RLP(paramGenesis);
+		//用于测试判断_bc中的genesis与预导入块的json中的是否相同
+		//auto gsRLP = inputTest.at("genesisRLP").get_str();
+		//bytes paramGenesis = _bc.chainParams().genesisBlock();
+		//ctrace << RLP(paramGenesis);
 
-		bytes ll = fromHex(gsRLP.substr(0, 2) == "0x" ? gsRLP.substr(2) : gsRLP, WhenError::Throw);
-		ctrace << RLP(ll);
+		//bytes ll = fromHex(gsRLP.substr(0, 2) == "0x" ? gsRLP.substr(2) : gsRLP, WhenError::Throw);
+		//ctrace << RLP(ll);
 
 		for (auto const& bl : inputTest.at("blocks").get_array())
 		{
