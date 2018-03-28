@@ -82,6 +82,7 @@ namespace eth
 		void destory();
 		static WASM_CORE* s_core;
 		void LoadModuleState(Address const& _address, const std::string& _string);
+		void ClearMemory(Runtime::MemoryInstance * mem);
 		ExtVMFace* current_ext;
 		bytes current_parameter;
 		bytes current_return;
