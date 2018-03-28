@@ -50,6 +50,7 @@ namespace fs = boost::filesystem;
 
 #define ETH_TIMED_IMPORTS 1
 #define MultiThreadVerifyOneBlock 1
+#define ShowImportTime 1
 namespace
 {
 
@@ -673,7 +674,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	//@tidy This is a behemoth of a method - could do to be split into a few smaller ones.
 	ImportPerformanceLogger performanceLogger;
 
-#if BenchMarkFlag
+#if BenchMarkFlag || ShowImportTime
 	Timer t;
 	Timer total;
 	//cout << "BlockChain::import: check point 0 " << std::endl;
@@ -691,7 +692,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(_block.info.parentHash()));
 	}
 
-#if BenchMarkFlag
+#if BenchMarkFlag || ShowImportTime
 	clog(BenchMarkChannel) << "Block Import: step1: " << t.elapsed();
 	t.restart();
 #endif // BenchMarkFlag
@@ -713,7 +714,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 	checkBlockTimestamp(_block.info);
 
-#if BenchMarkFlag
+#if BenchMarkFlag || ShowImportTime
 	clog(BenchMarkChannel) << " step 2: " << t.elapsed();
 	t.restart();
 #endif // BenchMarkFlag
@@ -721,7 +722,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	// Verify parent-critical parts
 	verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);
 
-#if BenchMarkFlag
+#if BenchMarkFlag || ShowImportTime
 	clog(BenchMarkChannel) << " step 3: " << t.elapsed();
 	t.restart();
 #endif // BenchMarkFlag
@@ -739,7 +740,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		Block s(*this, _db);
 		auto tdIncrease = s.enactOn(_block, *this);
 
-#if BenchMarkFlag
+#if BenchMarkFlag || ShowImportTime
 		clog(BenchMarkChannel) << " step 4: " << t.elapsed();
 		t.restart();
 #endif // BenchMarkFlag
@@ -776,7 +777,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	// All ok - insert into DB
 	bytes const receipts = br.rlp();
 
-#if BenchMarkFlag
+#if BenchMarkFlag || ShowImportTime
 	t.restart();
 	auto res = insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
 	//cout << " ZP populdate: " << t.elapsed() << std::endl;
@@ -784,7 +785,6 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	
 	return res;
 #else
-	clog(BlockChainDebug) << "Block number:" << _block.info.number() << " size:" << _block.transactions.size();
 	return insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
 #endif // BenchMarkFlag
 
