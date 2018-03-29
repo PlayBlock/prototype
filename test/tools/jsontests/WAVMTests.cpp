@@ -1626,7 +1626,7 @@ namespace dev {
 			BOOST_REQUIRE(cost_call_1 == u256(2060722) * u256(20000000000));
 			
 
-			//malloc  等于4MB的时候
+			//malloc  小于4MB的时候
 			client.sendTransaction(gasLimit, gasPrice, s_address, value, test_func2_string, account);  //Call contract code.
 			client.produce_blocks();
 
@@ -1634,7 +1634,7 @@ namespace dev {
 			u256 cost_call_2 = balance4 - balance5;
 			string s_call_2 = cost_call_2.str();
 			cout << "s_call_2: " << s_call_2 << endl;
-			BOOST_REQUIRE(cost_call_2 == u256(2060722) * u256(20000000000));
+			BOOST_REQUIRE(cost_call_2 < u256(2060722) * u256(20000000000));
 			
 
 			//malloc  四次申请总数为4B的时候
@@ -1643,7 +1643,10 @@ namespace dev {
 
 			u256 balance6 = client.balance(Address(account.address));
 			u256 cost_call_3 = balance5 - balance6;
-			BOOST_REQUIRE(cost_call_3 == u256(2060722) * u256(20000000000));
+			string s_call_3 = cost_call_3.str();
+			cout << "s_call_3: " << s_call_3 << endl;
+			cout << "s_call_3: " << u256(2060722) * u256(20000000000) << endl;
+			BOOST_REQUIRE(cost_call_3 < u256(2060722) * u256(20000000000));
 
 		}
 
