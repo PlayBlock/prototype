@@ -60,9 +60,10 @@ string const c_genesis = "genesis";
 string const c_accounts = "accounts";
 /// for dpos
 string const c_privateKeys = "privateKeys";
+string const c_peers = "peerset";
 
 set<string> const c_knownChainConfigFields =
-	{c_sealEngine, c_params, c_genesis, c_accounts, c_privateKeys};
+	{c_sealEngine, c_params, c_genesis, c_accounts, c_privateKeys, c_peers };
 
 string const c_minGasLimit = "minGasLimit";
 string const c_maxGasLimit = "maxGasLimit";

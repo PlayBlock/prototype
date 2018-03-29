@@ -70,6 +70,7 @@ using namespace dev::eth;
 using namespace boost::algorithm;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
+namespace js = json_spirit;
 
 namespace
 {
@@ -177,6 +178,72 @@ private:
 bool ExitHandler::s_shouldExit = false;
 
 }
+
+int getPeerFromJson(string const& _json, std::map<NodeID, pair<NodeIPEndpoint, bool>> &_preferredNodes)
+{
+	js::mValue val;
+	json_spirit::read_string_or_throw(_json, val);
+	js::mObject obj = val.get_obj();
+	if (obj.count("peerset") > 0)
+	{
+		string peerset = obj["peerset"].get_str();
+		if (peerset.empty())
+		{
+			cerr << "peerset argument must not be empty";
+			return -1;
+		}
+
+		vector<string> each;
+		boost::split(each, peerset, boost::is_any_of(","));
+		for (auto const& p : each)
+		{
+			string type;
+			string pubk;
+			string hostIP;
+			unsigned short port = c_defaultListenPort;
+
+			// type:key@ip[:port]
+			vector<string> typeAndKeyAtHostAndPort;
+			boost::split(typeAndKeyAtHostAndPort, p, boost::is_any_of(":"));
+			if (typeAndKeyAtHostAndPort.size() < 2 || typeAndKeyAtHostAndPort.size() > 3)
+				continue;
+
+			type = typeAndKeyAtHostAndPort[0];
+			if (typeAndKeyAtHostAndPort.size() == 3)
+				port = (uint16_t)atoi(typeAndKeyAtHostAndPort[2].c_str());
+
+			vector<string> keyAndHost;
+			boost::split(keyAndHost, typeAndKeyAtHostAndPort[1], boost::is_any_of("@"));
+			if (keyAndHost.size() != 2)
+				continue;
+			pubk = keyAndHost[0];
+			if (pubk.size() != 128)
+				continue;
+			hostIP = keyAndHost[1];
+
+			// todo: use Network::resolveHost()
+			if (hostIP.size() < 4 /* g.it */)
+				continue;
+
+			bool required = type == "required";
+			if (!required && type != "default")
+				continue;
+
+			Public publicKey(fromHex(pubk));
+			try
+			{
+				_preferredNodes[publicKey] = make_pair(NodeIPEndpoint(bi::address::from_string(hostIP), port, port), required);
+			}
+			catch (...)
+			{
+				cerr << "Unrecognized peerset: " << peerset << "\n";
+				return -1;
+			}
+		}
+
+	}
+}
+
 
 int main(int argc, char** argv)
 {
@@ -430,63 +497,6 @@ int main(int argc, char** argv)
 		peers = vm["peers"].as<int>();
 	if (vm.count("peer-stretch"))
 		peerStretch = vm["peer-stretch"].as<int>();
-	if (vm.count("peerset"))
-	{
-		string peerset = vm["peerset"].as<string>();
-		if (peerset.empty())
-		{
-			cerr << "--peerset argument must not be empty";
-			return -1;
-		}
-
-		vector<string> each;
-		boost::split(each, peerset, boost::is_any_of(","));
-		for (auto const& p: each)
-		{
-			string type;
-			string pubk;
-			string hostIP;
-			unsigned short port = c_defaultListenPort;
-
-			// type:key@ip[:port]
-			vector<string> typeAndKeyAtHostAndPort;
-			boost::split(typeAndKeyAtHostAndPort, p, boost::is_any_of(":"));
-			if (typeAndKeyAtHostAndPort.size() < 2 || typeAndKeyAtHostAndPort.size() > 3)
-				continue;
-
-			type = typeAndKeyAtHostAndPort[0];
-			if (typeAndKeyAtHostAndPort.size() == 3)
-				port = (uint16_t)atoi(typeAndKeyAtHostAndPort[2].c_str());
-
-			vector<string> keyAndHost;
-			boost::split(keyAndHost, typeAndKeyAtHostAndPort[1], boost::is_any_of("@"));
-			if (keyAndHost.size() != 2)
-				continue;
-			pubk = keyAndHost[0];
-			if (pubk.size() != 128)
-				continue;
-			hostIP = keyAndHost[1];
-
-			// todo: use Network::resolveHost()
-			if (hostIP.size() < 4 /* g.it */)
-				continue;
-
-			bool required = type == "required";
-			if (!required && type != "default")
-				continue;
-
-			Public publicKey(fromHex(pubk));
-			try
-			{
-				preferredNodes[publicKey] = make_pair(NodeIPEndpoint(bi::address::from_string(hostIP), port, port), required);
-			}
-			catch (...)
-			{
-				cerr << "Unrecognized peerset: " << peerset << "\n";
-				return -1;
-			}
-		}
-	}
 	if (vm.count("mode"))
 	{
 		string m = vm["mode"].as<string>();
@@ -776,6 +786,7 @@ int main(int argc, char** argv)
 		try
 		{
 			chainParams = chainParams.loadConfig(configJSON);
+			getPeerFromJson(configJSON, preferredNodes);
 			chainConfigIsSet = true;
 		}
 		catch (...)
