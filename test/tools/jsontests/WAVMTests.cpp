@@ -1597,7 +1597,6 @@ namespace dev {
 
 			Address m_newAddress = newAddress(account);  //Contract Address.
 			string s_address = m_newAddress.hex();
-			cout << "s_address: " << s_address << endl;
 
 			u256 balance2 = client.balance(Address(account.address));
 			
@@ -1609,11 +1608,20 @@ namespace dev {
 			bytes contractCode = client.code(Address(s_address));  //Get contract address.
 			string s_contractCode = toHex(contractCode);
 			BOOST_REQUIRE(s_contractCode.compare(mallocHex) == 0);  //Check contract code.
+
 			//判断消耗的gas
 			u256 cost_call = balance2 - balance3;
-			string s_call = cost_call.str();
-			cout << "s_call: " << s_call << endl;
 			BOOST_REQUIRE(cost_call < u256(2060722) * u256(20000000000));
+
+			//判断存储内容是否正确
+			u256 storage = client.storage(m_newAddress, u256(1));
+			BOOST_REQUIRE(storage == u256(11));
+			storage = client.storage(m_newAddress, u256(2));
+			BOOST_REQUIRE(storage == u256(22));
+			storage = client.storage(m_newAddress, u256(3));
+			BOOST_REQUIRE(storage == u256(33));
+			storage = client.storage(m_newAddress, u256(4));
+			BOOST_REQUIRE(storage == u256(44));
 
 			//malloc  等于0MB的时候
 			client.sendTransaction(gasLimit, gasPrice, s_address, value, test_func1_string, account);  //Call contract code.
@@ -1621,8 +1629,6 @@ namespace dev {
 
 			u256 balance4 = client.balance(Address(account.address));
 			u256 cost_call_1 = balance3 - balance4;
-			string s_call_1 = cost_call_1.str();
-			cout << "s_call_1: " << s_call_1 << endl;
 			BOOST_REQUIRE(cost_call_1 == u256(2060722) * u256(20000000000));
 			
 
@@ -1632,21 +1638,17 @@ namespace dev {
 
 			u256 balance5 = client.balance(Address(account.address));
 			u256 cost_call_2 = balance4 - balance5;
-			string s_call_2 = cost_call_2.str();
-			cout << "s_call_2: " << s_call_2 << endl;
 			BOOST_REQUIRE(cost_call_2 < u256(2060722) * u256(20000000000));
 			
 
-			//malloc  四次申请总数为4B的时候
-			client.sendTransaction(gasLimit, gasPrice, s_address, value, test_func2_string, account);  //Call contract code. (Error)
+			//malloc  四次申请总数为4M的时候
+			client.sendTransaction(gasLimit, gasPrice, s_address, value, test_func3_string, account);  //Call contract code. (Error)
 			client.produce_blocks();
 
 			u256 balance6 = client.balance(Address(account.address));
 			u256 cost_call_3 = balance5 - balance6;
 			string s_call_3 = cost_call_3.str();
-			cout << "s_call_3: " << s_call_3 << endl;
-			cout << "s_call_3: " << u256(2060722) * u256(20000000000) << endl;
-			BOOST_REQUIRE(cost_call_3 < u256(2060722) * u256(20000000000));
+			BOOST_REQUIRE(cost_call_3 == u256(2060722) * u256(20000000000));
 
 		}
 
