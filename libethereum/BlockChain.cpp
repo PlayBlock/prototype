@@ -186,7 +186,7 @@ void addBlockInfo(Exception& io_ex, BlockHeader const& _header, bytes&& _blockDa
 static const chrono::system_clock::duration c_collectionDuration = chrono::seconds(60);
 
 /// Length of death row (total time in cache is multiple of this and collection duration).
-static const unsigned c_collectionQueueSize = 20;
+static const unsigned c_collectionQueueSize = 3;
 
 /// Max size, above which we start forcing cache reduction.
 static const unsigned c_maxCacheSize = 1024 * 1024 * 64;
@@ -1388,6 +1388,8 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
 
 void BlockChain::noteUsed(h256 const& _h, unsigned _extra) const
 {
+	return;
+
 	auto id = CacheID(_h, _extra);
 	Guard l(x_cacheUsage);
 	m_cacheUsage[0].insert(id);
@@ -1435,9 +1437,40 @@ void BlockChain::garbageCollect(bool _force)
 	if (!_force && chrono::system_clock::now() < m_lastCollection + c_collectionDuration && m_lastStats.memTotal() < c_maxCacheSize)
 		return;
 	if (m_lastStats.memTotal() < c_minCacheSize)
-		return;
+		return; 
 
 	m_lastCollection = chrono::system_clock::now();
+
+	{
+		WriteGuard l(x_blocks);
+		m_blocks.clear();
+	}
+
+	{
+		WriteGuard l(x_details);
+		m_details.clear();
+	}
+
+	{
+		WriteGuard l(x_receipts);
+		m_receipts.clear();
+	}
+
+	{
+		WriteGuard l(x_logBlooms);
+		m_logBlooms.clear();
+	}
+
+	{
+		WriteGuard l(x_transactionAddresses);
+		m_transactionAddresses.clear();
+	}
+
+	{
+		WriteGuard l(x_blocksBlooms);
+		m_blocksBlooms.clear();
+	}
+	/*
 
 	Guard l(x_cacheUsage);
 	for (CacheID const& id: m_cacheUsage.back())
@@ -1492,6 +1525,7 @@ void BlockChain::garbageCollect(bool _force)
 	}
 	m_cacheUsage.pop_back();
 	m_cacheUsage.push_front(std::unordered_set<CacheID>{});
+	*/
 }
 
 void BlockChain::checkConsistency()
