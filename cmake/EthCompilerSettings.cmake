@@ -81,7 +81,7 @@ elseif (MSVC)
 	add_compile_options(-D_WIN32_WINNT=0x0600)		# declare Windows Vista API requirement
 	add_compile_options(-DNOMINMAX)					# undefine windows.h MAX && MIN macros cause it cause conflicts with std::min && std::max functions
 	add_compile_options(-DMINIUPNP_STATICLIB)		# define miniupnp static library
-
+	add_compile_options(/bigobj)
 	# Always use Release variant of C++ runtime.
 	# We don't want to provide Debug variants of all dependencies. Some default
 	# flags set by CMake must be tweaked.
