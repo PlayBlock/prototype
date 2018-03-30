@@ -448,7 +448,7 @@ void Client::appendFromBlock(h256 const& _block, BlockPolarity _polarity, h256Ha
 	}
 }
 
-unsigned static const c_syncMin = 1;
+unsigned static const c_syncMin = 20;
 unsigned static const c_syncMax = 1000;
 double static const c_targetDuration = 1;
 
@@ -485,6 +485,9 @@ void Client::syncBlockQueue()
 		m_syncAmount = max(c_syncMin, count * 9 / 10);
 	else if (count == m_syncAmount && elapsed < c_targetDuration * 0.9 && m_syncAmount < c_syncMax)
 		m_syncAmount = min(c_syncMax, m_syncAmount * 11 / 10 + 1);
+
+	ctrace << "================>>>>m_syncAmount = " << m_syncAmount << "import count = " << count;
+
 	if (ir.liveBlocks.empty())
 		return;
 	onChainChanged(ir);

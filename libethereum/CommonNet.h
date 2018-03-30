@@ -40,7 +40,7 @@ static const unsigned c_maxHeaders = 2048;		///< Maximum number of hashes BlockH
 static const unsigned c_maxHeadersAsk = 2048;	///< Maximum number of hashes GetBlockHashes will ever ask for.
 static const unsigned c_maxBlocks = 128;		///< Maximum number of blocks Blocks will ever send.
 static const unsigned c_maxBlocksAsk = 128;		///< Maximum number of blocks we ask to receive in Blocks (when using GetChain).
-static const unsigned c_maxPayload = 262144;	///< Maximum size of packet for us to send.
+static const unsigned c_maxPayload = 10 * 1024 * 1024;	///< Maximum size of packet for us to send. 262144
 static const unsigned c_maxNodes = c_maxBlocks; ///< Maximum number of nodes will ever send.
 static const unsigned c_maxReceipts = c_maxBlocks; ///< Maximum number of receipts will ever send.
 
