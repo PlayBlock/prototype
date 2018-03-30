@@ -247,7 +247,6 @@ int getPeerFromJson(string const& _json, std::map<NodeID, pair<NodeIPEndpoint, b
 
 int main(int argc, char** argv)
 {
-	cblockq << "Test Jenkins.";
 	setDefaultOrCLocale();
 	 
 	// Init secp256k1 context by calling one of the functions.
