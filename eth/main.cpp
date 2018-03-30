@@ -1180,11 +1180,9 @@ int main(int argc, char** argv)
 	if (!remoteHost.empty())
 		web3.addNode(p2p::NodeID(), remoteHost + ":" + toString(remotePort));
 
-#if not defined(_WIN32)
 	signal(SIGABRT, &ExitHandler::exitHandler);
 	signal(SIGTERM, &ExitHandler::exitHandler);
 	signal(SIGINT, &ExitHandler::exitHandler);
-#endif
 
 	if (c)
 	{

@@ -71,18 +71,17 @@ void WindowsPipeServer::Listen()
 			0,
 			nullptr);
 
-		DEV_GUARDED(x_sockets)
-			m_sockets.insert(socket);
-
 		if (ConnectNamedPipe(socket, nullptr) != 0)
 		{
+			DEV_GUARDED(x_sockets)
+				m_sockets.insert(socket);
+
 			std::thread handler([this, socket](){ GenerateResponse(socket); });
 			handler.detach();
 		}
 		else
 		{
-			DEV_GUARDED(x_sockets)
-				m_sockets.erase(socket);
+			CloseHandle(socket);
 		}
 	}
 }

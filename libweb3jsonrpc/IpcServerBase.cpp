@@ -65,7 +65,8 @@ template <class S> bool IpcServerBase<S>::StopListening()
 				CloseConnection(s);
 			m_sockets.clear();
 		}
-		m_listeningThread.join();
+		//m_listeningThread.join();
+		m_listeningThread.detach();
 		return true;
 	}
 	return false;
