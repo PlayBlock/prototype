@@ -162,6 +162,10 @@ void BlockQueue::verifierBody()
 		}
 		if (ready)
 			m_onReady();
+
+		//清理数据
+		res.blockData = bytes();
+		res.verified.transactions = Transactions();
 	}
 }
 
@@ -368,7 +372,8 @@ bool BlockQueue::doneDrain(h256s const& _bad)
 }
 
 void BlockQueue::tick()
-{
+{ 
+
 	vector<pair<h256, bytes>> todo;
 	{
 		UpgradableGuard l(m_lock);
