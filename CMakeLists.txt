@@ -147,6 +147,7 @@ add_subdirectory(libweb3jsonrpc)
 
 add_subdirectory(libproducer)
 add_subdirectory(libp2ptestrobot)
+add_subdirectory(libjumphash)
 
 if (EVMJIT)
     add_subdirectory(evmjit)
