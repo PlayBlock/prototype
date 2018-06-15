@@ -638,8 +638,8 @@ bool TestBlockChain::addBlock(TestBlock const& _block)
 			ImportRoute route;
 			_block.verify(*this); //check that block header match TestBlock contents
 			route = m_blockChain.get()->import(_block.bytes(), m_genesisBlock.state().db());
-			//if(route.goodTranactions.size() == 0)
-			//	BOOST_THROW_EXCEPTION(ExceedRollbackImportBlock());
+			if(route.liveBlocks.size() == 0 && route.goodTranactions.size()==0 && route.deadBlocks.size() ==0)
+				BOOST_THROW_EXCEPTION(ExceedRollbackImportBlock());
 			break;
 		}
 		catch (FutureTime)
@@ -806,7 +806,7 @@ TestBlock TestBlockChain::defaultDposGenesisBlock(u256 const& _gasLimit)
 	accountVote["storage"] = json_spirit::mObject();
 
 	json_spirit::mObject accountGenesis;
-	accountGenesis["balance"] = "123000000000000000000";
+	accountGenesis["balance"] = "123000000000000000000000000";
 	accountGenesis["nonce"] = "0";					//=1for nonce too low exception check
 	accountGenesis["code"] = "";
 	accountGenesis["storage"] = json_spirit::mObject();

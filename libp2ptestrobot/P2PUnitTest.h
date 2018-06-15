@@ -22,7 +22,7 @@ namespace P2PTest {
 		virtual std::string name() const = 0; 
 
 		//用于用例初始化
-		virtual void init() = 0;
+		virtual void init();
 
 		//用例销毁
 		virtual void destroy() = 0;
@@ -101,20 +101,22 @@ namespace P2PTest {
 		void registerAllUnitTest();
 
 	public: //请求协议助手函数
-		void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, unsigned hostProtocolVersion = 63);
+		void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, u256 _lastIrrBlock, h256 _lastIrrBlockHash, unsigned hostProtocolVersion = 63);
 		void requestBlockHeaders(dev::h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse);
 		void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse);
-		void sendNewBlockHash(h256& block, unsigned number);
-		void sendNewBlock(bytes& block);
-		void sendBlockHeader(bytes& block, unsigned _count=1);
+		void sendNewBlockHash(const h256& block, unsigned number);
+		void sendNewBlock(const bytes& block, const u256& irreversibleBlockNum = u256(0), const h256& irreversibleBlockHash = h256());
 
-		void getBlockBodiesPacket(h256& block, unsigned number);
-		void sendBlockBodiesPacket(h256& block, unsigned number);
-		void sendNewBlockPacket(h256& block, unsigned number);
-		void sendReceiptsPacket(h256& block, unsigned number);
-		void getReceiptsPacket(h256& block, unsigned number);
-		void getNodeDataPacket(h256& block, unsigned number);
-		void sendNodeDataPacket(h256& block, unsigned number);
+		void sendBlockHeader(const bytes& block, unsigned _count=1);
+
+		void getBlockBodiesPacket(const h256& block, unsigned number);
+		void sendBlockBodiesPacket(const bytes& block, unsigned number);
+		void sendReceiptsPacket(const h256& block, unsigned number);
+		void getReceiptsPacket(const h256& block, unsigned number);
+		void getNodeDataPacket(const h256& block, unsigned number);
+		void sendNodeDataPacket(const h256& block, unsigned number);
+
+		pair<bytes, unsigned> blockBodies(RLP const& _blockHashes);
 
 		pair<bytes, unsigned> blockHeaders(RLP const& _blockId, unsigned _maxHeaders, u256 _skip, bool _reverse, int32_t _invalidNum=-1);
 
@@ -211,9 +213,6 @@ namespace P2PTest {
 		//用例名称
 		virtual std::string name() const;
 
-		//用于用例初始化
-		virtual void init();
-
 		//用例销毁
 		virtual void destroy();
 
@@ -236,9 +235,6 @@ namespace P2PTest {
 
 		//用例名称
 		virtual std::string name() const;
-
-		//用于用例初始化
-		virtual void init();
 
 		//用例销毁
 		virtual void destroy();
@@ -705,4 +701,30 @@ namespace P2PTest {
 		unsigned int steps;
 	};
 
+	class P2PTestSyncBlocks : public P2PUnitTest
+	{
+	public:
+		P2PTestSyncBlocks(P2PHostProxy& _proxy) :P2PUnitTest(_proxy) {}
+		~P2PTestSyncBlocks() {}
+
+		//用例名称
+		virtual std::string name() const;
+
+		//用于用例初始化
+		virtual void init();
+
+		//用例销毁
+		virtual void destroy();
+
+		//用来解析传来的协议包
+		virtual void interpret(unsigned _id, RLP const& _r);
+		virtual void interpretProtocolPacket(PacketType _t, RLP const& _r);
+
+		//在host线程
+		virtual void step();
+	private:
+		bool m_passTest;
+		bool m_needSync;
+		unsigned int steps;
+	};
 }

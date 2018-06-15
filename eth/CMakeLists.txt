@@ -5,7 +5,6 @@ set(
     MinerAux.h
 	Register.h
     Register.cpp
-	VotePrecompiled.cpp
 )
 
 
@@ -33,10 +32,10 @@ foreach (l ${WASM_LIB_LIST})
 endforeach()
 
 target_link_libraries(
-    eth
-    PRIVATE ethereum ethashseal evm web3jsonrpc webthree devcore Boost::program_options fc Boost::chrono 
+    eth 
+    PRIVATE ethereum ethashseal evm web3jsonrpc webthree p2ptestrobot devcore Boost::program_options fc Boost::chrono p2ptestrobot
 )
 
-target_include_directories(eth PRIVATE ../utils ${WAVM_INCLUDE_DIRS} )
+target_include_directories(eth PRIVATE ../utils ../utils/fc/include ${WAVM_INCLUDE_DIRS} )
 
 install(TARGETS eth DESTINATION bin)

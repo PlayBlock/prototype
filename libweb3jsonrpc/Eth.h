@@ -119,9 +119,15 @@ public:
 	virtual Json::Value eth_syncing() override;
 	virtual Json::Value eth_getVote() override;
 	void setTransactionDefaults(eth::TransactionSkeleton& _t);
-	virtual std::string eth_makeKeys(std::string const& _a);
-	virtual std::string eth_testSendBlock(std::string const& _a);
-	virtual std::string eth_sign(std::string const& _a, std::string const& _b);
+	virtual std::string eth_makeKeys(std::string const& _a) override;
+	virtual std::string eth_testSend1(std::string const& _a) override;
+	virtual std::string eth_testSend2(std::string const& _a) override;
+	virtual std::string eth_testTransaction(Json::Value const& _json);
+	virtual std::string eth_testSendBlock(std::string const& _a) override;
+	virtual std::string eth_sign(std::string const& _a, std::string const& _b) override;
+	virtual std::string eth_sendTxWithRSV(Json::Value const& _json) override;
+	virtual std::string eth_checkSignature(Json::Value const& _json) override;
+	virtual std::string eth_sendTxNative(Json::Value const& _json) override;
 protected:
 
 	eth::Interface* client() { return &m_eth; }

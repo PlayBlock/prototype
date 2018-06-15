@@ -447,7 +447,6 @@ private:
 	/// for dpos
 	std::shared_ptr<producer_plugin> m_producer_plugin;
 
-
 	friend std::ostream& operator<<(std::ostream& _out, BlockChain const& _bc);
 };
 

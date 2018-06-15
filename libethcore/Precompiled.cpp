@@ -211,71 +211,71 @@ ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)(bytesConstRef _in)
 	return 100000 + (_in.size() / 192) * 80000;
 }
 class dev::eth::State;
-ETH_REGISTER_PRECOMPILED(mortgage)(bytesConstRef _in, Address const& _address, State& _state)
-{ 
-	uint64_t amount = boost::lexical_cast<uint64_t>(string(_in.begin(), _in.end()));
-	VoteDelegate::mortgage(amount, _address, _state);
-	return make_pair(true, bytes());
-}
-
-ETH_REGISTER_PRECOMPILED(redeem)(bytesConstRef _in, Address const& _address, State& _state)
-{ 
-	uint64_t voteCount = boost::lexical_cast<uint64_t>(string(_in.begin(), _in.end()));
-	VoteDelegate::redeem(voteCount, _address, _state);
-	return make_pair(true, bytes());
-}
-
-ETH_REGISTER_PRECOMPILED(candidateRegister)(bytesConstRef _in, Address const& _address, State& _state)
-{
- 
-
-	VoteDelegate::candidateRegister(_address, _state);
-	return make_pair(true, bytes());
-}
-
-ETH_REGISTER_PRECOMPILED(candidateDeregister)(bytesConstRef _in, Address const& _address, State& _state)
-{
- 
-
-	VoteDelegate::candidateDeregister(_address, _state);
-	return make_pair(true, bytes());
-}
-
-ETH_REGISTER_PRECOMPILED(vote)(bytesConstRef _in, Address const& _address, State& _state)
-{ 
-	Address toaddress(bytes(_in.begin(), _in.end()));
-	VoteDelegate::vote(toaddress,_address, _state);
-	return make_pair(true, bytes());
-}
-
-ETH_REGISTER_PRECOMPILED(removeVote)(bytesConstRef _in, Address const& _address, State& _state)
-{ 
-	Address toaddress(bytes(_in.begin(), _in.end()));
-	VoteDelegate::removeVote(_address, _state);
-	return make_pair(true, bytes());
-}
-
-ETH_REGISTER_PRECOMPILED(send)(bytesConstRef _in, Address const& _address, State& _state)
-{ 
-	Address toAddress(bytes(_in.begin(), _in.begin() + sizeof(Address)));
-	uint64_t voteCount = boost::lexical_cast<uint64_t>(string(_in.begin() + sizeof(Address), _in.end()));
-	VoteDelegate::send(toAddress, voteCount, _address, _state);
-	return make_pair(true, bytes());
-}
-
-ETH_REGISTER_PRECOMPILED(assign)(bytesConstRef _in, Address const& _address, State& _state)
-{ 
-	uint64_t voteCount = boost::lexical_cast<uint64_t>(string(_in.begin(), _in.end()));
-	VoteDelegate::assign(voteCount,_address, _state);
-	return make_pair(true, bytes());
-}
-
-ETH_REGISTER_PRECOMPILED(deAssign)(bytesConstRef _in, Address const& _address, State& _state)
-{ 
-	uint64_t voteCount = boost::lexical_cast<uint64_t>(string(_in.begin(), _in.end()));
-	VoteDelegate::deAssign(voteCount, _address, _state);
-	return make_pair(true, bytes());
-}
+//ETH_REGISTER_PRECOMPILED(mortgage)(bytesConstRef _in, Address const& _address, State& _state)
+//{ 
+//	uint64_t amount = boost::lexical_cast<uint64_t>(string(_in.begin(), _in.end()));
+//	VoteDelegate::mortgage(amount, _address, _state);
+//	return make_pair(true, bytes());
+//}
+//
+//ETH_REGISTER_PRECOMPILED(redeem)(bytesConstRef _in, Address const& _address, State& _state)
+//{ 
+//	uint64_t voteCount = boost::lexical_cast<uint64_t>(string(_in.begin(), _in.end()));
+//	VoteDelegate::redeem(voteCount, _address, _state);
+//	return make_pair(true, bytes());
+//}
+//
+//ETH_REGISTER_PRECOMPILED(candidateRegister)(bytesConstRef _in, Address const& _address, State& _state)
+//{
+// 
+//
+//	VoteDelegate::candidateRegister(_address, _state);
+//	return make_pair(true, bytes());
+//}
+//
+//ETH_REGISTER_PRECOMPILED(candidateDeregister)(bytesConstRef _in, Address const& _address, State& _state)
+//{
+// 
+//
+//	VoteDelegate::candidateDeregister(_address, _state);
+//	return make_pair(true, bytes());
+//}
+//
+//ETH_REGISTER_PRECOMPILED(vote)(bytesConstRef _in, Address const& _address, State& _state)
+//{ 
+//	Address toaddress(bytes(_in.begin(), _in.end()));
+//	VoteDelegate::vote(toaddress,_address, _state);
+//	return make_pair(true, bytes());
+//}
+//
+//ETH_REGISTER_PRECOMPILED(removeVote)(bytesConstRef _in, Address const& _address, State& _state)
+//{ 
+//	Address toaddress(bytes(_in.begin(), _in.end()));
+//	VoteDelegate::removeVote(_address, _state);
+//	return make_pair(true, bytes());
+//}
+//
+//ETH_REGISTER_PRECOMPILED(send)(bytesConstRef _in, Address const& _address, State& _state)
+//{ 
+//	Address toAddress(bytes(_in.begin(), _in.begin() + sizeof(Address)));
+//	uint64_t voteCount = boost::lexical_cast<uint64_t>(string(_in.begin() + sizeof(Address), _in.end()));
+//	VoteDelegate::send(toAddress, voteCount, _address, _state);
+//	return make_pair(true, bytes());
+//}
+//
+//ETH_REGISTER_PRECOMPILED(assign)(bytesConstRef _in, Address const& _address, State& _state)
+//{ 
+//	uint64_t voteCount = boost::lexical_cast<uint64_t>(string(_in.begin(), _in.end()));
+//	VoteDelegate::assign(voteCount,_address, _state);
+//	return make_pair(true, bytes());
+//}
+//
+//ETH_REGISTER_PRECOMPILED(deAssign)(bytesConstRef _in, Address const& _address, State& _state)
+//{ 
+//	uint64_t voteCount = boost::lexical_cast<uint64_t>(string(_in.begin(), _in.end()));
+//	VoteDelegate::deAssign(voteCount, _address, _state);
+//	return make_pair(true, bytes());
+//}
 
 
 ETH_REGISTER_PRECOMPILED(powReceive)(bytesConstRef _in, Address const& _address, State& _state)

@@ -447,7 +447,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 			if (m_isCreation)
 			{
 				m_s.clearStorage(m_ext->myAddress);
-				auto out = vm->exec(m_gas, *m_ext, _onOp);
+				auto out = vm->exec(m_gas, *m_ext, _onOp, true);
 				if (m_res)
 				{
 					m_res->gasForDeposit = m_gas;

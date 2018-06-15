@@ -2,12 +2,11 @@
 #include "rand.hpp"
 //#include "BlockChain.h"
 #include <iostream>
-//#include "../libevm/Vote.h"
 #include "producer_objects.hpp"
 #include "version.hpp"
 #include "boost/container/flat_map.hpp"
 #include <tuple>
-
+#include "libethereum/BenchMark.h"
 using namespace dev;
 using namespace dev::eth;
 using namespace dev::eth::chain;
@@ -16,7 +15,7 @@ using native::eos::ProducerVotesMultiIndex;
 using native::eos::ProducerScheduleMultiIndex;
 using native::eos::ProducerVotesObject;
 
-chain_controller::chain_controller(const dev::eth::BlockChain& bc, chainbase::database& db): _db(db), _bc(bc){
+chain_controller::chain_controller( dev::eth::BlockChain& bc, chainbase::database& db): _db(db), _bc(bc){
 
 	initialize_indexes();
 	initialize_chain(bc);
@@ -133,7 +132,8 @@ void chain_controller::initialize_chain(const dev::eth::BlockChain& bc)
 		init_hardforks();
 
 		//初始化当前不可逆转块号
-		_last_irreversible_block_num =  get_dynamic_global_properties().last_irreversible_block_num;
+		_last_irreversible_block_num =  get_dynamic_global_properties().last_irreversible_block_num; 
+		_last_irreversible_block_hash = bc.numberHash(_last_irreversible_block_num);
 	}
 	catch (UnknownHardfork& e) {//若当前不在主分叉上
 		ctrace << "YOUR CLIENT'S VERSION IS TOO OLD!!!!!!";
@@ -214,7 +214,7 @@ ProducerRound chain_controller::calculate_next_round(const BlockHeader& next_blo
 void chain_controller::update_global_properties(const BlockHeader& b) {
 	// If we're at the end of a round, update the BlockchainConfiguration, producer schedule
 	// and "producers" special account authority
-	ctrace << "============>BlockNum = "<<b.number().convert_to<uint32_t>()<<" "<<b.producer();
+	cwarn << "============>BlockNum = "<<b.number().convert_to<uint32_t>()<<" hash = "<<b.hash()<<" producer = "<<b.producer();
 	if (b.number().convert_to<uint32_t>() % config::TotalProducersPerRound == 0) {
 		try {
 			auto schedule = calculate_next_round(b);
@@ -255,131 +255,126 @@ void chain_controller::update_global_properties(const BlockHeader& b) {
 	}
 }
 
-//std::map<Address, VoteBace> chain_controller::get_votes(h256 const& _hash) const
-//{
-//	if (_stateDB == nullptr)
-//		return std::map<Address, VoteBace>();
-//
-//	Block block(_bc, *_stateDB);
-//	block.populateFromChain(_bc, _hash == h256() ? _bc.currentHash() : _hash);
-//
-//
-//	std::unordered_map<u256, u256> voteMap = block.storage(Address("0000000000000000000000000000000000000005"));
-//	std::unordered_map<u256, u256> voteMapChange;
-//	std::map<Address, VoteBace> returnMap;
-//	dev::bytes bytes0(12, '\0');
-//	for (auto iterator = voteMap.begin(); iterator != voteMap.end(); iterator++)
-//	{
-//		dev::u256 iteratorFirst = iterator->first;
-//		dev::bytes iteratorBytes = ((dev::h256)iteratorFirst).asBytes();
-//		dev::bytes iteratorAddress(iteratorBytes.begin(), iteratorBytes.begin() + sizeof(dev::Address));
-//		dev::bytes iteratorExpand(iteratorBytes.begin() + sizeof(dev::Address), iteratorBytes.end());
-//
-//		if (iteratorExpand == bytes0)
-//		{
-//			Vote reset(voteMap, voteMapChange, dev::Address(iteratorAddress));
-//			reset.load();
-//			VoteBace vb;
-//			vb.m_address = dev::Address(iteratorAddress);
-//			vb.m_assignNumber = reset.getAssignNumber();
-//			vb.m_isCandidate = reset.getIsCandidate();
-//			vb.m_isVoted = reset.getIsVoted();
-//			vb.m_receivedVoteNumber = reset.getReceivedVoteNumber();
-//			vb.m_unAssignNumber = reset.getUnAssignNumber();
-//			vb.m_votedNumber = reset.getVotedNumber();
-//			vb.m_voteTo = reset.getVoteTo();
-//			returnMap[dev::Address(iteratorAddress)] = vb;
-//		}
-//	}
-//	return returnMap;
-//}
+std::map<Address, VoteInfo> chain_controller::get_votes(h256 const& _hash) const
+{
+	std::map<Address, VoteInfo> returnMap;
+
+	if (_stateDB == nullptr)
+		return returnMap;
+	 
+	State& state = _bc.queryBlockStateCache(_hash == h256() ? _bc.currentHash() : _hash, *_stateDB); 
+	return VoteInfo::getVoteInfoMap(state); 
+}
 
 std::map<Address, uint64_t> chain_controller::get_producers(h256 const& _hash) const
 {
 	if (_stateDB == nullptr)
-		return std::map<Address, uint64_t>();
+		return std::map<Address, uint64_t>(); 
 
-	Block block(_bc, *_stateDB);
-	block.populateFromChain(_bc, _hash == h256() ? _bc.currentHash() : _hash);
-
-	return VoteInfo::getProducerMap(block.state());
+	State& state = _bc.queryBlockStateCache(_hash == h256() ? _bc.currentHash() : _hash, *_stateDB); 
+	return VoteInfo::getProducerMap(state);
 }
 
 
 using native::eos::ProducerScheduleObject;
 using native::eos::ProducerVotesObject;
 
-void chain_controller::update_pvomi_perblock()
-{
-//	//std::map<Address, VoteBace> AllProducers = get_votes();
-//	std::map<Address, uint32_t> AllProducers;
-//	std::unordered_set<Address> InactiveProducers;
-//
-//	// check every producer in AllProducers
-//	InactiveProducers.clear();
-//	for (const auto& p : AllProducers)
-//	{
-//		auto it = _all_votes.find(p.first);
-//		if (it != _all_votes.end())
-//		{
-//			dev::types::Int64 deltaVotes = p.second.m_votedNumber - it->second;
-//			if (deltaVotes == 0)
-//				continue;
-//
-//			auto raceTime = ProducerScheduleObject::get(_db).currentRaceTime;
-//			_db.modify<ProducerVotesObject>(_db.get<ProducerVotesObject, native::eos::byOwnerName>(p.first), [&](ProducerVotesObject& pvo) {
-//				pvo.updateVotes(deltaVotes, raceTime);
-//			});
-//			it->second = p.second.m_votedNumber;
-//		}
-//		else
-//		{
-//			auto raceTime = ProducerScheduleObject::get(_db).currentRaceTime;
-//			_db.create<ProducerVotesObject>([&](ProducerVotesObject& pvo) {
-//				pvo.ownerName = p.first;
-//				pvo.startNewRaceLap(raceTime);
-//			});
-//
-//			_db.create<producer_object>([&](producer_object& po) {
-//				po.owner = p.first;
-//				//po.signing_key = update.key;
-//				//po.configuration = update.configuration;
-//			});
-//			
-//			_all_votes.insert(std::make_pair(p.first, p.second.m_votedNumber));
-//		}
-//	}
-//
-//	// remove all inactive producers
-//	for (const auto& p : _all_votes)
-//	{
-//		if (AllProducers.find(p.first) == AllProducers.end())
-//		{
-//			InactiveProducers.insert(p.first);
-//		}
-//	}
-//
-//	for (auto& p : InactiveProducers)
-//	{
-//		_db.remove<ProducerVotesObject>(_db.get<ProducerVotesObject, native::eos::byOwnerName>(p));
-//		_db.remove<producer_object>(_db.get<producer_object, eos::chain::by_owner>(p));
-//		_all_votes.erase(p);
-//	}
-//
-//	ctrace << "ProducerVotesMultiIndex: ";
-//	for ( auto& a : _db.get_index<ProducerVotesMultiIndex, native::eos::byProjectedRaceFinishTime>())
-//	{
-//		ctrace << "name: " << a.ownerName;
-//		ctrace << "votes: " << a.getVotes();
-//		ctrace << "finish time: " << a.projectedRaceFinishTime();
-//	}
+void chain_controller::update_pvomi_perblock(const BlockHeader& b)
+{  
+	std::map<Address, VoteInfo> AllProducers = get_votes(b.parentHash());
+
+	const auto& gprops = _db.get<dynamic_global_property_object>();
+
+	std::unordered_set<Address> InactiveProducers;
+
+	// check every producer in AllProducers
+	InactiveProducers.clear();
+	for (const auto& p : AllProducers)
+	{
+		//略过非DPOS Producer
+		if (!p.second.getIsCandidate())
+			continue;
+
+		auto it = _all_votes.find(p.first);
+		if (it != _all_votes.end())
+		{
+			dev::types::Int64 deltaVotes = p.second.getReceivedVotedNumber() - it->second;
+			if (deltaVotes == 0)
+				continue;
+
+			auto raceTime = ProducerScheduleObject::get(_db).currentRaceTime;
+			_db.modify<ProducerVotesObject>(_db.get<ProducerVotesObject, native::eos::byOwnerName>(p.first), [&](ProducerVotesObject& pvo) {
+				pvo.updateVotes(deltaVotes, raceTime);
+			});
+			it->second = p.second.getReceivedVotedNumber();
+		}
+		else
+		{
+			auto raceTime = ProducerScheduleObject::get(_db).currentRaceTime;
+			_db.create<ProducerVotesObject>([&](ProducerVotesObject& pvo) {
+				pvo.ownerName = p.first;
+				pvo.startNewRaceLap(raceTime);
+			}); 
+			
+			const producer_object* lp_po = _db.find<producer_object, by_owner>(p.first); 
+			if (lp_po == nullptr)
+			{//只有在producer_object不存在时才创建，因为有可能已被pow过程创建
+				_db.create<producer_object>([&](producer_object& po) {
+					po.owner = p.first; 
+				});
+			}
+			else {//此时有可能已经进入pow队列，需要从pow队列中剔除。因为一个账户不能同时为DPOS与POW
+
+				if (lp_po->pow_worker != 0)
+				{
+					_db.modify(*lp_po, [&](producer_object& po) {
+						po.pow_worker = 0;
+					});
+
+					_db.modify(gprops, [&](dynamic_global_property_object& obj)
+					{
+						obj.num_pow_witnesses--;
+					});
+				}
+			}
+
+			_all_votes.insert(std::make_pair(p.first, p.second.getReceivedVotedNumber()));
+		}
+	}
+
+	// remove all inactive producers
+	for (const auto& p : _all_votes)
+	{
+		if (AllProducers.find(p.first) == AllProducers.end())
+		{
+			InactiveProducers.insert(p.first);
+		}
+	}
+
+	for (auto& p : InactiveProducers)
+	{
+		_db.remove<ProducerVotesObject>(_db.get<ProducerVotesObject, native::eos::byOwnerName>(p)); 
+
+		//这里并不清除producer_object，因为producer_object一旦创建不再清除
+
+		_all_votes.erase(p);
+	}
+
+	/*
+	ctrace << "ProducerVotesMultiIndex: ";
+	for ( auto& a : _db.get_index<ProducerVotesMultiIndex, native::eos::byProjectedRaceFinishTime>())
+	{
+		ctrace << "name: " << a.ownerName;
+		ctrace << "votes: " << a.getVotes();
+		ctrace << "finish time: " << a.projectedRaceFinishTime();
+	}*/
 }
 
  
 
 void dev::eth::chain::chain_controller::update_pow()
 {
-	auto last_block_id = _bc.currentHash();
+	auto last_block_id = _bc.info().parentHash();
 
 	dev::h256 target = get_pow_target();
 
@@ -393,7 +388,13 @@ void dev::eth::chain::chain_controller::update_pow()
 			continue;
 		}
 
-		if(opref.work >= target ) continue;
+		if(opref.work >= target ) 
+			continue;
+
+		//已注册为DPOS的Worker不能成为POW
+		if (_db.find<ProducerVotesObject, native::eos::byOwnerName>(opref.getAddress()))
+			continue;
+		 
 
 
 		const producer_object* pow_producer = _db.find<producer_object, by_owner>(opref.getAddress());
@@ -414,7 +415,7 @@ void dev::eth::chain::chain_controller::update_pow()
 
 
 		if (pow_producer == nullptr)
-		{//此Produer尚未存在，创建
+		{//此Produer不存在，创建
 			_db.create<producer_object>([&](producer_object& po) {
 				po.owner = opref.getAddress(); 
 				po.pow_worker = dgp.total_pow;
@@ -554,7 +555,7 @@ void dev::eth::chain::chain_controller::update_hardfork_votes(const std::array<A
 		{
 			auto hf_ver = std::get<0>(hf_itr->first);
 			auto hf_time = std::get<1>(hf_itr->first);
-			std::cout << "hardfork " << hf_ver.v_num << ": votes = " << hf_itr->second << " time = "<< hf_time.to_iso_string() <<std::endl;
+			ctrace << "hardfork " << hf_ver.v_num << ": votes = " << hf_itr->second << " time = "<< hf_time.to_iso_string();
 			hf_itr++;
 		}
 	}
@@ -590,14 +591,13 @@ void dev::eth::chain::chain_controller::update_hardfork_votes(const std::array<A
 }
 
 void dev::eth::chain::chain_controller::update_pow_perblock(const BlockHeader& b)
-{  
-	//按照当前header构造块
-	Block newBlock(_bc, *_stateDB);
-	newBlock.populateFromChain(_bc, b.hash());
+{   
+
+	State& parentState = _bc.queryBlockStateCache(b.parentHash(),*_stateDB);
 
 	_temp_pow_ops.clear();
 
-	std::map<h256, std::pair<u256, u256>> powMap = newBlock.storage(POWInfoAddress); 
+	std::map<h256, std::pair<u256, u256>> powMap = parentState.storage(POWInfoAddress);
 	std::map<dev::h160,dev::h160> addressTab;
 
 	//收集所有的POW Address
@@ -721,8 +721,12 @@ void chain_controller::update_last_irreversible_block()
 		_db.modify(dpo, [&](dynamic_global_property_object& _dpo) {
 			_dpo.last_irreversible_block_num = new_last_irreversible_block_num;
 		});
-		//更新外部的不可逆转块号
-		_last_irreversible_block_num = new_last_irreversible_block_num;
+
+		{ //更新外部的不可逆转块号
+			WriteGuard locker(x_last_irr_block);
+			_last_irreversible_block_num = new_last_irreversible_block_num;
+			_last_irreversible_block_hash = _bc.numberHash(_last_irreversible_block_num);
+		}
 	}
 
 	// Trim fork_database and undo histories
@@ -730,9 +734,10 @@ void chain_controller::update_last_irreversible_block()
 	_db.commit(new_last_irreversible_block_num);
 	
 	//打印数据库内存映射文件用量
-	//std::cout << "============>>>>>>DATABASE USED MEM = " << _db.get_segment_manager()->get_size() - _db.get_segment_manager()->get_free_memory() << std::endl;
-	//std::cout << "============>>>>>>DATABASE FREE MEM = " << _db.get_segment_manager()->get_free_memory() << std::endl;
-	//std::cout << "============>>>>>>DATABASE TOTAL MEM = " << _db.get_segment_manager()->get_size()<< std::endl; 
+	cwarn << "============>>>>>>DATABASE USED MEM = " << _db.get_segment_manager()->get_size() - _db.get_segment_manager()->get_free_memory();
+	cwarn << "============>>>>>>DATABASE FREE MEM = " << _db.get_segment_manager()->get_free_memory();
+	cwarn << "============>>>>>>DATABASE TOTAL MEM = " << _db.get_segment_manager()->get_size();
+	cwarn << "============>>>>>>LAST IRR BLOCK = " << _last_irreversible_block_num;
 
 }
 
@@ -749,11 +754,6 @@ void chain_controller::databaseReversion(uint32_t _firstvalid)
 
 void chain_controller::push_block(const BlockHeader& b)
 { 
-
-	std::cout << "=============>>> usedSize = " << _db.get_segment_manager()->get_size() - _db.get_segment_manager()->get_free_memory() << std::endl;
-	std::cout << "=============>>> freeSize = " << _db.get_segment_manager()->get_free_memory() << std::endl;
-	std::cout << "=============>>> totalSize = " << _db.get_segment_manager()->get_size() << std::endl;
-
 	try { 
 		auto session = _db.start_undo_session(true);
 		apply_block(b);
@@ -761,9 +761,6 @@ void chain_controller::push_block(const BlockHeader& b)
 	}
 	catch (...)
 	{
-		std::cout << "=============>>> usedSize = " << _db.get_segment_manager()->get_size() - _db.get_segment_manager()->get_free_memory() << std::endl;
-		std::cout << "=============>>> freeSize = " << _db.get_segment_manager()->get_free_memory() << std::endl;
-		std::cout << "=============>>> totalSize = " << _db.get_segment_manager()->get_size() << std::endl;
 		cwarn << "apply block error: " << b.number();
 		throw;
 	}
@@ -812,10 +809,22 @@ void chain_controller::apply_block(const BlockHeader& b)
 
 	process_block_header(b);
 
+#if BenchMarkFlag
+	Timer t0;
+#endif
 	update_pow_perblock(b);
-
+#if BenchMarkFlag
+	//ctrace << "apply_block time---update_pow_perblock:" << t0.elapsed();
+#endif
 	update_pow();
-	update_pvomi_perblock(); 
+
+#if BenchMarkFlag
+	t0.restart();
+#endif
+	update_pvomi_perblock(b); 
+#if BenchMarkFlag
+	//ctrace << "apply_block time---update_pvomi_perblock:" << t0.elapsed();
+#endif
 	update_global_dynamic_data(b);
 	update_global_properties(b);
 	update_signing_producer(signing_producer, b);
@@ -823,7 +832,7 @@ void chain_controller::apply_block(const BlockHeader& b)
 
 	process_hardforks();
 
-	//std::cout <<"currentHash: "<< _bc.currentHash().hex() << std::endl;
+	//ctrace <<"currentHash: "<< _bc.currentHash().hex();
 }
 
 const producer_object& chain_controller::validate_block_header(const BlockHeader& bh)const

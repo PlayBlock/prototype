@@ -1,23 +1,23 @@
 /*
-	This file is part of cpp-etiam.
+This file is part of cpp-etiam.
 
-	cpp-etiam is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+cpp-etiam is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+cpp-ethereum is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License
+along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file Vote.h
- * @author dongzhe <dongzhe@fancytech.com>
- * @date 2017
- */
+* @author dongzhe <dongzhe@fancytech.com>
+* @date 2017
+*/
 
 #pragma once
 
@@ -34,6 +34,9 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+const int U256Length = 256 / 8;
+const int AddressLength = 160 / 8;
+
 u256 UserStorage::addressToU256(Address const& _address, int _postffix)
 {
 	u256 _r((u160)_address);
@@ -41,34 +44,47 @@ u256 UserStorage::addressToU256(Address const& _address, int _postffix)
 }
 
 
-bytes UserStorage::LoadFixedSizeBtyes(State const& _state, Address const& _storageaddress, Address const& _keyaddress, int _size)
+void UserStorage::LoadFixedSizeBtyes(bytes& _data, State const& _state, Address const& _storageaddress, Address const& _keyaddress, int _size ,int _startPage)
 {
 	int pageNum = (_size + 31) / 32;
-	bytes res;
-	res.reserve(_size);
-	for (int i = 0; i < pageNum; i++)
+	_data.reserve(_size);
+	for (int i = _startPage; i < pageNum; i++)
 	{
-		//dev::u256 const key = addressToU256(_keyaddress, i);
-		//dev::h256 value = (dev::h256)_state.storage(_storageaddress, key);
-		//bytes bytesTemp = value.asBytes();
-		//res.insert(res.end(), bytesTemp.begin(), bytesTemp.end());
-
 		u256 const key = addressToU256(_keyaddress, i);
 		h256 value = (h256)_state.storage(_storageaddress, key);
 		if (i == pageNum - 1)
 		{
-			res.insert(res.end(), value.data(), value.data() + (_size - i * 32));
+			_data.insert(_data.end(), value.data(), value.data() + (_size - i * 32));
 		}
 		else
 		{
-			res.insert(res.end(), value.data(), value.data() + 32);
+			_data.insert(_data.end(), value.data(), value.data() + 32);
 		}
 	}
-	return res;
 
 }
 
-//map<Address, bytes> UserStorage::LoadFixedSizeBtyes(State const& _state, Address const& _storageaddress, int _size)
+void UserStorage::LoadFixedSizeBtyes(bytes& _data, map<h256, pair<u256, u256>> const& _storageMap, Address const& _storageaddress, Address const& _keyaddress, int _size, int _startPage)
+{
+	int pageNum = (_size + 31) / 32;
+	_data.reserve(_size);
+	for (int i = 0; i < pageNum; i++)
+	{
+		u256 const key = addressToU256(_keyaddress, i);
+		h256 const h256key = key;	
+		h256 value = _storageMap.find(sha3(h256key))->second.second;
+		if (i == pageNum - 1)
+		{
+			_data.insert(_data.end(), value.data(), value.data() + (_size - i * 32));
+		}
+		else
+		{
+			_data.insert(_data.end(), value.data(), value.data() + 32);
+		}
+	}
+}
+
+//void UserStorage::LoadFixedSizeBtyes(bytes& _data, map<h256, pair<u256, u256>> _storageMap, Address const& _storageaddress, Address const& _keyaddress, int _size, int _startPage)
 //{
 //	map<Address, bytes> resMap;
 //	map<h256, pair<u256, u256>>  storageMap = _state.storage(_storageaddress);
@@ -112,34 +128,25 @@ bytes UserStorage::LoadFixedSizeBtyes(State const& _state, Address const& _stora
 
 void UserStorage::SaveBytes(State& _state, Address const& _storageaddress, Address const& _keyaddress, bytes const& _data)
 {
-	int pageNum = (_data.size() + 31) / 32;
+	int pageNum = (_data.size() + U256Length - 1) / U256Length;
 	bytes::const_iterator iterator = _data.begin();
-	const int sectionLength = 256 / 8;
 
 	for (int i = 0; i < pageNum; i++)
 	{
 		if (i != pageNum - 1)
 		{
-			bytesConstRef tmp(&*iterator, sectionLength);
+			bytesConstRef tmp(&*iterator, U256Length);
 			h256 value(tmp);
 
 			_state.setStorage(_storageaddress, addressToU256(_keyaddress, i), value);
-			iterator += sectionLength;
+			iterator += U256Length;
 		}
 		else {
 			int lastsize = _data.end() - iterator;
 			bytesConstRef tmp(&*iterator, _data.end() - iterator);
 			h256 value(tmp, h256::AlignLeft);
 
-			//h256 value;
-			//memcpy(value.data(), &*iterator, _data.end() - iterator);
 			_state.setStorage(_storageaddress, addressToU256(_keyaddress, i), value);
-			//h256 value;
-			//dev::bytes lastPage(iterator, _data.end());
-			//lastPage.insert(lastPage.end(), lastsize, '\0');
-			//memcpy(value.data(), lastPage.data(), 32);
-			//_state.setStorage(_storageaddress, addressToU256(_keyaddress, i), value);
-
 		}
 	}
 }
@@ -151,8 +158,16 @@ void VoteInfo::load(State& _state)
 	u256 const key = UserStorage::addressToU256(m_address, 0);
 	h256 const value = _state.storage(VoteInfoAddress, key);
 	int size = *value.data() * (sizeof(Address) + sizeof(uint64_t)) + VoteInfo::BasicSize;
-	bytes const& bytes = UserStorage::LoadFixedSizeBtyes(_state, VoteInfoAddress, m_address, size);
-	initFromBytes(bytes);
+	bytes data;
+	if (size > U256Length)
+	{
+		data.insert(data.end(), value.data(), value.data() + U256Length);
+		UserStorage::LoadFixedSizeBtyes(data, _state, VoteInfoAddress, m_address, size, 1);
+	}
+	else {
+		data.insert(data.end(), value.data(), value.data() + size);
+	}
+	initFromBytes(data);
 }
 
 
@@ -163,7 +178,7 @@ void VoteInfo::save(State& _state)
 	int size = voteToNum * (sizeof(Address) + sizeof(uint64_t)) + VoteInfo::BasicSize;
 	bytes valueBytes(size, (byte)0);
 	bytes::iterator iterator = valueBytes.begin();
-	
+
 	memcpy(&*iterator, &voteToNum, sizeof(voteToNum));
 	iterator += sizeof(byte);
 
@@ -184,7 +199,7 @@ void VoteInfo::save(State& _state)
 	iterator += URLMaxSize;
 
 
-	for(auto const&  p:m_voteRecord)
+	for (auto const& p : m_voteRecord)
 	{
 		memcpy(&*iterator, &p.first, sizeof(Address));
 		iterator += sizeof(Address);
@@ -197,29 +212,35 @@ void VoteInfo::save(State& _state)
 
 }
 
-
 map<Address, VoteInfo> VoteInfo::getVoteInfoMap(State const& _state)
 {
 	map<h256, pair<u256, u256>>  storageMap = _state.storage(VoteInfoAddress);
-
 	map<Address, VoteInfo> voteInfoMap;
 	for (auto const &p : storageMap)
 	{
 		h256 keyh256 = p.second.first;
-		FixedHash<12> ret;
-		memcpy(ret.data(), keyh256.data() + 20, 12);
-
+		FixedHash<U256Length - AddressLength> ret;
+		memcpy(ret.data(), keyh256.data() + AddressLength, U256Length - AddressLength);
 		if (!ret)
-		{
+		{		
 			Address address;
-			memcpy(address.data(), keyh256.data(), 20);
+			memcpy(address.data(), keyh256.data(), AddressLength);
 			h256 value = p.second.second;
 			int size = *value.data() * (sizeof(Address) + sizeof(uint64_t)) + VoteInfo::BasicSize;
-			bytes storeBytes = UserStorage::LoadFixedSizeBtyes(_state, VoteInfoAddress, address, size);
+
+			bytes data;
+			if (size > U256Length)
+			{
+				data.insert(data.end(), value.data(), value.data() + U256Length);
+				UserStorage::LoadFixedSizeBtyes(data, _state, VoteInfoAddress, address, size, 1);
+			}
+			else {	
+				data.insert(data.end(), value.data(), value.data() + size);
+			}
 
 			VoteInfo vote(address);
 			voteInfoMap[address] = vote;
-			voteInfoMap[address].initFromBytes(storeBytes);
+			voteInfoMap[address].initFromBytes(data);
 		}
 	}
 	return voteInfoMap;
@@ -239,6 +260,34 @@ map<Address, VoteInfo> VoteInfo::getVoteInfoMap(State const& _state)
 
 }
 
+h256 const mask = u256("0xffffffffffffffffffffffff");
+
+map<Address, uint64_t> VoteInfo::getProducerMap(State const& _state)
+{
+	map<Address, uint64_t> res;
+	map<h256, pair<u256, u256>>  storageMap = _state.storage(VoteInfoAddress);
+	for (auto const &p : storageMap)
+	{
+		h256 keyh256 = p.second.first;
+		h256 r = mask&keyh256;
+		if (!r)
+		{
+			Address address;
+			memcpy(address.data(), keyh256.data(), AddressLength);
+			h256 value = p.second.second;
+
+			if (*(value.data() + sizeof(byte)))
+			{
+				uint64_t votes;
+				memcpy(&votes, value.data() + 2 * sizeof(byte) + sizeof(m_holdVotes), sizeof(votes));
+				res[address] = votes;
+			}
+		}
+	}
+	return res;
+}
+
+
 
 void VoteInfo::initFromBytes(bytes const &_bytes)
 {
@@ -246,7 +295,7 @@ void VoteInfo::initFromBytes(bytes const &_bytes)
 	byte voteToNum;
 	memcpy(&voteToNum, &*iterator, sizeof(voteToNum));
 	iterator += sizeof(byte);
-	
+
 	byte boolValues = *iterator;
 	m_isCandidate = boolValues;
 	iterator += sizeof(byte);
@@ -257,7 +306,7 @@ void VoteInfo::initFromBytes(bytes const &_bytes)
 	memcpy(&m_receivedVote, &*iterator, sizeof(m_receivedVote));
 	iterator += sizeof(m_receivedVote);
 
-	size_t len = strnlen((const char*)&*iterator,NameMaxSize);
+	size_t len = strnlen((const char*)&*iterator, NameMaxSize);
 	m_name = std::string((const char*)&*iterator, len);
 	iterator += NameMaxSize;
 
@@ -265,13 +314,13 @@ void VoteInfo::initFromBytes(bytes const &_bytes)
 	m_url = std::string((const char*)&*iterator, len);
 	iterator += URLMaxSize;
 
-
+	m_voteRecord.clear();
 	for (int i = 0; i < voteToNum; i++)
 	{
 		Address to;
 		uint64_t number;
 
-		memcpy(&to,&*iterator,sizeof(Address));
+		memcpy(&to, &*iterator, sizeof(Address));
 		iterator += sizeof(Address);
 		memcpy(&number, &*iterator, sizeof(uint64_t));
 		iterator += sizeof(uint64_t);
@@ -296,8 +345,10 @@ void VoteInfo::recordVoteTo(Address const& _address, uint64_t num)
 
 void VoteInfo::removeZeroVote()
 {
-	for (auto i = m_voteRecord.begin(), last = m_voteRecord.end(); i != last; ) {
-		if (i->second == 0) {
+	for (auto i = m_voteRecord.begin(), last = m_voteRecord.end(); i != last; ) 
+	{
+		if (i->second == 0) 
+		{
 			i = m_voteRecord.erase(i);
 		}
 		else {
@@ -316,7 +367,7 @@ bool VoteManager::candidateRegister(std::string const& _name, std::string const&
 	{
 		return false;
 	}
-	if (!sender.getIsCandidate())
+	if (!sender.m_isCandidate)
 	{
 		sender.m_name = _name;
 		sender.m_url = _url;
@@ -373,7 +424,7 @@ bool VoteManager::redeem(uint64_t _votes, Address const& _address, State& _state
 {
 	VoteInfo sender(_address);
 	sender.load(_state);
-	if(sender.m_holdVotes>= _votes)
+	if (sender.m_holdVotes >= _votes)
 	{
 		sender.m_holdVotes -= _votes;
 		_state.addBalance(_address, _votes * VOTES_PRE_ETH);
@@ -401,6 +452,8 @@ bool VoteManager::send(Address const& _toAddress, uint64_t _votes, Address const
 
 	sender.m_holdVotes -= _votes;
 	to.m_holdVotes += _votes;
+	sender.save(_state);
+	to.save(_state);
 	return true;
 }
 
@@ -445,7 +498,7 @@ bool VoteManager::vote(Address const& _toAddress, uint64_t _votes, Address const
 		to.save(_state);
 	}
 	sender.m_holdVotes -= _votes;
-	sender.recordVoteTo(_senderAddress, _votes);
+	sender.recordVoteTo(_toAddress, _votes);
 	sender.save(_state);
 	return true;
 }
@@ -519,7 +572,7 @@ ETH_REGISTER_PRECOMPILED(candidateRegister)(bytesConstRef _in, Address const& _a
 	//
 	//char const* urlPtr = namePtr + nameLen + 1;
 	//size_t urlLen = strnlen_s(urlPtr, VoteInfo::NameMaxSize);
-	if (_in.size() < 3 || _in.size() > (VoteInfo::NameMaxSize + VoteInfo::NameMaxSize + 1))
+	if (_in.size() < VoteInfo::NameMinSize + VoteInfo::URLMinSize + 1|| _in.size() > (VoteInfo::NameMaxSize + VoteInfo::URLMaxSize + 1))
 	{
 		return make_pair(true, bytes());
 	}

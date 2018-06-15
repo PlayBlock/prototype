@@ -5,17 +5,15 @@
 
 using namespace IR;
 using namespace Runtime;
+using namespace std;
 
-Runtime::MemoryInstance* WASM_CORE::current_memory;
-ExtVMFace* WASM_CORE::current_ext;
-bytes WASM_CORE::current_parameter;
-u256 WASM_CORE::u256_temp;
-WASM_CORE* WASM_VM::m_core;
-Timer WASM_CORE::execute_time;
-//by dz
+using namespace dev;
+using namespace eth;
+
+
+WASM_CORE* WASM_CORE::s_core = nullptr;
 u256* WASM_VM::m_io_gas = nullptr;
-int WASM_CORE::mem_end = 0;
-//by dz end
+
 
 void strMemCopy(std::string)
 {
@@ -30,28 +28,28 @@ owning_bytes_ref WASM_VM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 {
 	Log::setCategoryEnabled(Log::Category::debug, false);
 	m_io_gas = &io_gas;
-	auto data = _ext.data;
-	//std::cout << "data:" << (data.count() ? (const char*)(data.data()) : "") << std::endl;
+	bytesConstRef data = _ext.data;
+	//ctrace << "data:" << (data.count() ? (const char*)(data.data()) : "");
 
 	bytes retbytes;
-	//try {
-		if (!WASM_VM::m_core)
+	WASM_CORE* core = WASM_CORE::getInstance();
+
+	std::string string_temp((_ext).code.begin(), (_ext).code.end());
+	bytes _totalBytes((_ext).data.begin(), (_ext).data.end());
+	//by hjx 20171213
+	if (isCreation)
+	{
+		//Timer _time;
+		retbytes = core->run(string_temp, "init", 0, bytes(), _ext, true);
+		//std::cout << "exetime:" << _time.elapsed() << std::endl;
+		return owning_bytes_ref{ std::move(_ext.code), 0, _ext.code.size() };
+	}
+	else
+	{
+		if (_totalBytes.size() == 0)
+			retbytes = core->run(string_temp, "_default", 0, bytes(), _ext, false);
+		else if (_totalBytes.size() >= 8)
 		{
-			WASM_VM::m_core = new WASM_CORE();
-			WASM_VM::m_core->init();
-		}
-		std::string string_temp((_ext).code.begin(), (_ext).code.end());
-		bytes _totalBytes((_ext).data.begin(), (_ext).data.end());
-		//by hjx 20171213
-		if (isCreation)
-		{
-			retbytes = WASM_VM::m_core->run(string_temp, "init", 0, bytes(), _ext, true);
-		}
-		else
-		{
-			if (_totalBytes.size() < 8)
-				BOOST_THROW_EXCEPTION(WASMParameterLengthTooSmall());
-			//std::string funcName_;
 			bytes applyFunction(_totalBytes.begin(), _totalBytes.begin() + 8);
 			uint64_t applyFunctionUint;
 			memcpy(&applyFunctionUint, applyFunction.data(), sizeof(applyFunctionUint));
@@ -60,35 +58,35 @@ owning_bytes_ref WASM_VM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 			bytes logs = asBytes("abc logs");
 			_ext.log({}, bytesConstRef(logs.data(), logs.size()));
 
-			//retbytes = WASM_VM::m_core->run(string_temp, funcName_.c_str(), paraString_, _ext);
-			retbytes = WASM_VM::m_core->run(string_temp, "apply", applyFunctionUint, paraString_, _ext, false);
-		}
-		//by hjx 20171213 end
-
-		//WASM_VM::m_core->destory();
-
-		if (!data.count())
-		{ 
-			//m_bytes = bytesConstRef(_ext.code.data(), _ext.code.size());
-			bytes result = _ext.code;
-			return owning_bytes_ref{ std::move(result), 0, result.size() };
+			retbytes = core->run(string_temp, "apply", applyFunctionUint, paraString_, _ext, false);
 		}
 		else
-		{
-			//m_bytes = bytesConstRef(retbytes.data(), retbytes.size());
-			return owning_bytes_ref{ std::move(retbytes), 0, retbytes.size() };
-		}
-
-
-	//}
-	//catch (WASMOutOfGas)
-	//{
-	//	WASM_VM::m_core->destory();
-	//	std::cout << "WASMOutOfGas~~" << std::endl;
-	//	BOOST_THROW_EXCEPTION(OutOfGas());
-	//}
+			BOOST_THROW_EXCEPTION(WASMParameterLengthTooSmall());
+		return owning_bytes_ref{ std::move(retbytes), 0, retbytes.size() };
+	}
 
 }
+
+
+void WASM_VM::clearCodeCache(Address const& _address)
+{
+	WASM_CORE* core = WASM_CORE::getInstance();
+	
+	if (core->module_cache.count(_address))
+	{
+		auto const& moduleState = core->module_cache[_address];
+		if (moduleState.module)
+		{
+			delete moduleState.module;
+		}
+		//if (moduleState.instance)
+		//{
+		//	delete moduleState.instance;
+		//}
+		core->module_cache.erase(_address);
+	}
+}
+
 
 struct RootResolver : Resolver
 {
@@ -170,19 +168,19 @@ inline bool loadBinaryModule(const std::string& wasmBytes, IR::Module& outModule
 	}
 	catch (Serialization::FatalSerializationException exception)
 	{
-		std::cerr << "Error deserializing WebAssembly binary file:" << std::endl;
-		std::cerr << exception.message << std::endl;
+		ctrace << "Error deserializing WebAssembly binary file:";
+		ctrace << exception.message;
 		return false;
 	}
 	catch (IR::ValidationException exception)
 	{
-		std::cerr << "Error validating WebAssembly binary file:" << std::endl;
-		std::cerr << exception.message << std::endl;
+		ctrace << "Error validating WebAssembly binary file:";
+		ctrace << exception.message;
 		return false;
 	}
 	catch (std::bad_alloc)
 	{
-		std::cerr << "Memory allocation failed: input is likely malformed" << std::endl;
+		ctrace << "Memory allocation failed: input is likely malformed";
 		return false;
 	}
 
@@ -205,111 +203,269 @@ void WASM_CORE::init()
 	WASM_CORE::current_memory = NULL;
 	WASM_CORE::current_ext = NULL;
 	WASM_CORE::current_parameter = bytes();
-	WASM_CORE::u256_temp = 0;
+	WASM_CORE::current_return = bytes();
 	Runtime::init();
 }
 
 void WASM_CORE::destory()
 {
+	for (auto const& p : module_cache)
+	{
+		if (p.second.module)
+		{
+			delete p.second.module;
+		}
+		//if (moduleState.instance)
+		//{
+		//	delete moduleState.instance;
+		//}
+	}
+	module_cache.clear();
 	Runtime::freeUnreferencedObjects({});
 }
 
-bytes WASM_CORE::run(const std::string& string, const char* functionName, uint64_t applyFunction, const bytes& args, ExtVMFace& _ext, bool isCreation)
+WASM_CORE* WASM_CORE::getInstance()
 {
-	ResetTime();
-	if (*(U32*)string.data() != 0x6d736100)
+	if (s_core == nullptr)
 	{
-		return bytes(0);
+		s_core = new WASM_CORE();
+		s_core->init();
 	}
+	return s_core;
+}
 
-	Serialization::MemoryInputStream inputStream((const U8*)string.data(), string.size());
-
-	Module module;
-	//WASM::serialize(inputStream, module);
-	try
+void WASM_CORE::destoryInstance()
+{
+	if (s_core)
 	{
-		WASM::serializeWithInjection(inputStream, module);
+		s_core->destory();
+		delete s_core;
+		s_core = nullptr;
 	}
-	catch (const Serialization::FatalSerializationException& exception)
-	{		
-		BOOST_THROW_EXCEPTION(BadInstruction());
+}
+
+void WASM_CORE::LoadModuleState(Address const& _address, const std::string& _string)
+{
+
+	//Module* module = nullptr;
+	//ModuleInstance* moduleInstance = nullptr;
+
+	if (module_cache.count(_address))
+	{
+		ModuleState& state = module_cache[_address];
+		current_module = state.instance;
+		current_memory = getDefaultMemory(current_module);
+		current_state = &state;
+		ClearMemory(current_memory);
+		return;
 	}
 
+	module_cache.insert(make_pair(_address, ModuleState()));
+	ModuleState& state = module_cache[_address];
+	state.module = new Module();
+	Serialization::MemoryInputStream inputStream((const U8*)_string.data(), _string.size());
+	WASM::serializeWithInjection(inputStream, *state.module);
 
-	//Module module;
-	//if (!(loadBinaryModule(string, module)))
-	//	return bytes(0);
-
-
-	//module.memories.defs.front().type.size.min = 65 * 1024;
 	RootResolver rootResolver;
-	LinkResult linkResult = linkModule(module, rootResolver);
+	LinkResult linkResult = linkModule(*state.module, rootResolver);
+
 	if (!linkResult.success)
 	{
 		//return;
-		std::cerr << "Failed to link module:" << std::endl;
+		ctrace << "Failed to link module:";
 		for (auto& missingImport : linkResult.missingImports)
 		{
-			std::cerr << "Missing import: module=\"" << missingImport.moduleName
+			ctrace << "Missing import: module=\"" << missingImport.moduleName
 				<< "\" export=\"" << missingImport.exportName
-				<< "\" type=\"" << asString(missingImport.type) << "\"" << std::endl;
+				<< "\" type=\"" << asString(missingImport.type) << "\"";
 		}
-		return bytes(0);
+		throw;
 	}
-	ModuleInstance* moduleInstance = instantiateModule(module, std::move(linkResult.resolvedImports));
+	state.instance = instantiateModule(*state.module, std::move(linkResult.resolvedImports));
+	if (!state.instance) { throw; }
+	current_memory = Runtime::getDefaultMemory(state.instance);
 
 
-	if (!moduleInstance) { return bytes(0); }
-
-	current_memory = Runtime::getDefaultMemory(moduleInstance);
-	current_ext = &_ext;
-	current_parameter = args;
-
-	setMemoryEnd(0);
 	char* memstart = &memoryRef<char>(current_memory, 0);
 
-	for (uint32_t i = 0; i < 10000; ++i)
+	const auto allocated_memory = Runtime::getDefaultMemorySize(state.instance);
+	for (uint64_t i = 0; i < allocated_memory; ++i)
 	{
-		if (memstart[i]) {
-			setMemoryEnd(i + 1);
+		if (memstart[i])
+		{
+			state.mem_end = i + 1;
 		}
 	}
+	state.init_memory.resize(state.mem_end);
+	memcpy(state.init_memory.data(), memstart, state.mem_end);
 
+	current_module = state.instance;
+	current_memory = getDefaultMemory(current_module);
+	current_state = &state;
+	ClearMemory(current_memory);
+}
+
+
+
+
+
+bytes WASM_CORE::run(const std::string& _string, const char* functionName, uint64_t applyFunction, const bytes& args, ExtVMFace& _ext, bool isCreation)
+{
+	if (*(U32*)_string.data() != 0x6d736100)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	try
+	{
+		LoadModuleState(_ext.myAddress, _string);
+	}
+	catch (const Serialization::FatalSerializationException& exception)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	catch (IR::ValidationException exception)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	catch (std::bad_alloc)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
 
 	if (!current_memory) {
 		return bytes(0);
 	}
-	Emscripten::initInstance(module, moduleInstance);
 
-	// Look up the function export to call.
-	FunctionInstance* functionInstance;
+	FunctionInstance* call = nullptr;
 
-	functionInstance = asFunctionNullable(getInstanceExport(moduleInstance, functionName));
-	if (!functionInstance)
+	call = asFunctionNullable(getInstanceExport(current_module, functionName));
+	if (!call)
 	{
-		std::cerr << "Module does not export '" << functionName << "'" << std::endl;
+		ctrace << "Module does not export '" << functionName << "'";
+		if (strcmp(functionName, "apply") == 0)
+			BOOST_THROW_EXCEPTION(BadInstruction());
 		return bytes(0);
 	}
 
-	const FunctionType* functionType = getFunctionType(functionInstance);
+	//Timing::Timer executionTimer;
+	Runtime::Result functionResult;
 
-	// Set up the arguments for the invoke.
-	std::vector<Value> invokeArgs;
+	ModuleState& state = module_cache[_ext.myAddress];
+	char* memstart = &memoryRef<char>(current_memory, 0);
+	memset(memstart + state.mem_end, 0, ((1 << 16) - state.mem_end));
+	memcpy(memstart, state.init_memory.data(), state.mem_end);
 
-	//by hjx 20171213
-	if (isCreation == false)
+	try
 	{
-		Value value = (U64)applyFunction;
-		invokeArgs.push_back(value);
+		std::unique_ptr<wasm_memory> wasm_memory_mgmt;
+		const FunctionType* functionType = getFunctionType(call);
+
+		// Set up the arguments for the invoke.
+		std::vector<Value> invokeArgs;
+		current_ext = &_ext;
+		current_parameter = args;
+		if (strcmp(functionName, "apply") == 0)
+		{
+			Value value = (U64)applyFunction;
+			invokeArgs.push_back(value);
+		}
+		wasm_memory_mgmt.reset(new wasm_memory(*this));
+		// 运行虚拟机之前，重置返回结果
+		current_return = bytes();
+		functionResult = invokeFunction(call, invokeArgs);
+		wasm_memory_mgmt.reset();
+		current_ext = nullptr;
 	}
-	//by hjx 20171213 end
+	catch (const Runtime::Exception& e)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	catch (VMException const& _e)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	catch (...)
+	{
+		ctrace << "catch (...)";
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
 
-	Timing::Timer executionTimer;
-	auto functionResult = invokeFunction(functionInstance, invokeArgs);
-	Timing::logTimer("Invoked function", executionTimer);
-	std::string stringResult = asString(functionResult);
-	return asBytes(stringResult.c_str());
+	//Timing::logTimer("Invoked function", executionTimer);
+	//std::string stringResult;
+	//if (functionResult.type == ResultType::i32)
+	//	stringResult = std::to_string(functionResult.i32);
+	//else if (functionResult.type == ResultType::i64)
+	//	stringResult = std::to_string(functionResult.i64);
+	//else if (functionResult.type == ResultType::f32)
+	//	stringResult = Floats::asString(functionResult.f32);
+	//else if (functionResult.type == ResultType::f64)
+	//	stringResult = Floats::asString(functionResult.f64);
+	//else
+	//	stringResult = asString(functionResult);
+	//return asBytes(stringResult.c_str());
 
+	return current_return;
+}
+
+void dev::eth::WASM_CORE::ClearMemory(Runtime::MemoryInstance * mem)
+{
+	int32_t pageSize = 1 << Platform::getPageSizeLog2(); 
+	int32_t totalSize = getMemoryNumPages(mem) * pageSize;
+	byte* pBuf = &memoryRef<byte>(mem,0);
+	memset(pBuf, 0, totalSize);
+}
+
+wasm_memory::wasm_memory(WASM_CORE& core)
+	: _wasm_core(core)
+	, _num_pages(Runtime::getMemoryNumPages(core.current_memory))
+	, _min_bytes(limit_32bit_address(_num_pages << numBytesPerPageLog2))
+{
+	_wasm_core.current_memory_management = this;
+	_num_bytes = _min_bytes;
+}
+
+wasm_memory::~wasm_memory()
+{
+	if (_num_bytes > _min_bytes)
+		sbrk((I32)_min_bytes - (I32)_num_bytes);
+	_wasm_core.current_memory_management = nullptr;
+}
+
+U32 wasm_memory::sbrk(I32 num_bytes)
+{
+	const U32 previous_num_bytes = _num_bytes;
+	if (Runtime::getMemoryNumPages(_wasm_core.current_memory) != _num_pages)
+		throw;
+
+	// Round the absolute value of num_bytes to an alignment boundary, and ensure it won't allocate too much or too little memory.
+	num_bytes = (num_bytes + 7) & ~7;
+	if (num_bytes > 0 && previous_num_bytes > _max_memory - num_bytes)
+		throw;
+	else if (num_bytes < 0 && previous_num_bytes < _min_bytes - num_bytes)
+		throw;
+
+	// Update the number of bytes allocated, and compute the number of pages needed for it.
+	_num_bytes += num_bytes;
+	const Uptr num_desired_pages = (_num_bytes + IR::numBytesPerPage - 1) >> IR::numBytesPerPageLog2;
+
+	// Grow or shrink the memory object to the desired number of pages.
+	if (num_desired_pages > _num_pages)
+		Runtime::growMemory(_wasm_core.current_memory, num_desired_pages - _num_pages);
+	else if (num_desired_pages < _num_pages)
+		Runtime::shrinkMemory(_wasm_core.current_memory, _num_pages - num_desired_pages);
+
+	_num_pages = num_desired_pages;
+
+	return previous_num_bytes;
+}
+
+U32 wasm_memory::limit_32bit_address(Uptr address)
+{
+	return (U32)(address > UINT32_MAX ? UINT32_MAX : address);
 }
 
 

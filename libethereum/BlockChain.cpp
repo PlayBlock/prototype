@@ -43,6 +43,8 @@
 #include <boost/filesystem.hpp>
 #include <libproducer/producer_plugin.hpp>
 
+#include <chrono>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -677,7 +679,6 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 #if BenchMarkFlag || ShowImportTime
 	Timer t;
 	Timer total;
-	//cout << "BlockChain::import: check point 0 " << std::endl;
 #endif // BenchMarkFlag
 
 	// Check block doesn't already exist first!
@@ -780,7 +781,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 #if BenchMarkFlag || ShowImportTime
 	t.restart();
 	auto res = insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
-	//cout << " ZP populdate: " << t.elapsed() << std::endl;
+	clog(BenchMarkChannel) << " step 5: " << t.elapsed();
 	clog(BenchMarkChannel) << " Total Import Time: " << total.elapsed() <<" number:"<<_block.info.number()<<" size:"<< _block.transactions.size();
 	
 	return res;
@@ -879,6 +880,21 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 	// This might be the new best block...
 	h256 last = currentHash();
 
+	//标识是否已发现分叉需要回滚
+	bool forkFounded = false;
+	unsigned int forkFirstInvalid = 0;
+
+#if BenchMarkFlag
+	double time_serialize = 0.0;
+	double time_updateblock = 0.0;
+	double time_sha3 = 0;
+	double time_db = 0;
+
+	double time_step5 = 0.0;
+
+#endif
+
+
 	// by maml, 整个导入过程捕获异常，可能出现的异常有：
 	try {
 		// 如果当前块高度小于最后一个块的父块的高度，并且收到的块的父块与新块不是相同的块，做分叉处理
@@ -898,6 +914,11 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 
 				DEV_READ_GUARDED(x_lastBlockHash)
 					clearCachesDuringChainReversion(number(common) + 1);
+
+				{//这里将由于分叉需要抹除的起始块记录下来，用于写入数据库后做二次抹除 
+					forkFounded = true;
+					forkFirstInvalid = number(common) + 1;
+				}
 
 				// by maml, producer中的数据库回滚到common块
 				if (m_producer_plugin)
@@ -939,6 +960,10 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 					else
 						tbi = BlockHeader(block(curBlock));
 
+#if BenchMarkFlag
+					Timer timer1;
+#endif
+
 					//更新下一轮生产顺序，更新全局动态数据和全局状态数据
 					if (m_producer_plugin)
 					{
@@ -949,16 +974,25 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 						cwarn << "no set producer_plugin";
 					}
 
+#if BenchMarkFlag
+					time_updateblock += timer1.elapsed();
+#endif
+
+#if BenchMarkFlag
+					Timer timer2;
+					Timer time_step;
+#endif
+
 					// Collate logs into blooms.
 					h256s alteredBlooms;
 					{
 						LogBloom blockBloom = tbi.logBloom();
-						blockBloom.shiftBloom<3>(sha3(tbi.author().ref()));
-
+						blockBloom.shiftBloom<3>(sha3(tbi.author().ref()));					
+						
 						// Pre-memoize everything we need before locking x_blocksBlooms
 						for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
 							blocksBlooms(chunkId(level, index / c_bloomIndexSize));
-
+						
 						WriteGuard l(x_blocksBlooms);
 						for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
 						{
@@ -971,20 +1005,82 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 					// Collate transaction hashes and remember who they were.
 					//h256s newTransactionAddresses;
 					{
-						bytes blockBytes;
-						RLP blockRLP(curBlock == _block.info.hash() ? _block.block : &(blockBytes = block(curBlock)));
-						TransactionAddress ta;
-						ta.blockHash = tbi.hash();
-						RLP transactionsRLP = blockRLP[1];
-						for (ta.index = 0; ta.index < transactionsRLP.itemCount(); ++ta.index)
-							extrasBatch.Put(toSlice(sha3(transactionsRLP[ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+						if (curBlock == _block.info.hash())
+						{
+							//bytes blockBytes;
+							//RLP blockRLP(_block.block);
+							TransactionAddress ta;
+							ta.blockHash = tbi.hash();
+							
+							for (ta.index = 0; ta.index < _block.transactions.size(); ++ta.index)
+								extrasBatch.Put(toSlice(_block.transactions[ta.index].sha3(), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+
+						}
+						else
+						{
+							bytes blockBytes;
+							RLP blockRLP(&(blockBytes = block(curBlock)));
+							TransactionAddress ta;
+							ta.blockHash = tbi.hash();
+							for (ta.index = 0; ta.index < blockRLP[1].itemCount(); ++ta.index)
+								extrasBatch.Put(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+
+						}
+						
+//						bytes blockBytes;
+//						RLP blockRLP(curBlock == _block.info.hash() ? _block.block : &(blockBytes = block(curBlock)));
+//						TransactionAddress ta;
+//						ta.blockHash = tbi.hash();
+//#if BenchMarkFlag
+//
+//						RLP transactionsRLP = blockRLP[1];
+//
+//						Timer time4;
+//
+//						vector<h256> tmph256s;
+//						tmph256s.reserve(transactionsRLP.itemCount());
+//
+//						Timer time5;
+//						for (ta.index = 0; ta.index < transactionsRLP.itemCount(); ++ta.index)
+//						{
+//							bytesConstRef data = transactionsRLP[ta.index].data();
+//							tmph256s[ta.index] = sha3(data);
+//
+//							if (tmph256s[ta.index] != _block.transactions[ta.index].sha3())
+//							{
+//								clog(BenchMarkChannel) << "tmph256s[ta.index] != _block.transactions[ta.index].sha3()";
+//							}
+//							
+//						}
+//						time_sha3 += time5.elapsed();
+//						time5.restart();
+//
+//						for (ta.index = 0; ta.index < transactionsRLP.itemCount(); ++ta.index)
+//						{
+//							extrasBatch.Put(toSlice(tmph256s[ta.index], ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+//						}
+//
+//						time_db += time5.elapsed();
+//						time_step5 += time4.elapsed();
+//#else
+//						for (ta.index = 0; ta.index < blockRLP[1].itemCount(); ++ta.index)
+//							extrasBatch.Put(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+//#endif	
+
 					}
 
+
+#if BenchMarkFlag
+					time_serialize += timer2.elapsed();
+#endif
+	
+					
 					// Update database with them.
 					ReadGuard l1(x_blocksBlooms);
 					for (auto const& h : alteredBlooms)
 						extrasBatch.Put(toSlice(h, ExtraBlocksBlooms), (ldb::Slice)dev::ref(m_blocksBlooms[h].rlp()));
-					extrasBatch.Put(toSlice(h256(tbi.number()), ExtraBlockHash), (ldb::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
+					extrasBatch.Put(toSlice(h256(tbi.number()), ExtraBlockHash), (ldb::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));							
+					
 				}
 			}
 			catch (...) { //捕获到任何错误皆回滚
@@ -1050,7 +1146,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 						}
 					}
 				}
-				BOOST_THROW_EXCEPTION(ExceedRollbackImportBlock());
+				return ImportRoute{ h256s(), h256s(), std::vector<Transaction>() };
 			}
 			// FINALLY! change our best hash.
 			{
@@ -1058,7 +1154,14 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 				newLastBlockNumber = (unsigned)_block.info.number();
 				isImportedAndBest = true;
 			}
+#if BenchMarkFlag
+			clog(BenchMarkChannel) << "time_serialize:" << time_serialize << "  time_updateblock:" << time_updateblock;// << "time_db(in time_serialize): " << time_db;
+			clog(BenchMarkChannel) << "sha3 time:" << time_sha3 << " time_db :" << time_db << " time_step5 :" << time_step5;
+			//clog(BenchMarkChannel) << "time_step1:" << time_step1 << "  time_step2:" << time_step2 << " time_step3:" << time_step3 << " time_step4: " << time_step4 <<"time_step5: " << time_step5 << "time_step6: " << time_step6;
 			
+			//clog(BenchMarkChannel) << "time_step5:" << time_step5 << "  full_scope:" << (full_scope / 1000000.0) << "time_sha3:" << time_sha3 / 1000000.0 << "time_step5_long:" << time_step5_long / 1000000.0;
+				//clog(BenchMarkChannel) << "time_step5:" << time_step5 << "  full_scope:" << full_scope / 1000000.0 << "time_sha3:" << time_sha3 / 1000000.0;
+#endif		
 
 			clog(BlockChainNote) << "   Imported and best" << _totalDifficulty << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;
 		}
@@ -1102,6 +1205,14 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 		ctrace << "Fail writing to extras database. Bombing out.";
 		exit(-1);
 	}
+
+	//发现分叉需要再次抹除一遍内存缓存数据，因为在切分叉过程中，
+	//仍然会有外网节点获取Header，导致刚抹除的缓存数据污染
+	if (forkFounded)
+	{
+		DEV_READ_GUARDED(x_lastBlockHash)
+			clearCachesDuringChainReversion(forkFirstInvalid);
+	}
 	
 
 #if ETH_PARANOIA
@@ -1136,7 +1247,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 			if (!o.ok())
 			{
 				cwarn << "Error writing to extras database: " << o.ToString();
-				cout << "Put" << toHex(bytesConstRef(ldb::Slice("best"))) << "=>" << toHex(bytesConstRef(ldb::Slice((char const*)&m_lastBlockHash, 32)));
+				cwarn << "Put" << toHex(bytesConstRef(ldb::Slice("best"))) << "=>" << toHex(bytesConstRef(ldb::Slice((char const*)&m_lastBlockHash, 32)));
 				cwarn << "Fail writing to extras database. Bombing out.";
 				exit(-1);
 			}

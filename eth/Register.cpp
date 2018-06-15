@@ -15,27 +15,23 @@
 
 #include <iostream>
 #include <map>
-#include "Register.h"
+#include "../eth/Register.h"
 
-inline Address asAddress(u256 _item)
-{
-	return right160(h256(_item));
-}
-
-inline u256 fromAddress(Address _a)
-{
-	return (u160)_a;
-}
-
-
+using namespace dev;
+using namespace eth;
+using namespace IR;
+using namespace Runtime;
+using namespace std;
 
 DEFINE_INTRINSIC_FUNCTION2(env, readMessage, readMessage, i32, i32, destptr, i32, destsize) {
+	WASM_VM::AddUsedGas(basicGas);
 	if (destsize <= 0)
 	{
 		BOOST_THROW_EXCEPTION(WASMWrongMemory());
 	}
-	bytes para = WASM_CORE::getParameter();
-	auto mem = WASM_CORE::getMemory();
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	bytes para = instance->getParameter();
+	auto mem = instance->getMemory();
 	char* begin = memoryArrayPtr<char>(mem, destptr, uint32_t(destsize));
 	int minlen = std::min<int>(para.size(), destsize);
 	memcpy(begin, para.data(), minlen);
@@ -43,240 +39,74 @@ DEFINE_INTRINSIC_FUNCTION2(env, readMessage, readMessage, i32, i32, destptr, i32
 }
 
 
-//void resetVotedTo(dev::Address address)
-//{
-//	ExtVMFace* _ext = WASM_CORE::getExt();
-//
-//	auto storageMap = (*(_ext)).getStorage();
-//	for (auto iterator = storageMap.begin(); iterator != storageMap.end(); iterator++)
-//	{
-//		u256 iteratorFirst = iterator->first;
-//		dev::Address addressVotedTo = Vote::getVotedTo((*(_ext)), iteratorFirst);
-//		if (addressVotedTo == address)
-//		{
-//			Vote::setVotedTo((*(_ext)), iteratorFirst, dev::Address(0));
-//			Vote::setIsVoted((*(_ext)), iteratorFirst, 0);
-//		}
-//	}
-//
-//}
-
-
-//DEFINE_INTRINSIC_FUNCTION2(env, setCandidate, setCandidate, i32, i32, from, i32, isCandidate)
-//{
-//	ExtVMFace* _ext = WASM_CORE::getExt();
-//	auto mem = WASM_CORE::getMemory();
-//	Address& _from = memoryRef<Address>(mem, from);
-//
-//	if (_from == Address(0))
-//	{
-//		return -3;
-//	}
-//
-//	int _isCandidate;
-//	if (isCandidate == 0)
-//		_isCandidate = 0;
-//	else
-//		_isCandidate = 1;
-//
-//	//Do nothing.
-//	if (Vote::getIsCandidate(*(_ext), (u160)_from) == _isCandidate)
-//	{
-//		return 2;
-//	}
-//
-//	//Candidate deregister.
-//	if (_isCandidate == 0)
-//	{
-//		resetVotedTo(_from);
-//	}
-//	Vote::setVotedNumber(*(_ext), (u160)_from, 0);
-//
-//	Vote::setIsCandidate(*(_ext), (u160)_from, _isCandidate);
-//
-//	return 1;
-//}
-
-//DEFINE_INTRINSIC_FUNCTION3(env, setVote, setVote, i32, i32, from, i32, to, i32, isVote)
-//{
-//	ExtVMFace* _ext = WASM_CORE::getExt();
-//	auto mem = WASM_CORE::getMemory();
-//	Address& _from = memoryRef<Address>(mem, from);
-//	Address& _to = memoryRef<Address>(mem, to);
-//
-//	u256 a = (u160)_from;
-//	u256 b = (u160)_to;
-//	std::string s_from = toHex(a);
-//	std::string s_to = toHex(b);
-//
-//	if (_from == Address(0))
-//	{
-//		return -3;
-//	}
-//
-//	int _isVote;
-//	if (isVote == 0)
-//		_isVote = 0;
-//	else
-//		_isVote = 1;
-//
-//	//Set vote = 0.
-//	if (_isVote == 0)
-//	{
-//		//Do nothing.
-//		if (Vote::getIsVoted(*(_ext), (u160)_from) == 0)
-//		{
-//			return 2;
-//		}
-//
-//		uint64_t voteNumber = Vote::getVotedNumber(*(_ext), (u160)Vote::getVotedTo(*(_ext), (u160)_from));
-//		//Remove vote.
-//		if (voteNumber - 1 > voteNumber)
-//		{
-//			return -2;
-//		}
-//		Vote::setVotedNumber(*(_ext), (u160)Vote::getVotedTo(*(_ext), (u160)_from), voteNumber - 1);
-//	}
-//	//Set vote = 1.
-//	else
-//	{
-//		//Illegal candidate.
-//		if (Vote::getIsCandidate(*(_ext), (u160)_to) == 0)
-//		{
-//			return 0;
-//		}
-//
-//		//Vote first time.
-//		if (Vote::getIsVoted(*(_ext), (u160)_from) == 0)
-//		{
-//			uint64_t voteNumber = Vote::getVotedNumber(*(_ext), (u160)_to);
-//			if (voteNumber + 1 < voteNumber)
-//			{
-//				return -1;
-//			}
-//			Vote::setVotedNumber(*(_ext), (u160)_to, voteNumber + 1);
-//		}
-//		//Revote.(Vote second time.)
-//		else
-//		{
-//			Address voteBeforeAccount = Vote::getVotedTo(*(_ext), (u160)_from);
-//			//If voteBefore account equals to voteTo account, do nothing.
-//			if (voteBeforeAccount == _to)
-//			{
-//				return 2;
-//			}
-//
-//			uint64_t voteNumber_before = Vote::getVotedNumber(*(_ext), (u160)voteBeforeAccount);
-//			uint64_t voteNumber_after = Vote::getVotedNumber(*(_ext), (u160)_to);
-//			if (voteNumber_before - 1 > voteNumber_before)
-//			{
-//				return -2;
-//			}
-//			if (voteNumber_after + 1 < voteNumber_after)
-//			{
-//				return -1;
-//			}
-//			Vote::setVotedNumber(*(_ext), (u160)voteBeforeAccount, voteNumber_before - 1);
-//			Vote::setVotedNumber(*(_ext), (u160)_to, voteNumber_after + 1);
-//		}
-//	}
-//
-//	//Set vote infomation finally.
-//	Vote::setIsVoted(*(_ext), (u160)_from, _isVote);
-//	Vote::setVotedTo(*(_ext), (u160)_from, _to);
-//
-//	return 1;
-//}
-
-//DEFINE_INTRINSIC_FUNCTION3(env, setDelegate, setDelegate, i32, i32, from, i32, to, i32, isDelegate)
-//{
-//	return 0;
-//}
-//
-//DEFINE_INTRINSIC_FUNCTION1(env, getSender, getSender, none, i32, address)
-//{
-//	ExtVMFace* _ext = WASM_CORE::getExt();
-//	auto mem = WASM_CORE::getMemory();
-//	Address& _address = memoryRef<Address>(mem, address);
-//
-//	dev::Address _caller = _ext->caller;
-//	dev::Address _create = _ext->origin;
-//
-//	if (_caller != _create)
-//	{
-//		_address = dev::Address(0);
-//	}
-//
-//	_address = _caller;
-//}
-
-
-
-//our register functions by dz
 DEFINE_INTRINSIC_FUNCTION0(env, gascount1, gascount1, none)
 {
-	std::cout << "gascount1" << std::endl;
+	//ctrace << "gascount1";
 	WASM_VM::AddUsedGas(1);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount2, gascount2, none)
 {
-	std::cout << "gascount2" << std::endl;
+	//ctrace << "gascount2";
 	WASM_VM::AddUsedGas(2);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount3, gascount3, none)
 {
-	std::cout << "gascount3" << std::endl;
+	//ctrace << "gascount3";
 	WASM_VM::AddUsedGas(3);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount4, gascount4, none)
 {
-	std::cout << "gascount4" << std::endl;
+	//ctrace << "gascount4";
 	WASM_VM::AddUsedGas(4);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount5, gascount5, none)
 {
-	std::cout << "gascount5" << std::endl;
+	//ctrace << "gascount5";
 	WASM_VM::AddUsedGas(5);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount6, gascount6, none)
 {
-	std::cout << "gascount6" << std::endl;
+	//ctrace << "gascount6";
 	WASM_VM::AddUsedGas(6);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount7, gascount7, none)
 {
-	std::cout << "gascount7" << std::endl;
+	//ctrace << "gascount7";
 	WASM_VM::AddUsedGas(7);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount8, gascount8, none)
 {
-	std::cout << "gascount8" << std::endl;
+	//ctrace << "gascount8";
 	WASM_VM::AddUsedGas(8);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount9, gascount9, none)
 {
-	std::cout << "gascount9" << std::endl;
+	//ctrace << "gascount9";
 	WASM_VM::AddUsedGas(9);
 }
 
 DEFINE_INTRINSIC_FUNCTION0(env, gascount10, gascount10, none)
 {
-	std::cout << "gascount10" << std::endl;
+	//ctrace << "gascount10";
 	WASM_VM::AddUsedGas(10);
 }
 
 
 
 DEFINE_INTRINSIC_FUNCTION0(env, checktime, checktime, none) {
-	std::cout << "check time" << std::endl;
+	//ctrace << "check time" ;
+	if (WASM_CORE::IsExecuteExceed())
+	{
+		BOOST_THROW_EXCEPTION(WASMTimeExceed());
+	}
 }
 
 //
@@ -482,57 +312,65 @@ DEFINE_INTRINSIC_FUNCTION0(env, checktime, checktime, none) {
 //		wasm_interface::get().current_validate_context->require_scope(scope);
 //	}
 //
-	DEFINE_INTRINSIC_FUNCTION3(env, memcpy, memcpy, i32, i32, dstp, i32, srcp, i32, len) {
-		
-		WASM_VM::AddUsedGas(2 * len);
-		//auto& wasm = wasm_interface::get();
-		//auto  mem = wasm.current_memory;
-		//char* dst = memoryArrayPtr<char>(mem, dstp, len);
-		//const char* src = memoryArrayPtr<const char>(mem, srcp, len);
-		//FC_ASSERT(len > 0);
+DEFINE_INTRINSIC_FUNCTION3(env, memcpy, memcpy, i32, i32, dstp, i32, srcp, i32, len) {
 
-		//if (dst > src)
-		//	FC_ASSERT(dst >= (src + len), "overlap of memory range is undefined", ("d", dstp)("s", srcp)("l", len));
-		//else
-		//	FC_ASSERT(src >= (dst + len), "overlap of memory range is undefined", ("d", dstp)("s", srcp)("l", len));
+	WASM_VM::AddUsedGas(2 * len);
+	//auto& wasm = wasm_interface::get();
+	//auto  mem = wasm.current_memory;
+	//char* dst = memoryArrayPtr<char>(mem, dstp, len);
+	//const char* src = memoryArrayPtr<const char>(mem, srcp, len);
+	//FC_ASSERT(len > 0);
 
-		//memcpy(dst, src, uint32_t(len));
-		//return dstp;
+	//if (dst > src)
+	//	FC_ASSERT(dst >= (src + len), "overlap of memory range is undefined", ("d", dstp)("s", srcp)("l", len));
+	//else
+	//	FC_ASSERT(src >= (dst + len), "overlap of memory range is undefined", ("d", dstp)("s", srcp)("l", len));
 
-		auto mem = WASM_CORE::getMemory();
-		char* dst = memoryArrayPtr<char>(mem, dstp, len);
-		const char* src = memoryArrayPtr<const char>(mem, srcp, len);
-		if(len <= 0)
-			BOOST_THROW_EXCEPTION(WASMWrongMemory());
+	//memcpy(dst, src, uint32_t(len));
+	//return dstp;
 
-		if (dst > src)
+	auto mem = WASM_CORE::getInstance()->getMemory();
+	char* dst = memoryArrayPtr<char>(mem, dstp, len);
+	const char* src = memoryArrayPtr<const char>(mem, srcp, len);
+	if (len <= 0)
+		BOOST_THROW_EXCEPTION(WASMWrongMemory());
+
+	if (dst > src)
+	{
+		if (dst < (src + len))
 		{
-			if (dst < (src + len))
-			{
-				BOOST_THROW_EXCEPTION(WASMWrongMemory());
-			}
+			BOOST_THROW_EXCEPTION(WASMWrongMemory());
 		}
-		else {
-			if (src < (dst + len))
-			{
-				BOOST_THROW_EXCEPTION(WASMWrongMemory());
-			}
+	}
+	else {
+		if (src < (dst + len))
+		{
+			BOOST_THROW_EXCEPTION(WASMWrongMemory());
 		}
-
-
-		memcpy(dst, src, uint32_t(len));
-		return dstp;
 	}
 
-	//DEFINE_INTRINSIC_FUNCTION3(env, memset, memset, i32, i32, rel_ptr, i32, value, i32, len) {
-	//	auto& wasm = wasm_interface::get();
-	//	auto  mem = wasm.current_memory;
-	//	char* ptr = memoryArrayPtr<char>(mem, rel_ptr, len);
-	//	FC_ASSERT(len > 0);
 
-	//	memset(ptr, value, len);
-	//	return rel_ptr;
-	//}
+	memcpy(dst, src, uint32_t(len));
+	return dstp;
+}
+
+DEFINE_INTRINSIC_FUNCTION3(env, memset, memset, i32, i32, rel_ptr, i32, value, i32, len) {
+	WASM_VM::AddUsedGas(2 * len);
+	auto mem = WASM_CORE::getInstance()->getMemory();
+	char* ptr = memoryArrayPtr<char>(mem, rel_ptr, len);
+	memset(ptr, value, len);
+	return rel_ptr;
+}
+
+//DEFINE_INTRINSIC_FUNCTION3(env, memset, memset, i32, i32, rel_ptr, i32, value, i32, len) {
+//	auto& wasm = wasm_interface::get();
+//	auto  mem = wasm.current_memory;
+//	char* ptr = memoryArrayPtr<char>(mem, rel_ptr, len);
+//	FC_ASSERT(len > 0);
+
+//	memset(ptr, value, len);
+//	return rel_ptr;
+//}
 //
 //
 //	/**
@@ -677,6 +515,7 @@ DEFINE_INTRINSIC_FUNCTION0(env, checktime, checktime, none) {
 //	}
 //
 DEFINE_INTRINSIC_FUNCTION1(env, printi, printi, none, i64, val) {
+	WASM_VM::AddUsedGas(basicGas);
 	std::cerr << uint64_t(val);
 }
 //	DEFINE_INTRINSIC_FUNCTION1(env, printd, printd, none, i64, val) {
@@ -701,11 +540,11 @@ DEFINE_INTRINSIC_FUNCTION1(env, prints, prints, none, i32, charptr) {
 	//const char* str = &memoryRef<const char>(mem, charptr);
 
 	//std::cerr << std::string(str, strnlen(str, wasm.current_state->mem_end - charptr));
-
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
 	const char* str = &memoryRef<const char>(mem, charptr);
-	std::cerr << std::string(str, strnlen(str, WASM_CORE::getMemoryEnd() - charptr));
+	std::cerr << std::string(str, strnlen(str, instance->current_state->mem_end - charptr));
 }
 //
 //	DEFINE_INTRINSIC_FUNCTION1(env, free, free, none, i32, ptr) {
@@ -713,153 +552,188 @@ DEFINE_INTRINSIC_FUNCTION1(env, prints, prints, none, i32, charptr) {
 //
 //
 
-//////////
-
-#define CT256Size 40
 
 DEFINE_INTRINSIC_FUNCTION3(env, sha3, sha3, none, i32, sourcePtr, i32, length, i32, dest)
 {
 	WASM_VM::AddUsedGas(sha3Gas + sha3WordGas*(length + 31) / 32);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
 	byte* str = memoryArrayPtr<byte>(mem, sourcePtr, length);
-	u256& destination = memoryRef<u256>(mem, dest);
+	h256& destination = memoryRef<h256>(mem, dest);
 	bytesConstRef bcr(str, length);
-	u256 result = sha3(bcr);
-	memcpy(&destination, &result, CT256Size);
+	h256 result = sha3(bcr);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
 
 
-DEFINE_INTRINSIC_FUNCTION1(env, address, address, none, i32, dest)
+DEFINE_INTRINSIC_FUNCTION1(env, contractaddress, contractaddress, none, i32, dest)
 {
 	WASM_VM::AddUsedGas(basicGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = fromAddress(_ext->myAddress);
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	Address result = _ext->myAddress;
+	Address& destination = memoryRef<Address>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, AddressSize);
 }
 
 DEFINE_INTRINSIC_FUNCTION1(env, caller, caller, none, i32, dest)
 {
 	WASM_VM::AddUsedGas(basicGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = fromAddress(_ext->caller);
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	Address result = _ext->caller;
+	Address& destination = memoryRef<Address>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
 DEFINE_INTRINSIC_FUNCTION2(env, balance, balance, none, i32, address, i32, dest)
 {
 	WASM_VM::AddUsedGas(balanceGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = _ext->balance(asAddress(memoryRef<u256>(mem, address)));
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	h256 result = _ext->balance(memoryRef<Address>(mem, address));
+	h256& destination = memoryRef<h256>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
 DEFINE_INTRINSIC_FUNCTION2(env, blockhash, blockhash, none, i32, number, i32, dest)
 {
 	WASM_VM::AddUsedGas(blockhashGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = _ext->blockHash(memoryRef<u256>(mem, number));
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	h256 result = _ext->blockHash(memoryRef<h256>(mem, number));
+	h256& destination = memoryRef<h256>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
 DEFINE_INTRINSIC_FUNCTION1(env, coinbase, coinbase, none, i32, dest)
 {
 	WASM_VM::AddUsedGas(basicGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = fromAddress(_ext->envInfo().author());
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
-
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	Address result = _ext->envInfo().author();
+	Address& destination = memoryRef<Address>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
 DEFINE_INTRINSIC_FUNCTION1(env, timestamp, timestamp, none, i32, dest)
 {
 	WASM_VM::AddUsedGas(basicGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = _ext->envInfo().timestamp();
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	h256 result = _ext->envInfo().prevTimestamp();
+	h256& destination = memoryRef<h256>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
 DEFINE_INTRINSIC_FUNCTION1(env, number, number, none, i32, dest)
 {
 	WASM_VM::AddUsedGas(basicGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = _ext->envInfo().number();
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	h256 result = _ext->envInfo().number();
+	h256& destination = memoryRef<h256>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
-DEFINE_INTRINSIC_FUNCTION1(env, difficulty, difficulty, none, i32, dest)
+DEFINE_INTRINSIC_FUNCTION1(env, getcallvalue, getcallvalue, none, i32, dest)
 {
 	WASM_VM::AddUsedGas(basicGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = _ext->envInfo().difficulty();
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	h256 result = _ext->value;
+	h256& destination = memoryRef<h256>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
+
 
 DEFINE_INTRINSIC_FUNCTION1(env, gaslimit, gaslimit, none, i32, dest)
 {
 	WASM_VM::AddUsedGas(basicGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = _ext->envInfo().gasLimit();
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	h256 result = _ext->envInfo().gasLimit();
+	h256& destination = memoryRef<h256>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
 DEFINE_INTRINSIC_FUNCTION1(env, gasprice, gasprice, none, i32, dest)
 {
 	WASM_VM::AddUsedGas(basicGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = _ext->gasPrice;
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	h256 result = _ext->gasPrice;
+	h256& destination = memoryRef<h256>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
 DEFINE_INTRINSIC_FUNCTION1(env, printu256, printu256, none, i32, source)
 {
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256& result = memoryRef<u256>(mem, source);
-	std::cout << "DEC: "<<result.str() << std::endl;
-	//std::cout << "Hex: "<<toHex(result) << std::endl;
+	WASM_VM::AddUsedGas(basicGas);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	u256 result = memoryRef<h256>(mem, source);
+	std::cout << "DEC: " << result.str() << std::endl;
+	//ctrace << "Hex: "<<toHex(result) ;
+}
+
+
+DEFINE_INTRINSIC_FUNCTION1(env, printaddress, printaddress, none, i32, source)
+{
+	WASM_VM::AddUsedGas(basicGas);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	Address& result = memoryRef<Address>(mem, source);
+	ctrace << "Address: " << result.hex();
+	//ctrace << "Hex: "<<toHex(result);
 }
 
 DEFINE_INTRINSIC_FUNCTION2(env, getstore, getstore, none, i32, location, i32, data)
 {
 	WASM_VM::AddUsedGas(sloadGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256& address = memoryRef<u256>(mem, location);
-	u256 result = _ext->store(address);
-	u256& destination = memoryRef<u256>(mem, data);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	u256 address = memoryRef<h256>(mem, location);
+	h256 result = _ext->store(address);
+	h256& destination = memoryRef<h256>(mem, data);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
 DEFINE_INTRINSIC_FUNCTION2(env, setstore, setstore, none, i32, location, i32, data)
 {
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256& address = memoryRef<u256>(mem, location);
-	u256& savedata = memoryRef<u256>(mem, data);
-	
-	
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	u256 address = memoryRef<h256>(mem, location);
+	u256 savedata = memoryRef<h256>(mem, data);
+
 	if (!_ext->store(address) && savedata)
 		WASM_VM::AddUsedGas(sstoreSetGas);
 	else if (_ext->store(address) && !savedata)
@@ -869,8 +743,8 @@ DEFINE_INTRINSIC_FUNCTION2(env, setstore, setstore, none, i32, location, i32, da
 	}
 	else
 		WASM_VM::AddUsedGas(sstoreResetGas);
-	
-	
+
+
 	_ext->setStore(address, savedata);
 }
 
@@ -878,111 +752,195 @@ DEFINE_INTRINSIC_FUNCTION2(env, setstore, setstore, none, i32, location, i32, da
 DEFINE_INTRINSIC_FUNCTION2(env, transferbalance, transferbalance, none, i32, address, i32, data)
 {
 	WASM_VM::AddUsedGas(callGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256& balance = memoryRef<u256>(mem, data);
-	_ext->transferBalance(asAddress(memoryRef<u256>(mem, address)), balance);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	u256 balance = memoryRef<h256>(mem, data);
+
+	Address tmp = memoryRef<Address>(mem, address);
+	ctrace << "address: " << memoryRef<Address>(mem, address).hex();
+	ctrace << "balance: " << balance.str();
+	_ext->transferBalance(memoryRef<Address>(mem, address), balance);
 }
 
 
 DEFINE_INTRINSIC_FUNCTION1(env, callvalue, callvalue, none, i32, dest)
 {
 	WASM_VM::AddUsedGas(basicGas);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
-	u256 result = _ext->value;
-	u256& destination = memoryRef<u256>(mem, dest);
-	memcpy(&destination, &result, CT256Size);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	h256 result = _ext->value;
+	h256& destination = memoryRef<h256>(mem, dest);
+	destination = result;
+	//memcpy(&destination, &result, CT256Size);
 }
 
 
 DEFINE_INTRINSIC_FUNCTION2(env, setu256value, setu256value, none, i32, u256address, i32, charptr)
 {
 	WASM_VM::AddUsedGas(u256op1);
-	ExtVMFace* _ext = WASM_CORE::getExt();
-	auto mem = WASM_CORE::getMemory();
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
 	const char* str = &memoryRef<const char>(mem, charptr);
-	u256& destination = memoryRef<u256>(mem, u256address);
-	std::string numberStr(str, strnlen(str, WASM_CORE::getMemoryEnd() - charptr));
+	h256& destination = memoryRef<h256>(mem, u256address);
+	std::string numberStr(str, strnlen(str, 66));
 	u256 number(numberStr);
 	//destination.assign(numberStr);
 	destination = number;
 }
+
+DEFINE_INTRINSIC_FUNCTION2(env, setaddressvalue, setaddressvalue, none, i32, addressptr, i32, charptr)
+{
+	WASM_VM::AddUsedGas(u256op1);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+	const char* str = &memoryRef<const char>(mem, charptr);
+	Address& destination = memoryRef<Address>(mem, addressptr);
+	std::string numberStr(str, strnlen(str, 66));
+
+	Address address(numberStr);
+	//destination.assign(numberStr);
+	destination = address;
+}
+
+DEFINE_INTRINSIC_FUNCTION2(env, u256toaddress, u256toaddress, none, i32, input, i32, result)
+{
+	WASM_VM::AddUsedGas(basicGas);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+
+	h256& value = memoryRef<h256>(mem, input);
+	Address& destination = memoryRef<Address>(mem, result);
+
+	memcpy(&destination, &value, sizeof(Address));
+}
+
+DEFINE_INTRINSIC_FUNCTION2(env, addresstou256, addresstou256, none, i32, input, i32, result)
+{
+	WASM_VM::AddUsedGas(basicGas);
+	WASM_CORE* instance = WASM_CORE::getInstance();
+	ExtVMFace* _ext = instance->getExt();
+	auto mem = instance->getMemory();
+
+	Address& value = memoryRef<Address>(mem, input);
+	h256& destination = memoryRef<h256>(mem, result);
+	destination = h256(0);
+	memcpy(&destination, &value, sizeof(Address));
+}
+
 
 
 #define U256OperatorDelarationAndImp(name,operator,usedGas)\
 DEFINE_INTRINSIC_FUNCTION3(env,name, name, none, i32, operand_1, i32, operand_2, i32, result)\
 {\
 	WASM_VM::AddUsedGas(usedGas);\
-	auto mem = WASM_CORE::getMemory();\
-	u256& op1 = memoryRef<u256>(mem, operand_1);\
-	u256& op2 = memoryRef<u256>(mem, operand_2);\
-	if(std::string(#name).compare(std::string("div_u256")) == 0 && op2 == u256(0))\
-		BOOST_THROW_EXCEPTION(BadInstruction());\
-	u256& v = memoryRef<u256>(mem, result);\
+	WASM_CORE* instance = WASM_CORE::getInstance();\
+	auto mem = instance->getMemory();\
+	u256 op1 = memoryRef<h256>(mem, operand_1);\
+	u256 op2 = memoryRef<h256>(mem, operand_2);\
+	h256& v = memoryRef<h256>(mem, result);\
 	v = op1 operator op2;\
 }\
+
+#define U256OperatorDivDelarationAndImp(name,operator,usedGas)\
+DEFINE_INTRINSIC_FUNCTION3(env,name, name, none, i32, operand_1, i32, operand_2, i32, result)\
+{\
+	WASM_VM::AddUsedGas(usedGas);\
+	WASM_CORE* instance = WASM_CORE::getInstance();\
+	auto mem = instance->getMemory();\
+	u256 op1 = memoryRef<h256>(mem, operand_1);\
+	u256 op2 = memoryRef<h256>(mem, operand_2);\
+	if(op2 == u256(0))\
+		BOOST_THROW_EXCEPTION(BadInstruction()); \
+	h256& v = memoryRef<h256>(mem, result);\
+	v = op1 operator op2;\
+}\
+
 
 U256OperatorDelarationAndImp(add_u256, +, u256op1)
 U256OperatorDelarationAndImp(sub_u256, -, u256op1)
 U256OperatorDelarationAndImp(mul_u256, *, u256op2)
-U256OperatorDelarationAndImp(div_u256, /, u256op2)
-U256OperatorDelarationAndImp(mod_u256, %, u256op2)
+U256OperatorDivDelarationAndImp(div_u256, / , u256op2)
+U256OperatorDivDelarationAndImp(mod_u256, %, u256op2)
 
 
 #define U256ComparatorDelarationAndImp(name,operator)\
 DEFINE_INTRINSIC_FUNCTION2(env,name, name, i32, i32, operand_1, i32, operand_2)\
 {\
 	WASM_VM::AddUsedGas(u256op1);\
-	auto mem = WASM_CORE::getMemory();\
-	u256& op1 = memoryRef<u256>(mem, operand_1);\
-	u256& op2 = memoryRef<u256>(mem, operand_2);\
+	WASM_CORE* instance = WASM_CORE::getInstance();\
+	auto mem = instance->getMemory();\
+	u256 op1 = memoryRef<h256>(mem, operand_1);\
+	u256 op2 = memoryRef<h256>(mem, operand_2);\
 	return op1 operator op2;\
 }\
 
 U256ComparatorDelarationAndImp(lt_u256, <)
-U256ComparatorDelarationAndImp(gt_u256, > )
-U256ComparatorDelarationAndImp(eq_u256, == )
+	U256ComparatorDelarationAndImp(gt_u256, >)
+	U256ComparatorDelarationAndImp(eq_u256, == )
 
 
 
-
-DEFINE_INTRINSIC_FUNCTION2(env, WAVMAssert, WAVMAssert, none, i32, test, i32, msg) {
+	DEFINE_INTRINSIC_FUNCTION2(env, WAVMAssert, WAVMAssert, none, i32, test, i32, msg)
+{
+	WASM_VM::AddUsedGas(basicGas);
 	if (test == 0)
 	{
-		auto mem = WASM_CORE::getMemory();
+		WASM_CORE* instance = WASM_CORE::getInstance();
+		auto mem = instance->getMemory();
 		const char* str = &memoryRef<const char>(mem, msg);
-		std::cout << std::string(str, strnlen(str, WASM_CORE::getMemoryEnd() - msg)) << std::endl;
+		ctrace << std::string(str, strnlen(str, instance->current_state->mem_end - msg));
 		BOOST_THROW_EXCEPTION(WASMAssertFailed());
 	}
 }
 //´ýÉ¾³ý
 DEFINE_INTRINSIC_FUNCTION1(env, test1, test1, none, i32, a) {
-	std::cout << "test1 " << "a: " << a  << std::endl;
+	WASM_VM::AddUsedGas(sstoreSetGas);
+	ctrace << "test1 " << "a: " << a;
+	auto mem = WASM_CORE::getInstance()->getMemory();
 }
 //´ýÉ¾³ý
 DEFINE_INTRINSIC_FUNCTION2(env, test2, test2, none, i32, a, i32, b) {
-	std::cout << "test2 " << "a: " << a << " b:" << b << std::endl;
+	WASM_VM::AddUsedGas(sstoreSetGas);
+	ctrace << "test2 " << "a: " << a << " b:" << b;
 }
-//´ýÉ¾³ý
+#define TOTAL_PAGES 1024 
+#define GLOBAL_ENV_VAR_OFFSET 4
 DEFINE_INTRINSIC_FUNCTION1(env, malloc, malloc, i32, i32, size) {
-	if (size < 0)
+	if (size <= 0)
 	{
 		BOOST_THROW_EXCEPTION(BadInstruction());
+	}  
+	
+	auto mem = WASM_CORE::getInstance()->getMemory();
+
+	int32_t pageSize = 1<<Platform::getPageSizeLog2();
+
+	if (getMemoryNumPages(mem) < TOTAL_PAGES)
+	{
+		growMemory(mem, TOTAL_PAGES - getMemoryNumPages(mem));
 	}
-	auto mem = WASM_CORE::getMemory();
-	int32_t& end = memoryRef<int32_t>(mem, 0);
+
+	int32_t& end = memoryRef<int32_t>(mem, TOTAL_PAGES * pageSize - GLOBAL_ENV_VAR_OFFSET);
 	int32_t old_end = end;
 	end += 8 * ((size + 7) / 8);
 	if (end <= old_end)
 	{
 		BOOST_THROW_EXCEPTION(BadInstruction());
 	}
-	return old_end;
+	if (TOTAL_PAGES * pageSize - GLOBAL_ENV_VAR_OFFSET - end < 0)
+	{
+		BOOST_THROW_EXCEPTION(BadInstruction());
+	}
+	return TOTAL_PAGES * pageSize - GLOBAL_ENV_VAR_OFFSET - end;
 }
-//´ýÉ¾³ý
+
 DEFINE_INTRINSIC_FUNCTION1(env, free, free, none, i32, ptr) {
-	std::cout << "####free#####" << std::endl;
+	ctrace << "####free#####";
 }
 
 DEFINE_INTRINSIC_FUNCTION2(env, WAVMReturn, WAVMReturn, none, i32, sourcePtr, i32, length)
@@ -995,14 +953,4 @@ DEFINE_INTRINSIC_FUNCTION2(env, WAVMReturn, WAVMReturn, none, i32, sourcePtr, i3
 	bytesConstRef bcr(str, length);
 	bytes ss = bcr.toBytes();
 	instance->getReturn() = ss;
-	//const char* str = &memoryRef<const char>(mem, charptr);
-	//std::string str_res(str, strnlen(str, instance->current_state->mem_end - charptr));
-	//std::cerr << str_res;
-	//struct R
-	//{
-	//	int len;
-	//	char* data;
-	//};
-	//char* r = memoryArrayPtr<char>(mem, sourcePtr, length);
-	//ctrace << "WAVMReturn";
 }

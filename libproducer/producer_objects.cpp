@@ -180,14 +180,27 @@ ProducerRound ProducerScheduleObject::calculateNextRound(chainbase::database& db
 		   && newRaceTime < std::numeric_limits<UInt128>::max()) { 
 
 		   // 下面这样写会在访问LapCompleters的过程中修改container，导致使用LapCompleters访问下一个元素时发生错误
-		   //boost::for_each(LapCompleters, StartNewLap);
+		   // boost::for_each(LapCompleters, StartNewLap);
 
-		   std::vector<ProducerVotesObject> AllLapCompleters;
-		   for (auto &a : LapCompleters)
+		  // std::vector<ProducerVotesObject&> AllLapCompleters;
+		   //for (auto &a : LapCompleters)
+		   //{
+			   // AllLapCompleters.push_back(a);
+		   //}
+
+		   auto itr = LapCompleters.begin();
+		   while (itr != LapCompleters.end())
 		   {
-			   AllLapCompleters.push_back(a);
+			   auto& completer = *itr++;
+
+				   // StartNewLap(completer);
+				   db.modify(completer, [newRaceTime](ProducerVotesObject& pvo) {
+					   pvo.startNewRaceLap(newRaceTime);
+				   });
+				  // LapCompleters.erase(LapCompleters.begin());
+
 		   }
-		   boost::for_each(AllLapCompleters, StartNewLap);
+		   // boost::for_each(AllLapCompleters, StartNewLap);
 
 		   db.modify(*this, [newRaceTime](ProducerScheduleObject& pso) {
 			   pso.currentRaceTime = newRaceTime;

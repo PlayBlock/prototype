@@ -36,7 +36,7 @@
 #include <utils/json_spirit/json_spirit_reader_template.h>
 #include <utils/json_spirit/json_spirit_writer_template.h>
 #include <libethereum/EthereumHost.h>
-
+#include <random>
 using namespace std;
 using namespace jsonrpc;
 using namespace dev;
@@ -854,7 +854,8 @@ string Eth::eth_testSend1(string const& _a)
 		for (int i = 0; i < count; i++)
 		{
 			TransactionSkeleton ts;
-			ts.type = TransactionType::MessageCall;
+			ts.creation = false;
+			//ts.type = TransactionType::MessageCall;
 			//ts.from = Address(as[0].address);
 			ts.to = Address(as[i + 1].address);
 			ts.value = u256(1000000000000000);
@@ -909,7 +910,8 @@ string Eth::eth_testSend2(string const& _a)
 		for (int i = 0; i < count; i++)
 		{
 			TransactionSkeleton ts;
-			ts.type = TransactionType::MessageCall;
+			ts.creation = false;
+			//ts.type = TransactionType::MessageCall;
 			//ts.from = Address(as[0].address);
 			ts.to = Address(as[0].address);
 			ts.value = u256(1000000000000000);
@@ -964,79 +966,77 @@ string Eth::eth_testTransaction(const Json::Value& _json)
 		}
 
 		int count = keys.size();
+		static int scount = 0;
+		//static std::vector<Address> AddressVector;
+		Transactions vectorT;
 
-		for (int i = 0; i < count; i++)
-		{
-			TransactionSkeleton ts;
-			ts.creation = false;
-			ts.to = Address(as[i].address);
-			ts.value = u256(1);
-			ts.gas = u256(50000);
-			ts.gasPrice = client()->gasBidPrice();
+		static int allnum =0;
 
-			Secret secret("329cde16d721501c7f1d16d620644d34fe12f3d68e6fc9d7fd238a984e5dc289");
-			ts.from = Address("0x0070015693bb96335dd8c7025dded3a2da735db1");
-			ts.nonce = u256(i);
-			Transaction t(ts, secret);
-			EthereumHost::transactionCheat(t);
-		}
-
-
-		//struct myAccount {
-		//	string address;
-		//	string secret;
-		//};
-		//std::vector<myAccount> as;
-		//string filePath(boost::filesystem::current_path().string());
-		//string s = contentsString(filePath + "/address-keys.json");
-		//json_spirit::mValue v;
-		//json_spirit::read_string(s, v);
-		//json_spirit::mObject keys = v.get_obj();
-		//for (const auto& key : keys)
+		//if (count == 1)
 		//{
-		//	myAccount account{ key.first , key.second.get_str() };
-		//	as.push_back(std::move(account));
-		//}
+		//	std::random_device rd;
 
-		//Address SourceAddress("0x0070015693bb96335dd8c7025dded3a2da735db1");
-		//Secret SourceSecret("329cde16d721501c7f1d16d620644d34fe12f3d68e6fc9d7fd238a984e5dc289");
-
-		//Address LastAddress;
-		//Secret LastSecret;
-
-
-		//u256 value = u256("900000000000000000000000");
-
-		//int count = keys.size();
-
-		//for (int i = 0; i < count; i++)
-		//{
-		//	TransactionSkeleton ts;
-		//	ts.creation = false;
-		//	ts.to = Address(as[i].address);
-		//	ts.value = value;
-		//	ts.gas = u256(500000);
-		//	ts.gasPrice = client()->gasBidPrice();
-
-		//	if (i == 0)
+		//	for (int i = 0; i < 3000; i++)
 		//	{
-		//		ts.from = Address("0x0070015693bb96335dd8c7025dded3a2da735db1");
-		//		ts.nonce = u256(0);
-		//		Transaction t(ts, SourceSecret);
-		//		EthereumHost::transactionCheat(t);
-		//	}
-		//	else {
-		//		ts.from = LastAddress;
-		//		ts.nonce = u256(0);
-		//		Transaction t(ts, LastSecret);
-		//		EthereumHost::transactionCheat(t);
-		//	}
-		//	LastAddress = Address(as[i].address);
-		//	LastSecret = Secret(as[i].secret);
+		//		allnum++;
+		//		TransactionSkeleton ts;
+		//		ts.creation = false;
+		//		ts.to = Address(AddressVector[allnum%AddressVector.size()]);
+		//		ts.value = u256(1);
+		//		ts.gas = u256(50000);
+		//		ts.gasPrice = client()->gasBidPrice();
 
-		//	value -= 100000000000000000;
+
+		//		Secret secret("329cde16d721501c7f1d16d620644d34fe12f3d68e6fc9d7fd238a984e5dc289");
+		//		ts.from = Address("0x0070015693bb96335dd8c7025dded3a2da735db1");
+		//		ts.nonce = u256(scount);
+		//		scount++;
+		//		Transaction t(ts, secret);
+		//		EthereumHost::transactionCheat(t);
+		//	}
+		//}
+		//else
+		//{
+			for (int i = 0; i < count; i++)
+			{
+				TransactionSkeleton ts;
+				ts.creation = false;
+				ts.to = Address(as[i].address);
+				ts.value = u256(1);
+				ts.gas = u256(50000);
+				ts.gasPrice = client()->gasBidPrice();
+
+				//AddressVector.push_back(ts.to);
+
+				Secret secret("329cde16d721501c7f1d16d620644d34fe12f3d68e6fc9d7fd238a984e5dc289");
+				ts.from = Address("0x0070015693bb96335dd8c7025dded3a2da735db1");
+				ts.nonce = u256(scount);
+				scount++;
+				Transaction t(ts, secret);
+				//EthereumHost::transactionCheat(t);
+
+				vectorT.push_back(t);
+				if (vectorT.size() >= 256)
+				{
+					EthereumHost::transactionCheat(vectorT);
+					vectorT.clear();
+				}
+			}
+			if (vectorT.size() > 0)
+			{
+				EthereumHost::transactionCheat(vectorT);
+			}
+
+
+
 
 		//}
+
+
+
+
+
+
 		return toJS(count);
 	}
 	catch (...)

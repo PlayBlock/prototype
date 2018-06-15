@@ -1,6 +1,7 @@
 #include "DPwTestsHelper.h"
 #include "Inline/Timing.h"
 #include <boost/range/algorithm/find.hpp>
+#include "libevm/WASM_VM.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -106,9 +107,43 @@ namespace dev {
 		string para2_string = "672b0000ce560000";
 
 		BOOST_FIXTURE_TEST_SUITE(ContractTestsSuite, TestOutputHelperFixture)
+		BOOST_AUTO_TEST_CASE(ctMemoryRef)
+		{
+			cout << "ctMemoryRef" << endl;
+
+			WASM_CORE::destoryInstance();
+			std::string memoryRefHex = loadData("memoryRef.wasm");
+
+			DposTestClient client;
+
+			BOOST_REQUIRE(client.get_accounts().size() >= 2);
+			Account& account = client.get_accounts()[0];
+
+			string gasLimit = "0x1f71b2";
+			string gasPrice = "0x04a817c800";
+			string value = "0x0";
+
+
+			Address m_newAddress = newAddress(account);  //Contract Address.
+			string s_address = m_newAddress.hex();
+			client.sendTransaction(gasLimit, gasPrice, "", value, "0x" + memoryRefHex, account);  //Create contract.
+			client.produce_blocks();
+			u256 balance1 = client.balance(Address(account.address));
+
+			//memoryRef传入负值 memoryRef.cpp
+			client.sendTransaction(gasLimit, gasPrice, s_address, value, test_func1_string, account);  //Call contract code.
+			client.produce_blocks();
+
+			u256 balance2 = client.balance(Address(account.address));
+			u256 cost_call = balance1 - balance2;
+			BOOST_REQUIRE(cost_call == u256(2060722) * u256(20000000000));
+			cout << "cost_call: " << cost_call << endl;
+		}
 		BOOST_AUTO_TEST_CASE(ctCreateContract)
 		{
 			cout << "ctCreateContract" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string currencyHex = loadData("currency.wasm");
 
 			DposTestClient client;
@@ -211,6 +246,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctCodeSize)
 		{
 			cout << "ctCodeSize" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string currencyHex = loadData("currency.wasm");
 
 			std::string currency_2Hex = loadData("currency_2.wasm");
@@ -264,6 +301,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctLackBalance)
 		{
 			cout << "ctLackBalance" << endl;
+
+			WASM_CORE::destoryInstance();
 			DposTestClient client;
 
 			BOOST_REQUIRE(client.get_accounts().size() >= 3);
@@ -326,6 +365,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctCompile)
 		{
 			cout << "ctCompile" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string currencyHex = loadData("currency.wasm");
 
 			DposTestClient client;
@@ -355,6 +396,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctLackField)
 		{
 			cout << "ctLackField" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string currencyHex = loadData("currency.wasm");
 
 			DposTestClient client;
@@ -421,6 +464,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctInit)
 		{
 			cout << "ctInit" << endl;
+
+			WASM_CORE::destoryInstance();
 			DposTestClient client;
 
 			BOOST_REQUIRE(client.get_accounts().size() >= 3);
@@ -460,6 +505,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctDiv0)
 		{
 			cout << "ctDiv0" << endl;
+
+			WASM_CORE::destoryInstance();
 			DposTestClient client;
 
 			BOOST_REQUIRE(client.get_accounts().size() >= 2);
@@ -503,6 +550,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctInvalidU256Print)
 		{
 			cout << "ctInvalidU256Print" << endl;
+
+			WASM_CORE::destoryInstance();
 			DposTestClient client;
 
 			BOOST_REQUIRE(client.get_accounts().size() >= 2);
@@ -535,6 +584,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctInfiniteLoop)
 		{
 			cout << "ctInfiniteLoop" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string infiniteLoopHex = loadData("infiniteLoop.wasm");
 
 			DposTestClient client;
@@ -569,6 +620,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctInfiniteLoop2)
 		{
 			cout << "ctInfiniteLoop2" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string infiniteLoop2Hex = loadData("infiniteLoop2.wasm");
 
 			DposTestClient client;
@@ -595,6 +648,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctOverflow)
 		{
 			cout << "ctOverflow" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string overflowHex = loadData("overflow.wasm");
 
 			DposTestClient client;
@@ -629,6 +684,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctOverflow2)
 		{
 			cout << "ctOverflow2" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string overflow2Hex = loadData("overflow2.wasm");
 
 			DposTestClient client;
@@ -663,6 +720,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctAssert)
 		{
 			cout << "ctAssert" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string assertHex = loadData("assert.wasm");
 
 			DposTestClient client;
@@ -697,6 +756,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctThrow)
 		{
 			cout << "ctThrow" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string throwHex = loadData("throw.wasm");
 
 			DposTestClient client;
@@ -723,6 +784,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctOverflow3)
 		{
 			cout << "ctOverflow3" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string overflow3Hex = loadData("overflow3.wasm");
 
 			DposTestClient client;
@@ -757,6 +820,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctCast)
 		{
 			cout << "ctCast" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string castHex = loadData("cast.wasm");
 
 			DposTestClient client;
@@ -791,6 +856,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctInvalidDeletedPoint)
 		{
 			cout << "ctInvalidDeletedPoint" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string accessDestroyHex = loadData("accessDestroy.wasm");
 
 			DposTestClient client;
@@ -825,6 +892,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctNewDelete)
 		{
 			cout << "ctNewDelete" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string newDelete_2Hex = loadData("newDelete_2.wasm");
 
 			DposTestClient client;
@@ -859,6 +928,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctUnknowInstruction)
 		{
 			cout << "ctUnknowInstruction" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string unknowInstructionHex = loadData("unknowInstruction.wasm");
 
 			DposTestClient client;
@@ -882,40 +953,11 @@ namespace dev {
 			BOOST_REQUIRE(u256(1000000000000000000) - balance1 == u256(2060722) * u256(20000000000));
 		}
 
-		BOOST_AUTO_TEST_CASE(ctMemoryRef)
-		{
-			cout << "ctMemoryRef" << endl;
-			std::string memoryRefHex = loadData("memoryRef.wasm");
-
-			DposTestClient client;
-
-			BOOST_REQUIRE(client.get_accounts().size() >= 2);
-			Account& account = client.get_accounts()[0];
-
-			string gasLimit = "0x1f71b2";
-			string gasPrice = "0x04a817c800";
-			string value = "0x0";
-
-
-			Address m_newAddress = newAddress(account);  //Contract Address.
-			string s_address = m_newAddress.hex();
-			client.sendTransaction(gasLimit, gasPrice, "", value, "0x" + memoryRefHex, account);  //Create contract.
-			client.produce_blocks();
-			u256 balance1 = client.balance(Address(account.address));
-
-			//memoryRef传入负值 memoryRef.cpp
-			client.sendTransaction(gasLimit, gasPrice, s_address, value, test_func1_string, account);  //Call contract code.
-			client.produce_blocks();
-
-			u256 balance2 = client.balance(Address(account.address));
-			u256 cost_call = balance1 - balance2;
-			BOOST_REQUIRE(cost_call == u256(2060722) * u256(20000000000));
-			cout << "cost_call: " << cost_call << endl;
-		}
-
 		BOOST_AUTO_TEST_CASE(ctTransferBalance)
 		{
 			cout << "ctTransferBalance" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string transferBalanceHex = loadData("transferBalance.wasm");
 
 			DposTestClient client;
@@ -995,6 +1037,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctTransferBalance2)
 		{
 			cout << "ctTransferBalance2" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string currencyHex = loadData("currency.wasm");
 			std::string transferBalanceHex = loadData("transferBalance.wasm");
 
@@ -1054,6 +1098,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctLackApply)
 		{
 			cout << "ctLackApply" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string lackApplyHex = loadData("lackApply.wasm");
 
 			DposTestClient client;
@@ -1090,6 +1136,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctGas)
 		{
 			cout << "ctGas" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string gasHex = loadData("gas.wasm");
 
 			DposTestClient client;
@@ -1115,8 +1163,9 @@ namespace dev {
 
 			u256 balance2 = client.balance(Address(account.address));
 			u256 cost_call = balance1 - balance2;
-			cout << "cost_call.str(): " << cost_call.str() << endl;
+			cout << cost_call.str() << endl;
 			BOOST_REQUIRE(cost_call == u256(452460000000000));
+			cout << "cost_call.str(): " << cost_call.str() << endl;
 
 			//调用合约方法2 减
 			client.sendTransaction(gasLimit, gasPrice, s_address, value, test_func2_string, account);  //Call contract code.
@@ -1124,8 +1173,8 @@ namespace dev {
 
 			u256 balance3 = client.balance(Address(account.address));
 			u256 cost_call_2 = balance2 - balance3;
-			cout << "cost_call_2.str(): " << cost_call_2.str() << endl;
 			BOOST_REQUIRE(cost_call_2 == u256(451180000000000));
+			cout << "cost_call_2.str(): " << cost_call_2.str() << endl;
 
 			
 			//调用合约方法3 IO
@@ -1134,13 +1183,15 @@ namespace dev {
 
 			u256 balance4 = client.balance(Address(account.address));
 			u256 cost_call_3 = balance3 - balance4;
-			cout << "cost_call_3.str(): " << cost_call_3.str() << endl;
 			BOOST_REQUIRE(cost_call_3 == u256(957580000000000));
+			cout << "cost_call_3.str(): " << cost_call_3.str() << endl;
 		}
 
 		BOOST_AUTO_TEST_CASE(ctInitGas)
 		{
 			cout << "ctInitGas" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string initGas_1Hex = loadData("initGas_1.wasm");
 
 			std::string initGas_2Hex = loadData("initGas_2.wasm");
@@ -1181,6 +1232,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctCallContract)
 		{
 			cout << "ctCallContract" << endl;
+
+			WASM_CORE::destoryInstance();
 			std::string currencyHex = loadData("currency.wasm");
 
 			DposTestClient client;
@@ -1245,6 +1298,8 @@ namespace dev {
 		BOOST_AUTO_TEST_CASE(ctTestSampleTransaction)
 		{
 			cout << "ctTestSampleTransaction" << endl;
+
+			WASM_CORE::destoryInstance();
 			DposTestClient client;
 
 			BOOST_REQUIRE(client.get_accounts().size() >= 2);
@@ -1270,6 +1325,8 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctDefault)
 		{
+			cout << "ctDefault" << endl;
+
 			WASM_CORE::destoryInstance();
 			std::string defaultHex = loadData("default.wasm");
 
@@ -1320,6 +1377,8 @@ namespace dev {
 
 		BOOST_AUTO_TEST_CASE(ctGame)
 		{
+			cout << "ctGame" << endl;
+
 			WASM_CORE::destoryInstance();
 			std::string gameHex = loadData("game.wasm");
 

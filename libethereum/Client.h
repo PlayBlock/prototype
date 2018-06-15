@@ -357,7 +357,7 @@ protected:
 public:
 	void generate_block(fc::time_point_sec when, const types::AccountName& producer, const fc::ecc::private_key& block_signing_private_key);
 
-	static void setCheat(bool c) { m_cheat = c; }
+	void vote_for_hardforks(BlockHeader& bh, const types::AccountName& producer);	static void setCheat(bool c) { m_cheat = c; }
 	static bool getCheat() { return m_cheat; }
 private:
 	void generateSeal(BlockHeader& bh);

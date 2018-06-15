@@ -32,7 +32,9 @@ BOOST_FIXTURE_TEST_SUITE(PrecompiledTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpFermatTheorem" << endl;
+
+	State null(0);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -42,7 +44,7 @@ BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
 		"03"
 		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e"
 		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
-	auto res = exec(bytesConstRef(in.data(), in.size()));
+	auto res = exec(bytesConstRef(in.data(), in.size()),Address(), null);
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
@@ -51,7 +53,9 @@ BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
 
 BOOST_AUTO_TEST_CASE(modexpZeroBase)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpZeroBase" << endl;
+
+	State null(0);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -60,7 +64,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroBase)
 		"0000000000000000000000000000000000000000000000000000000000000020"
 		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e"
 		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
-	auto res = exec(bytesConstRef(in.data(), in.size()));
+	auto res = exec(bytesConstRef(in.data(), in.size()), Address(), null);
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
@@ -69,7 +73,9 @@ BOOST_AUTO_TEST_CASE(modexpZeroBase)
 
 BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpExtraByteIgnored" << endl;
+
+	State null(0);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -80,7 +86,7 @@ BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
 		"ffff"
 		"8000000000000000000000000000000000000000000000000000000000000000"
 		"07");
-	auto res = exec(bytesConstRef(in.data(), in.size()));
+	auto res = exec(bytesConstRef(in.data(), in.size()), Address(), null);
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("3b01b01ac41f2d6e917c6d6a221ce793802469026d9ab7578fa2e79e4da6aaab");
@@ -89,7 +95,9 @@ BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
 
 BOOST_AUTO_TEST_CASE(modexpRightPadding)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpRightPadding" << endl;
+
+	State null(0);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -99,7 +107,7 @@ BOOST_AUTO_TEST_CASE(modexpRightPadding)
 		"03"
 		"ffff"
 		"80");
-	auto res = exec(bytesConstRef(in.data(), in.size()));
+	auto res = exec(bytesConstRef(in.data(), in.size()), Address(), null);
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("3b01b01ac41f2d6e917c6d6a221ce793802469026d9ab7578fa2e79e4da6aaab");
@@ -108,7 +116,9 @@ BOOST_AUTO_TEST_CASE(modexpRightPadding)
 
 BOOST_AUTO_TEST_CASE(modexpMissingValues)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpMissingValues" << endl;
+
+	State null(0);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -116,7 +126,7 @@ BOOST_AUTO_TEST_CASE(modexpMissingValues)
 		"0000000000000000000000000000000000000000000000000000000000000002"
 		"0000000000000000000000000000000000000000000000000000000000000020"
 		"03");
-	auto res = exec(bytesConstRef(in.data(), in.size()));
+	auto res = exec(bytesConstRef(in.data(), in.size()), Address(), null);
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
@@ -125,7 +135,9 @@ BOOST_AUTO_TEST_CASE(modexpMissingValues)
 
 BOOST_AUTO_TEST_CASE(modexpEmptyValue)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpEmptyValue" << endl;
+
+	State null(0);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -134,7 +146,7 @@ BOOST_AUTO_TEST_CASE(modexpEmptyValue)
 		"0000000000000000000000000000000000000000000000000000000000000020"
 		"03"
 		"8000000000000000000000000000000000000000000000000000000000000000");
-	auto res = exec(bytesConstRef(in.data(), in.size()));
+	auto res = exec(bytesConstRef(in.data(), in.size()), Address(), null);
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
@@ -143,7 +155,9 @@ BOOST_AUTO_TEST_CASE(modexpEmptyValue)
 
 BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpZeroPowerZero" << endl;
+
+	State null(0);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -153,7 +167,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
 		"00"
 		"00"
 		"80");
-	auto res = exec(bytesConstRef(in.data(), in.size()));
+	auto res = exec(bytesConstRef(in.data(), in.size()), Address(), null);
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
@@ -162,7 +176,9 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
 
 BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpZeroPowerZeroModZero" << endl;
+
+	State null(0);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -172,7 +188,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
 		"00"
 		"00"
 		"00");
-	auto res = exec(bytesConstRef(in.data(), in.size()));
+	auto res = exec(bytesConstRef(in.data(), in.size()), Address(), null);
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
@@ -181,7 +197,9 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
 
 BOOST_AUTO_TEST_CASE(modexpModLengthZero)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpModLengthZero" << endl;
+
+	State null(0);
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
@@ -190,7 +208,7 @@ BOOST_AUTO_TEST_CASE(modexpModLengthZero)
 		"0000000000000000000000000000000000000000000000000000000000000000"
 		"01"
 		"01");
-	auto res = exec(bytesConstRef(in.data(), in.size()));
+	auto res = exec(bytesConstRef(in.data(), in.size()), Address(), null);
 
 	BOOST_REQUIRE(res.first);
 	BOOST_REQUIRE(res.second.empty());
@@ -198,7 +216,9 @@ BOOST_AUTO_TEST_CASE(modexpModLengthZero)
 
 BOOST_AUTO_TEST_CASE(modexpCostFermatTheorem)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpCostFermatTheorem" << endl;
+
+	State null(0);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -215,7 +235,9 @@ BOOST_AUTO_TEST_CASE(modexpCostFermatTheorem)
 
 BOOST_AUTO_TEST_CASE(modexpCostTooLarge)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpCostTooLarge" << endl;
+
+	State null(0);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -231,7 +253,9 @@ BOOST_AUTO_TEST_CASE(modexpCostTooLarge)
 
 BOOST_AUTO_TEST_CASE(modexpCostEmptyExponent)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpCostEmptyExponent" << endl;
+
+	State null(0);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -250,7 +274,9 @@ BOOST_AUTO_TEST_CASE(modexpCostEmptyExponent)
 
 BOOST_AUTO_TEST_CASE(modexpCostZeroExponent)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpCostZeroExponent" << endl;
+
+	State null(0);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -268,7 +294,9 @@ BOOST_AUTO_TEST_CASE(modexpCostZeroExponent)
 
 BOOST_AUTO_TEST_CASE(modexpCostApproximated)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpCostApproximated" << endl;
+
+	State null(0);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -286,7 +314,9 @@ BOOST_AUTO_TEST_CASE(modexpCostApproximated)
 
 BOOST_AUTO_TEST_CASE(modexpCostApproximatedPartialByte)
 {
-	State* p = nullptr; State NullConference(*p);
+	cout << "modexpCostApproximatedPartialByte" << endl;
+
+	State null(0);
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -304,6 +334,8 @@ BOOST_AUTO_TEST_CASE(modexpCostApproximatedPartialByte)
 
 BOOST_AUTO_TEST_CASE(modexpCostApproximatedGhost)
 {
+	cout << "modexpCostApproximatedGhost" << endl;
+
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -321,6 +353,8 @@ BOOST_AUTO_TEST_CASE(modexpCostApproximatedGhost)
 
 BOOST_AUTO_TEST_CASE(modexpCostMidRange)
 {
+	cout << "modexpCostMidRange" << endl;
+
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -338,6 +372,8 @@ BOOST_AUTO_TEST_CASE(modexpCostMidRange)
 
 BOOST_AUTO_TEST_CASE(modexpCostHighRange)
 {
+	cout << "modexpCostHighRange" << endl;
+
 	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
 
 	bytes in = fromHex(
@@ -686,13 +722,13 @@ void benchmarkPrecompiled(char const name[], vector_ref<const PrecompiledTest> t
 		bytes input = fromHex(test.input);
 		bytesConstRef inputRef = &input;
 
-		auto res = exec(inputRef);
+		auto res = exec(inputRef, Address(), NullConference);
 		BOOST_REQUIRE_MESSAGE(res.first, test.name);
 		BOOST_REQUIRE_EQUAL(toHex(res.second), test.expected);
 
 		timer.restart();
 		for (int i = 0; i < n; ++i)
-			exec(inputRef);
+			exec(inputRef, Address(), NullConference);
 		auto d = timer.duration() / n;
 
 		auto t = std::chrono::duration_cast<std::chrono::nanoseconds>(d).count();
@@ -705,30 +741,40 @@ void benchmarkPrecompiled(char const name[], vector_ref<const PrecompiledTest> t
 
 BOOST_AUTO_TEST_CASE(bench_ecrecover, *ut::label("bench"))
 {
+	cout << "bench_ecrecover" << endl;
+
 	vector_ref<const PrecompiledTest> tests{ecrecoverTests, sizeof(ecrecoverTests) / sizeof(ecrecoverTests[0])};
 	benchmarkPrecompiled("ecrecover", tests, 100000);
 }
 
 BOOST_AUTO_TEST_CASE(bench_modexp, *ut::label("bench"))
 {
+	cout << "bench_modexp" << endl;
+
 	vector_ref<const PrecompiledTest> tests{modexpTests, sizeof(modexpTests) / sizeof(modexpTests[0])};
 	benchmarkPrecompiled("modexp", tests, 10000);
 }
 
 BOOST_AUTO_TEST_CASE(bench_bn256Add, *ut::label("bench"))
 {
+	cout << "bench_bn256Add" << endl;
+
 	vector_ref<const PrecompiledTest> tests{bn256AddTests, sizeof(bn256AddTests) / sizeof(bn256AddTests[0])};
 	benchmarkPrecompiled("alt_bn128_G1_add", tests, 1000000);
 }
 
 BOOST_AUTO_TEST_CASE(bench_bn256ScalarMul, *ut::label("bench"))
 {
+	cout << "bench_bn256ScalarMul" << endl;
+
 	vector_ref<const PrecompiledTest> tests{bn256ScalarMulTests, sizeof(bn256ScalarMulTests) / sizeof(bn256ScalarMulTests[0])};
 	benchmarkPrecompiled("alt_bn128_G1_mul", tests, 10000);
 }
 
 BOOST_AUTO_TEST_CASE(bench_bn256Pairing, *ut::label("bench"))
 {
+	cout << "bench_bn256Pairing" << endl;
+
 	vector_ref<const PrecompiledTest> tests{bn256PairingTests, sizeof(bn256PairingTests) / sizeof(bn256PairingTests[0])};
 	benchmarkPrecompiled("alt_bn128_pairing_product", tests, 1000);
 }

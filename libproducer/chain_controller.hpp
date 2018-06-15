@@ -5,8 +5,10 @@
 #include "types.hpp"
 #include "producer_object.hpp"
 #include "chainbase.hpp"
-#include <libethereum/Block.h>
-#include <map> 
+#include <libethereum/Block.h> 
+#include <map>
+//#include "producer_objects.hpp"
+#include <libethereum/Vote.h>
 #include <libethereum/BlockChain.h>
 #include "libevm/Vote.h"
 
@@ -46,28 +48,26 @@ public:
 
 
 	types::AccountName get_scheduled_producer(uint32_t slot_num)const;
-//	const producer_object& get_producer(const types::AccountName& ownerName) const;
-//
-//	//signed_block generate_block(
-//	//	fc::time_point_sec when,
-//	//	const AccountName& producer,
-//	//	const fc::ecc::private_key& block_signing_private_key
-//	//);
-//
+ 
 	ProducerRound calculate_next_round(const BlockHeader& next_block);
-//
-//	void setStateDB(const OverlayDB& db) { _db.setStateDB(db); }
-//	const chainbase::database& db() { return _db; }
-//
-//  
+ 
 
 	void setStateDB(const OverlayDB& db) { _stateDB = &db; }
 	const OverlayDB* getStateDB() { return _stateDB; }
 
 	void databaseReversion(uint32_t _firstvalid);
 
-	//std::map<Address, VoteBace> chain_controller::get_votes(h256 const& _hash = h256()) const;
-	
+	std::map<Address, VoteInfo> get_votes(h256 const& _hash = h256()) const;
+	std::map<Address, uint64_t> get_producers(h256 const& _hash = h256()) const;
+	dev::h256 get_pow_target();
+
+	const fc::time_point_sec* hardfork_times() const { return _hardfork_times; }
+	const hardfork_version*	hardfork_versions() const { return _hardfork_versions; }
+
+	//用于外界获取最新的不可逆转块
+	const uint32_t get_last_irreversible_block() const { ReadGuard locker(x_last_irr_block); return _last_irreversible_block_num; }
+	const h256 get_last_irreversible_block_hash() const { ReadGuard locker(x_last_irr_block); return _last_irreversible_block_hash; }
+
 private:
 	void update_global_dynamic_data(const BlockHeader& b);
 	void update_global_properties(const BlockHeader& b);
@@ -75,6 +75,12 @@ private:
 
 
 	void process_block_header(const BlockHeader& b);
+	void process_hardforks();
+
+	void apply_hardfork(uint32_t hardfork);
+
+	void update_hardfork_votes(const std::array<AccountName, TotalProducersPerRound>& active_producers);
+
 	void update_pow_perblock(const BlockHeader& b);
 	void update_pvomi_perblock(const BlockHeader& b);
 	void update_pow();
@@ -83,7 +89,6 @@ private:
 	void apply_block(const BlockHeader& b);
 	const producer_object& validate_block_header(const BlockHeader& bh)const;
 
-	dev::h256 get_pow_target();
 
 
 private:
@@ -97,6 +102,11 @@ private:
 
 	fc::time_point_sec   _hardfork_times[config::ETI_HardforkNum + 1];
 	hardfork_version     _hardfork_versions[config::ETI_HardforkNum + 1];
+
+	mutable SharedMutex x_last_irr_block;
+	//当前不可逆转块号
+	uint32_t _last_irreversible_block_num;
+	h256	 _last_irreversible_block_hash;
 };
 
 } } }

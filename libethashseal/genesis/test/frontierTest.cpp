@@ -21,7 +21,7 @@ static std::string const c_genesisInfoFrontierTest =
 R"E(
 {
 	"sealEngine": "Ethash",
-	"params":{
+    "params": {
 		"accountStartNonce": "0x00", 
 		"networkID" : "0x88",
 		"chainID": "0x88",
@@ -36,21 +36,28 @@ R"E(
 		"blockReward": "0x4563918244F40000",
 		"enableStaleProduction" : "1", 
 		"allowFutureBlocks" : true,
-        "producerAccounts" : [
-			"0x110e3e0a01EcE3a91e04a818F840E9E3D17B3C8f",
-			"0x7A62B4Df0Df87742E3d4a0099B39C30939A7D74c",
+		"producerAccounts" : [
+			"0x0070015693bb96335dd8c7025dded3a2da735db1", 
+			"0x2ecffd9dc5561bbdf23929a250bb99c758d64dbb",
 			"0x5c30B1688Bf9b515F268deBF6e286c36DD1E1AF3",
-            "0xfc9f39081b56b1612acbbf0bdfb350b53fae11d7",
-            "0x2ecffd9dc5561bbdf23929a250bb99c758d64dbb",
-            "0xd4ad13effbb688e77930431a24fd296b71d6c1c9",
-            "0x53650a167586d1411c3d9a9a29fa9685efcac6ef",
-            "0x0f5d4d1cb57aeab539b5976850fdf983d9bcdbf1",
-            "0xd401f0f9f95fc9aed246a3ef441e4903848ef554",
-            "0x0874ebb72289617e84220a0b8463b23071c36c37"
+			"0xfc9f39081b56b1612acbbf0bdfb350b53fae11d7", 
+			"0xd4ad13effbb688e77930431a24fd296b71d6c1c9",
+			"0x53650a167586d1411c3d9a9a29fa9685efcac6ef",
+			"0x0f5d4d1cb57aeab539b5976850fdf983d9bcdbf1",
+			"0xd401f0f9f95fc9aed246a3ef441e4903848ef554",
+			"0x0874ebb72289617e84220a0b8463b23071c36c37",
+			"0x202d4e20a86aa821ebd4c02c613099052ffea6c9",
+			"0xa333d00639f2be4aa58cc14aa7230bccc6001343",
+			"0x75813ae7bf1f9f47a8b168a342c258871dbcbc86",
+			"0x68bf457802894d342c5ae4b6badc735980e090b5",
+			"0xc109036229145360c90ba4cb768cdd7121460d10",
+			"0x32cc7ac533a1291c19f9b1fbf43bb4f117e9f9de",
+			"0x956feb0119392f88937dfe6fc194b5d0fd13fa58",
+			"0x938527c3516b68a9ee18f5a940b699d5b64bf92e"
 		]
-	},
-"privateKeys": {
-		"0x110e3e0a01EcE3a91e04a818F840E9E3D17B3C8f": "b81b893df61f227bdc4858012c3bbfab9e695d781911db3f2b12696ade186c56",
+    },
+	"privateKeys": {
+		"0x0070015693bb96335dd8c7025dded3a2da735db1": "329cde16d721501c7f1d16d620644d34fe12f3d68e6fc9d7fd238a984e5dc289",
 		"0x7A62B4Df0Df87742E3d4a0099B39C30939A7D74c": "542f36083237819e222b4f8e682c555186182bb4978caafe9089de09f05d16ec",
 		"0x5c30B1688Bf9b515F268deBF6e286c36DD1E1AF3": "7980c9db65ea3bb9b1ac11400968f149c037314ba47397c894750162225f523d",
 		"0xfc9f39081b56b1612acbbf0bdfb350b53fae11d7": "0b4c6b0cd7d29ea49bd66363a357ba950b3e873a3f32948b61ecbabbdfa29246",
@@ -71,28 +78,35 @@ R"E(
         "0xf856de35ef56d6f9f258b8a4de6e11be21cca525": "8abbfe1a7fe89e900a7578c87edf54159f63154eee5bff4df467e9d4506c3946",
         "0x1235cc0207838ce92b8c1d1c72e2a1049d191f4d": "9640bc4d3f3c87805a3b406f2fd9df7bba64c95ff732d94b420eb8009e63c8c9",
         "0x6eaa7ec4508b82fc300b131707485a93fe85bff8": "fabac3ed98f7c3d753e70ebbab53dadf12a2f2ed3db31b1301140fededb61757",
-        "0x000d9a2034e8383e9b8a76b55a19aed2cb74dcb1": "a6b78438219867fc85cb199de77a619454b481764b84c861e27ef727a6c362b0"
+		"0x938527c3516b68a9ee18f5a940b699d5b64bf92e": "9e4921b828f9a789007fdd980dd3b227e682ab56c5d36b18616ed1d30dbc4881"
     },
-	"genesis": {
-		"nonce": "0x0000000000000042",
-		"difficulty": "0x400000000",
-		"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-		"author": "0x0000000000000000000000000000000000000000",
-		"timestamp": "0x00",
-		"parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-		"extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-		"gasLimit": "0x1388",
-        "initialProducers" : [
-				"0x110e3e0a01EcE3a91e04a818F840E9E3D17B3C8f",
-				"0x7A62B4Df0Df87742E3d4a0099B39C30939A7D74c",
-				"0x5c30B1688Bf9b515F268deBF6e286c36DD1E1AF3",
-                "0xfc9f39081b56b1612acbbf0bdfb350b53fae11d7",
-                "0x2ecffd9dc5561bbdf23929a250bb99c758d64dbb",
-                "0xd4ad13effbb688e77930431a24fd296b71d6c1c9",
-                "0x53650a167586d1411c3d9a9a29fa9685efcac6ef",
-                "0x0f5d4d1cb57aeab539b5976850fdf983d9bcdbf1",
-                "0xd401f0f9f95fc9aed246a3ef441e4903848ef554",
-                "0x0874ebb72289617e84220a0b8463b23071c36c37"
+    "genesis": {
+            "nonce": "0x000000000000002a",
+            "difficulty": "0x400",
+            "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "author": "0x0000000000000000000000000000000000000000",
+            "timestamp": "0x00",
+            "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "extraData": "0x",
+            "gasLimit": "0xcd14000",
+			"initialProducers" : [
+			"0x0070015693bb96335dd8c7025dded3a2da735db1", 
+			"0x2ecffd9dc5561bbdf23929a250bb99c758d64dbb",
+			"0x5c30B1688Bf9b515F268deBF6e286c36DD1E1AF3",
+			"0xfc9f39081b56b1612acbbf0bdfb350b53fae11d7", 
+			"0xd4ad13effbb688e77930431a24fd296b71d6c1c9",
+			"0x53650a167586d1411c3d9a9a29fa9685efcac6ef",
+			"0x0f5d4d1cb57aeab539b5976850fdf983d9bcdbf1",
+			"0xd401f0f9f95fc9aed246a3ef441e4903848ef554",
+			"0x0874ebb72289617e84220a0b8463b23071c36c37",
+			"0x202d4e20a86aa821ebd4c02c613099052ffea6c9",
+			"0xa333d00639f2be4aa58cc14aa7230bccc6001343",
+			"0x75813ae7bf1f9f47a8b168a342c258871dbcbc86",
+			"0x68bf457802894d342c5ae4b6badc735980e090b5",
+			"0xc109036229145360c90ba4cb768cdd7121460d10",
+			"0x32cc7ac533a1291c19f9b1fbf43bb4f117e9f9de",
+			"0x956feb0119392f88937dfe6fc194b5d0fd13fa58",
+			"0x938527c3516b68a9ee18f5a940b699d5b64bf92e"
 			]
     },
     "accounts": {
@@ -105,9 +119,6 @@ R"E(
 		"0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "startingBlock": "0x42ae50", "linear": { "base": 500, "word": 0 } } },
 		"0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "startingBlock": "0x42ae50", "linear": { "base": 40000, "word": 0 } } },
 		"0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product", "startingBlock": "0x42ae50" } },
-		"3282791d6fd713f1e94f4bfd565eaa78b3a0599d": {
-		"balance": "1337000000000000000000"
-		},
 		"0000000000000000000000000000000000000020": { "wei": "1", "code":"0x00" },
 		"0000000000000000000000000000000000000021": { "wei": "1", "code":"0x00" },
 		"0000000000000000000000000000000000000022": {"precompiled": { "name": "mortgage", "linear": { "base": 210000, "word": 7 } } },
@@ -116,13 +127,12 @@ R"E(
 		"0000000000000000000000000000000000000025": {"precompiled": { "name": "candidateDeregister", "linear": { "base": 210000, "word": 10 } } },
 		"0000000000000000000000000000000000000026": {"precompiled": { "name": "vote", "linear": { "base": 210000, "word": 6 } } },
 		"0000000000000000000000000000000000000027": {"precompiled": { "name": "removeVote", "linear": { "base": 210000, "word": 6 } } },
-		"0000000000000000000000000000000000000028": {"precompiled": { "name": "assign", "linear": { "base": 60, "word": 6 } } },
-		"0000000000000000000000000000000000000029": {"precompiled": { "name": "deAssign", "linear": { "base": 60, "word": 6 } } },
 		"000000000000000000000000000000000000002a": {"precompiled": { "name": "send", "linear": { "base": 210000, "word": 6 } } },
 		"000000000000000000000000000000000000002b": { "wei": "1", "code":"0x00" },
 		"000000000000000000000000000000000000002c": {"precompiled": { "name": "powReceive", "linear": { "base": 60, "word": 6 } } }
-    }	
-	}
+    }
+
+}
    
 )E";
 

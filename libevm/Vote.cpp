@@ -2,13 +2,18 @@
 #include <libdevcore/SHA3.h>
 #include <libethereum/State.h>
 #include "Vote.h"
+#include "libdevcore/Address.h"
+#include <libjumphash/jumphash.h>
 
 using namespace dev;
 using namespace eth;
 
-Vote::Vote(std::map<dev::h256, std::pair<dev::u256,dev::u256>>& map, std::unordered_map<dev::u256, dev::u256>& mapChange, const dev::Address& address, bool isCandidate, uint64_t votedNumber,
+Vote::Vote(
+	std::map<dev::h256, std::pair<dev::u256,dev::u256>>& map, 
+	std::unordered_map<dev::u256, dev::u256>& mapChange, 
+	const dev::Address& address, bool isCandidate, uint64_t votedNumber,
 	uint64_t unAssignNumber, uint64_t assignNumbe, bool isVoted, const dev::Address& voteTo, uint64_t receivedVoteNumber)
-	: m_map(map), m_mapChange(mapChange), m_address(address), m_isCandidate(isCandidate), m_votedNumber(votedNumber), m_unAssignNumber(unAssignNumber),
+	: StateMap(map,mapChange,address), m_isCandidate(isCandidate), m_votedNumber(votedNumber), m_unAssignNumber(unAssignNumber),
 	m_assignNumber(assignNumbe), m_isVoted(isVoted), m_voteTo(voteTo), m_receivedVoteNumber(receivedVoteNumber)
 {
 }
@@ -17,13 +22,12 @@ Vote::~Vote()
 {
 }
 
-void Vote::load()
-{
-	dev::bytes loadFromBytes;
-	dev::bytes tempBytes;
+ 
 
-	loadFromBytes = loadFromMap(size());
-	auto iterator = loadFromBytes.begin();
+void Vote::_loadImpl(const dev::bytes& loadedBytes)
+{ 
+	dev::bytes tempBytes; 
+	auto iterator = loadedBytes.begin();
 
 	tempBytes = dev::bytes(iterator, iterator + sizeof(m_isCandidate));
 	iterator += sizeof(m_isCandidate);
@@ -52,7 +56,7 @@ void Vote::load()
 	m_receivedVoteNumber = bytesToUint64_t(tempBytes);
 }
 
-void Vote::save()
+dev::bytes Vote::_saveImpl()
 {
 	dev::bytes saveInBytes;
 	dev::bytes tempBytes;
@@ -74,162 +78,14 @@ void Vote::save()
 	tempBytes = uint64_tToBytes(m_receivedVoteNumber);
 	saveInBytes.insert(saveInBytes.end(), tempBytes.begin(), tempBytes.end());
 
-	saveInMaps(saveInBytes);
+	return saveInBytes;
 }
-
-dev::bytes Vote::uint64_tToBytes(uint64_t number)
-{
-	dev::bytes res;
-	byte val;
-	for (int i = 0; i < 8; i++)
-	{
-		val = number % 8;
-		number = number / 8;
-		res.push_back(val);
-	}
-	return res;
-}
-
-uint64_t Vote::bytesToUint64_t(const dev::bytes& bytes)
-{
-	if (bytes.size() != 8)
-		BOOST_THROW_EXCEPTION(std::length_error("Bytes length is not 8."));
-	uint64_t res = 0;
-	for (int i = 7; i >= 0; i--)
-	{
-		res *= 8;
-		res += bytes.at(i);
-	}
-	return res;
-}
-
-dev::bytes Vote::u256ToBytes(dev::u256 number)
-{
-	std::string s = number.str();
-	return dev::bytes(s.begin(), s.end());
-}
-
-dev::u256 Vote::bytesToU256(const dev::bytes & bytes)
-{
-	std::string s(bytes.begin(), bytes.end());
-	return dev::u256(s);
-}
-
-dev::u256 Vote::expand(uint64_t number, uint32_t m)
-{
-	dev::bytes expandKey = m_address.asBytes();
-	byte val;
-
-	// Expand key with num.
-	for (int i = 0; i < 8; i++)
-	{
-		val = number % 8;
-		number = number / 8;
-		expandKey.push_back(val);
-	}
-
-	// Expand key with m.
-	expandKey.insert(expandKey.end(), 4, '\0');
-
-	dev::h256 temp;
-	memcpy(temp.data(), expandKey.data(), 32);
-
-	return (dev::u256)temp;
-}
-
-void Vote::saveInMaps(const dev::bytes& data)
-{
-	uint64_t size = data.size();
-	uint64_t page = size / 32;
-	uint64_t segment = size % 32;
-	dev::h256 pageH256;
-
-	// Write complete pages.
-	for (uint64_t i = 0; i < page; i++)
-	{
-		memcpy(pageH256.data(), data.data() + (i * 32), 32);
-		//m_map[expand(i)] = (dev::u256)pageH256;
-		u256 key = expand(i);
-		dev::h256 hashkey = key;
-		dev::h256 const hashedKey = dev::sha3(hashkey);
-		m_map[hashedKey] = std::make_pair(key, (dev::u256)pageH256);
-		m_mapChange[key] = (dev::u256)pageH256;
-	}
-
-	// Write last page.
-	dev::bytes lastPage(data.begin() + (page * 32), data.end());
-	lastPage.insert(lastPage.end(), (32 - segment), '\0');
-	memcpy(pageH256.data(), lastPage.data(), 32);
-	//std::cout << "expand(page): " << expand(page).str() << std::endl;
-	//for (auto i : m_map)
-	//{
-	//	std::cout << "i.first: " << i.first.str() << std::endl;
-	//}
-	//m_map[expand(page)] = (dev::u256)pageH256;
-	//m_mapChange[expand(page)] = (dev::u256)pageH256;
-
-	u256 key = expand(page);
-	h256 hashkey = key;
-	h256 const hashedKey = dev::sha3(hashkey);
-	m_map[hashedKey] = std::make_pair(key, (dev::u256)pageH256);
-	m_mapChange[key] = (dev::u256)pageH256;
-
-}
-
-dev::bytes Vote::loadFromMap(uint64_t size)
-{
-	uint64_t page = size / 32;
-	uint64_t segment = size % 32;
-	dev::h256 pageH256;
-	dev::bytes res;
-	dev::bytes bytesTemp;
-	//std::unordered_map<dev::u256, dev::u256>::iterator it;
-
-	// Write complete pages.
-	for (uint64_t i = 0; i < page; i++)
-	{
-		dev::u256 const key = expand(i);
-		dev::h256 const hashkey = key;
-		dev::h256 const hashedKey = dev::sha3(hashkey);
-		auto it = m_map.find(hashedKey);
-		if (it == m_map.end())
-		{
-			pageH256 = dev::h256();
-		}
-		else
-		{
-			//pageH256 = (dev::h256)m_map.at(expand(i));
-			pageH256 = (dev::h256)(it->second.second);
-		}
-		bytesTemp = pageH256.asBytes();
-		res.insert(res.end(), bytesTemp.begin(), bytesTemp.end());
-	}
-	
-	// Write last page.
-	dev::u256 key = expand(page);
-	dev::h256 const hashkey = key;
-	dev::h256 const hashedKey = dev::sha3(hashkey);
-	//it = m_map.find(key);
-	auto it = m_map.find(hashedKey);
-
-	if (it == m_map.end())
-	{
-		pageH256 = dev::h256();
-	}
-	else
-	{
-		//pageH256 = (dev::h256)m_map.at(expand(page));
-		pageH256 = (dev::h256)(it->second.second);
-	}
-	bytesTemp = pageH256.asBytes();
-	res.insert(res.end(), bytesTemp.begin(), bytesTemp.begin() + segment);
-	return res;
-}
+ 
 
 void Vote::resetVotedTo(const dev::Address& address)
 {
 	dev::bytes bytes0(12, '\0');
-	for (auto iterator = m_map.begin(); iterator != m_map.end(); iterator++)
+	for (auto iterator = getMap().begin(); iterator != getMap().end(); iterator++)
 	{
 		dev::u256 iteratorFirst = iterator->first;
 		dev::bytes iteratorBytes = ((dev::h256)iteratorFirst).asBytes();
@@ -239,9 +95,9 @@ void Vote::resetVotedTo(const dev::Address& address)
 		if (iteratorExpand == bytes0)
 		{
 			/// Reset myself vote info.
-			if (dev::Address(iteratorAddress) == m_address)
+			if (dev::Address(iteratorAddress) == getAddress())
 			{
-				if (m_voteTo == m_address)
+				if (m_voteTo == getAddress())
 				{
 					m_isVoted = false;
 					m_voteTo = dev::Address();
@@ -250,7 +106,7 @@ void Vote::resetVotedTo(const dev::Address& address)
 			/// Reset another vote info.
 			else
 			{
-				Vote reset(m_map, m_mapChange, dev::Address(iteratorAddress));
+				Vote reset(getMap(), getMapChange(), dev::Address(iteratorAddress));
 				reset.load();
 				if (reset.getVoteTo() == address)
 				{
@@ -339,16 +195,10 @@ uint64_t Vote::getReceivedVoteNumber()
 {
 	return m_receivedVoteNumber;
 }
-
-const std::unordered_map<dev::u256, dev::u256>& Vote::getMapChange()
-{
-	return m_mapChange;
-}
-
+ 
 int Vote::mortgage(uint64_t balance)
 {
-	m_unAssignNumber += balance / VOTES_PRE_ETH;
-	//std::cout << "mortgage:" << balance << "eth." << "m_unAssignNumber:" << balance / VOTES_PRE_ETH << std::endl;
+	m_unAssignNumber += balance / VOTES_PRE_ETH; 
 	return 1;
 }
 
@@ -366,7 +216,7 @@ int Vote::redeem(uint64_t voteCount)
 int Vote::vote(const dev::Address& address)
 {
 	/// Vote to myself.
-	if (address == m_address)
+	if (address == getAddress())
 	{
 		if (m_isCandidate == 0)
 		{
@@ -389,7 +239,7 @@ int Vote::vote(const dev::Address& address)
 			}
 			else
 			{
-				Vote before(m_map, m_mapChange, m_voteTo);
+				Vote before(getMap(), getMapChange(), m_voteTo);
 				before.load();
 				before.setVotedNumber(before.getVotedNumber() - m_assignNumber);
 				before.save();
@@ -403,7 +253,7 @@ int Vote::vote(const dev::Address& address)
 	/// Vote to another.
 	else
 	{
-		Vote to(m_map, m_mapChange, address);
+		Vote to(getMap(), getMapChange(), address);
 		to.load();
 		if (to.getIsCandidate() == false)
 		{
@@ -428,14 +278,14 @@ int Vote::vote(const dev::Address& address)
 			}
 
 			/// Vote to myself before.
-			if (m_voteTo == m_address)
+			if (m_voteTo == getAddress())
 			{
 				m_votedNumber -= m_assignNumber;
 			}
 			/// Vote to another before.
 			else
 			{
-				Vote before(m_map, m_mapChange, m_voteTo);
+				Vote before(getMap(), getMapChange(), m_voteTo);
 				before.load();
 				before.setVotedNumber(before.getVotedNumber() - m_assignNumber);
 				before.save();
@@ -461,7 +311,7 @@ int Vote::removeVote()
 	else
 	{
 		/// Remove vote to myself.
-		if (m_voteTo == m_address)
+		if (m_voteTo == getAddress())
 		{
 			m_votedNumber -= m_assignNumber;
 			m_isVoted = false;
@@ -470,7 +320,7 @@ int Vote::removeVote()
 		/// Remove vote to another.
 		else
 		{
-			Vote before(m_map, m_mapChange, m_voteTo);
+			Vote before(getMap(), getMapChange(), m_voteTo);
 			before.load();
 			before.setVotedNumber(before.getVotedNumber() - m_assignNumber);
 			before.save();
@@ -492,14 +342,14 @@ int Vote::assign(uint64_t voteCount)
 	if (m_isVoted == true)
 	{
 		/// Move vote to myself.
-		if (m_voteTo == m_address)
+		if (m_voteTo == getAddress())
 		{
 			m_votedNumber += voteCount;
 		}
 		/// Move vote to another.
 		else
 		{
-			Vote before(m_map, m_mapChange, m_voteTo);
+			Vote before(getMap(), getMapChange(), m_voteTo);
 			before.load();
 			before.setVotedNumber(before.getVotedNumber() + voteCount);
 			before.save();
@@ -520,14 +370,14 @@ int Vote::deAssign(uint64_t voteCount)
 	if (m_isVoted == true)
 	{
 		/// Remove vote from myself.
-		if (m_voteTo == m_address)
+		if (m_voteTo == getAddress())
 		{
 			m_votedNumber -= voteCount;
 		}
 		/// Remove vote from another.
 		else
 		{
-			Vote before(m_map, m_mapChange, m_voteTo);
+			Vote before(getMap(), getMapChange(), m_voteTo);
 			before.load();
 			before.setVotedNumber(before.getVotedNumber() - voteCount);
 			before.save();
@@ -540,13 +390,13 @@ int Vote::deAssign(uint64_t voteCount)
 
 int Vote::send(const dev::Address& address, uint64_t voteCount)
 {
-	if (address == m_address || m_unAssignNumber < voteCount)
+	if (address == getAddress() || m_unAssignNumber < voteCount)
 	{
 		return 0;
 	}
 	m_unAssignNumber -= voteCount;
 	
-	Vote to(m_map, m_mapChange, address);
+	Vote to(getMap(), getMapChange(), address);
 	to.load();
 	to.setReceivedVoteNumber(to.getReceivedVoteNumber() + voteCount);
 	to.setAssignNumber(to.getAssignNumber() + voteCount);
@@ -555,7 +405,7 @@ int Vote::send(const dev::Address& address, uint64_t voteCount)
 	if (to.getIsVoted() == true)
 	{
 		/// Vote to myself.
-		if (to.getVoteTo() == m_address)
+		if (to.getVoteTo() == getAddress())
 		{
 			m_votedNumber += m_votedNumber;
 		}
@@ -567,7 +417,7 @@ int Vote::send(const dev::Address& address, uint64_t voteCount)
 		/// Vote to another.
 		else
 		{
-			Vote before(m_map, m_mapChange, to.getVoteTo());
+			Vote before(getMap(), getMapChange(), to.getVoteTo());
 			before.load();
 			before.setVotedNumber(before.getVotedNumber() + voteCount);
 			before.save();
@@ -590,7 +440,7 @@ int Vote::candidateRegister()
 
 int Vote::candidateDeregister()
 {
-	resetVotedTo(m_address);
+	resetVotedTo(getAddress());
 	m_votedNumber = 0;
 	m_isCandidate = false;
 	return 1;
@@ -601,7 +451,7 @@ void VoteDelegate::mortgage(uint64_t amount, dev::Address const& _address, dev::
 {
 	if (_state.balance(_address) >= amount)
 	{
-		std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
+		std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address(VoteInfoAddress));
 		std::unordered_map<dev::u256, dev::u256> mapChange;
 		Vote vote(voteMap, mapChange, _address);
 		vote.load();
@@ -611,7 +461,7 @@ void VoteDelegate::mortgage(uint64_t amount, dev::Address const& _address, dev::
 		vote.save();
 		for (auto i : mapChange)
 		{
-			_state.setStorage(VoteInfoAddress, i.first, i.second);
+			_state.setStorage(Address(VoteInfoAddress), i.first, i.second);
 		}
 	}
 
@@ -621,7 +471,7 @@ void VoteDelegate::mortgage(uint64_t amount, dev::Address const& _address, dev::
 
 void VoteDelegate::redeem(uint64_t voteCount, dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address(VoteInfoAddress));
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -633,12 +483,12 @@ void VoteDelegate::redeem(uint64_t voteCount, dev::Address const& _address, dev:
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(VoteInfoAddress, i.first, i.second);
+		_state.setStorage(Address(VoteInfoAddress), i.first, i.second);
 	}
 }
 void VoteDelegate::candidateRegister(dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address(VoteInfoAddress));
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -647,13 +497,12 @@ void VoteDelegate::candidateRegister(dev::Address const& _address, dev::eth::Sta
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(VoteInfoAddress, i.first, i.second);
+		_state.setStorage(Address(VoteInfoAddress), i.first, i.second);
 	}
-
 }
 void VoteDelegate::candidateDeregister(dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address(VoteInfoAddress));
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -662,13 +511,13 @@ void VoteDelegate::candidateDeregister(dev::Address const& _address, dev::eth::S
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(VoteInfoAddress, i.first, i.second);
+		_state.setStorage(Address(VoteInfoAddress), i.first, i.second);
 	}
 }
 
 void VoteDelegate::vote(dev::Address _toAddress, dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address(VoteInfoAddress));
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -677,13 +526,13 @@ void VoteDelegate::vote(dev::Address _toAddress, dev::Address const& _address, d
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(VoteInfoAddress, i.first, i.second);
+		_state.setStorage(Address(VoteInfoAddress), i.first, i.second);
 	}
 }
 
 void VoteDelegate::removeVote(dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address(VoteInfoAddress));
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -692,14 +541,14 @@ void VoteDelegate::removeVote(dev::Address const& _address, dev::eth::State& _st
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(VoteInfoAddress, i.first, i.second);
+		_state.setStorage(Address(VoteInfoAddress), i.first, i.second);
 	}
 
 }
 
 void VoteDelegate::send(dev::Address _toAddress, uint64_t _amount, dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address(VoteInfoAddress));
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -708,13 +557,13 @@ void VoteDelegate::send(dev::Address _toAddress, uint64_t _amount, dev::Address 
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(VoteInfoAddress, i.first, i.second);
+		_state.setStorage(Address(VoteInfoAddress), i.first, i.second);
 	}
 }
 
 void VoteDelegate::assign(uint64_t voteCount, dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address(VoteInfoAddress));
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -723,12 +572,12 @@ void VoteDelegate::assign(uint64_t voteCount, dev::Address const& _address, dev:
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(VoteInfoAddress, i.first, i.second);
+		_state.setStorage(Address(VoteInfoAddress), i.first, i.second);
 	}
 }
 void VoteDelegate::deAssign(uint64_t voteCount, dev::Address const& _address, dev::eth::State& _state)
 {
-	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(VoteInfoAddress);
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> voteMap = _state.storage(Address(VoteInfoAddress));
 	std::unordered_map<dev::u256, dev::u256> mapChange;
 	Vote vote(voteMap, mapChange, _address);
 	vote.load();
@@ -737,8 +586,355 @@ void VoteDelegate::deAssign(uint64_t voteCount, dev::Address const& _address, de
 
 	for (auto i : mapChange)
 	{
-		_state.setStorage(VoteInfoAddress, i.first, i.second);
+		_state.setStorage(Address(VoteInfoAddress), i.first, i.second);
 	}
 	
 }
 
+void VoteDelegate::pow(dev::Address const& _address, 
+	dev::eth::State& _state,
+	dev::h512 worker_pubkey,
+	dev::h256 block_id, //¿éhash
+	uint64_t nonce,
+	dev::h256 input,
+	dev::h256 work,
+	dev::Signature signature)
+{
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>> powMap = _state.storage(Address(POWInfoAddress)); 
+	std::unordered_map<dev::u256, dev::u256> mapChange;
+	POW_Operation powop(powMap, mapChange, _address);
+
+	powop.load();  
+	powop.worker_pubkey = worker_pubkey;
+	powop.block_id = block_id;
+	powop.nonce = nonce;
+	powop.input = input;
+	powop.work = work;
+	powop.signature = signature;
+	powop.save();  
+
+	for (auto i : mapChange)
+	{
+		_state.setStorage(Address(POWInfoAddress), i.first, i.second);
+	} 
+}
+
+StateMap::StateMap(
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>>& map, 
+	std::unordered_map<dev::u256, dev::u256>& mapChange, 
+	const dev::Address& address):
+	m_map(map),m_mapChange(mapChange),m_address(address)
+{ 
+}
+
+StateMap::~StateMap()
+{
+
+}
+
+void StateMap::load()
+{ 
+	this->_loadImpl(loadFromMap(size())); 
+}
+
+void StateMap::save()
+{
+   saveInMaps(this->_saveImpl());
+}
+
+ 
+
+dev::bytes StateMap::uint64_tToBytes(uint64_t number)
+{
+	dev::bytes res;
+	byte val;
+	for (int i = 0; i < 8; i++)
+	{
+		val = number % 8;
+		number = number / 8;
+		res.push_back(val);
+	}
+	return res;
+}
+
+uint64_t StateMap::bytesToUint64_t(const dev::bytes& bytes)
+{
+	if (bytes.size() != 8)
+		BOOST_THROW_EXCEPTION(std::length_error("Bytes length is not 8."));
+	uint64_t res = 0;
+	for (int i = 7; i >= 0; i--)
+	{
+		res *= 8;
+		res += bytes.at(i);
+	}
+	return res;
+}
+
+dev::bytes StateMap::u256ToBytes(dev::u256 number)
+{
+	std::string s = number.str();
+	return dev::bytes(s.begin(), s.end());
+}
+
+dev::u256 StateMap::bytesToU256(const dev::bytes& bytes)
+{
+	std::string s(bytes.begin(), bytes.end());
+	return dev::u256(s);
+}
+
+dev::bytes StateMap::h160ToBytes(dev::h160 number)
+{
+	return number.asBytes(); 
+}
+
+dev::h160 StateMap::bytesToH160(const dev::bytes& bytes)
+{
+	return dev::h160(bytes);
+}
+
+dev::bytes StateMap::h256ToBytes(dev::h256 number)
+{
+	return number.asBytes();
+}
+
+dev::h256 StateMap::bytesToH256(const dev::bytes& bytes)
+{
+	return dev::h256(bytes);
+}
+
+dev::u256 StateMap::expand(uint64_t number, uint32_t m /*= 0*/)
+{
+	dev::bytes expandKey = m_address.asBytes();
+	byte val;
+
+	// Expand key with num.
+	for (int i = 0; i < 8; i++)
+	{
+		val = number % 8;
+		number = number / 8;
+		expandKey.push_back(val);
+	}
+
+	// Expand key with m.
+	expandKey.insert(expandKey.end(), 4, '\0');
+
+	dev::h256 temp;
+	memcpy(temp.data(), expandKey.data(), 32);
+
+	return (dev::u256)temp;
+}
+
+void StateMap::saveInMaps(const dev::bytes& data)
+{
+	uint64_t size = data.size();
+	uint64_t page = size / 32;
+	uint64_t segment = size % 32;
+	dev::h256 pageH256;
+
+	// Write complete pages.
+	for (uint64_t i = 0; i < page; i++)
+	{
+		memcpy(pageH256.data(), data.data() + (i * 32), 32);
+		//m_map[expand(i)] = (dev::u256)pageH256;
+		u256 key = expand(i);
+		dev::h256 hashkey = key;
+		dev::h256 const hashedKey = dev::sha3(hashkey);
+		m_map[hashedKey] = std::make_pair(key, (dev::u256)pageH256);
+		m_mapChange[key] = (dev::u256)pageH256;
+	}
+
+	// Write last page.
+	dev::bytes lastPage(data.begin() + (page * 32), data.end());
+	lastPage.insert(lastPage.end(), (32 - segment), '\0');
+	memcpy(pageH256.data(), lastPage.data(), 32); 
+
+	u256 key = expand(page);
+	h256 hashkey = key;
+	h256 const hashedKey = dev::sha3(hashkey);
+	m_map[hashedKey] = std::make_pair(key, (dev::u256)pageH256);
+	m_mapChange[key] = (dev::u256)pageH256;
+
+
+}
+
+dev::bytes StateMap::loadFromMap(uint64_t size)
+{
+	uint64_t page = size / 32;
+	uint64_t segment = size % 32;
+	dev::h256 pageH256;
+	dev::bytes res;
+	dev::bytes bytesTemp;
+	//std::unordered_map<dev::u256, dev::u256>::iterator it;
+
+	// Write complete pages.
+	for (uint64_t i = 0; i < page; i++)
+	{
+		dev::u256 const key = expand(i);
+		dev::h256 const hashkey = key;
+		dev::h256 const hashedKey = dev::sha3(hashkey);
+		auto it = m_map.find(hashedKey);
+		if (it == m_map.end())
+		{
+			pageH256 = dev::h256();
+		}
+		else
+		{
+			//pageH256 = (dev::h256)m_map.at(expand(i));
+			pageH256 = (dev::h256)(it->second.second);
+		}
+		bytesTemp = pageH256.asBytes();
+		res.insert(res.end(), bytesTemp.begin(), bytesTemp.end());
+	}
+
+	// Write last page.
+	dev::u256 key = expand(page);
+	dev::h256 const hashkey = key;
+	dev::h256 const hashedKey = dev::sha3(hashkey);
+	//it = m_map.find(key);
+	auto it = m_map.find(hashedKey);
+
+	if (it == m_map.end())
+	{
+		pageH256 = dev::h256();
+	}
+	else
+	{
+		//pageH256 = (dev::h256)m_map.at(expand(page));
+		pageH256 = (dev::h256)(it->second.second);
+	}
+	bytesTemp = pageH256.asBytes();
+	res.insert(res.end(), bytesTemp.begin(), bytesTemp.begin() + segment);
+	return res;
+}
+
+POW_Operation::POW_Operation(
+	std::map<dev::h256, std::pair<dev::u256, dev::u256>>& map, 
+	std::unordered_map<dev::u256, dev::u256>& mapChange, 
+	const dev::Address& address):StateMap(map,mapChange,address)
+{
+
+}
+
+POW_Operation::~POW_Operation()
+{
+
+}
+
+void POW_Operation::_loadImpl(const dev::bytes& loadedBytes)
+{
+	dev::bytes tempBytes;
+	auto iterator = loadedBytes.begin();
+
+	tempBytes = dev::bytes(iterator, iterator + sizeof(worker_pubkey));
+	iterator += sizeof(worker_pubkey);
+	worker_pubkey = dev::h512(tempBytes);
+
+	tempBytes = dev::bytes(iterator, iterator + sizeof(block_id));
+	iterator += sizeof(block_id);
+	block_id = bytesToH256(tempBytes);
+
+
+	tempBytes = dev::bytes(iterator, iterator + sizeof(nonce));
+	iterator += sizeof(nonce);
+	nonce = bytesToUint64_t(tempBytes);
+
+
+	tempBytes = dev::bytes(iterator, iterator + sizeof(input));
+	iterator += sizeof(input);
+	input = bytesToH256(tempBytes);
+
+	tempBytes = dev::bytes(iterator, iterator + sizeof(work));
+	iterator += sizeof(work);
+	work = bytesToH256(tempBytes); 
+
+	tempBytes = dev::bytes(iterator, iterator + sizeof(signature));
+	iterator += sizeof(signature);
+	signature = Signature(tempBytes);
+}
+
+dev::bytes POW_Operation::_saveImpl()
+{
+	dev::bytes saveInBytes;
+	dev::bytes tempBytes; 
+
+	tempBytes = worker_pubkey.asBytes();
+	saveInBytes.insert(saveInBytes.end(), tempBytes.begin(), tempBytes.end());
+
+	tempBytes = h256ToBytes(block_id);
+	saveInBytes.insert(saveInBytes.end(), tempBytes.begin(), tempBytes.end());
+
+	tempBytes = uint64_tToBytes(nonce);
+	saveInBytes.insert(saveInBytes.end(), tempBytes.begin(), tempBytes.end());
+
+	tempBytes = h256ToBytes(input);
+	saveInBytes.insert(saveInBytes.end(), tempBytes.begin(), tempBytes.end());
+	 
+	tempBytes = h256ToBytes(work);
+	saveInBytes.insert(saveInBytes.end(), tempBytes.begin(), tempBytes.end());
+
+	tempBytes = signature.asBytes();
+	saveInBytes.insert(saveInBytes.end(), tempBytes.begin(), tempBytes.end());
+
+	return saveInBytes;
+}
+
+uint64_t POW_Operation::size()
+{
+	return 
+		sizeof(worker_pubkey) + 
+		sizeof(block_id) + 
+		sizeof(nonce) + 
+		sizeof(input) + 
+		sizeof(work)+
+		sizeof(signature); 
+}
+
+dev::h256 POW_Operation::work_input()
+{
+	auto hash = dev::sha3(block_id);
+	dev::bytes nonceBytes = uint64_tToBytes(nonce);
+	for (int i = 0; i < nonceBytes.size(); i++)
+	{
+		hash[i] = nonceBytes[i];
+	}
+	return dev::sha3(hash);
+}
+
+bool POW_Operation::validate()
+{
+
+	if (work_input() != input) return false;
+	
+	if (work == dev::h256()) return false;
+	 
+	if (Public(dev::recover(signature, input)) != worker_pubkey) return false;
+
+	auto sig_hash = dev::sha3(signature);
+	Public recover = dev::recover(signature, sig_hash);
+
+	uint8_t output0[64], output1[64];
+	Hex2Str((uint8_t*)recover.data(), output0, 32);
+
+	int id = (((uint16_t *)block_id.data())[0]) % 13;
+	jump[id](output0, output1);	bytesConstRef output1Bytes(output1, sizeof(output1));
+	if (work != dev::sha3(output1Bytes)) return false;
+
+	return true;
+}
+
+
+void POW_Operation::create(const fc::ecc::private_key& w, const dev::h256& i) {
+	input = i;
+	signature = dev::sign(w, input);
+	auto sig_hash = dev::sha3(signature);
+	Public recover = dev::recover(signature, sig_hash);
+	//work = dev::sha3(recover);
+
+	uint8_t output0[64], output1[64];
+	Hex2Str((uint8_t*)recover.data(), output0, 32);
+	int id = (((uint16_t *)block_id.data())[0]) % 13;
+	jump[id](output0, output1);
+	bytesConstRef output1Bytes(output1, sizeof(output1));
+
+	work = dev::sha3(output1Bytes);
+}

@@ -13,8 +13,11 @@ producer_plugin::producer_plugin( dev::eth::BlockChain& bc):
 	_timer(*_io_server)
 {
 	auto dbPath = bc.dbPath().string() + "/" + toHex(bc.genesisHash().ref().cropped(0, 4));
-	_db = std::make_shared<chainbase::database>(dbPath, chainbase::database::read_write, 1 * 1024 * 1024);
-
+#if USE_FAKE_HOST
+	_db = std::make_shared<chainbase::database>(dbPath, chainbase::database::read_write, 10 * 1024 * 1024);
+#else
+	_db = std::make_shared<chainbase::database>(dbPath, chainbase::database::read_write, 1024 * 1024 * 1024);
+#endif
 	_chain = std::make_unique<chain::chain_controller>(bc, *_db);
 
 	for (auto k : bc.chainParams().privateKeys)
@@ -52,7 +55,7 @@ block_production_condition::block_production_condition_enum producer_plugin::sho
 	}
 	catch (...)
 	{
-		std::cerr << "Got exception while generating block: xx" << std::endl;
+		ctrace<< "Got exception while generating block: xx";
 		result = block_production_condition::exception_producing_block;
 	}
 
@@ -98,6 +101,12 @@ block_production_condition::block_production_condition_enum producer_plugin::sho
 
 block_production_condition::block_production_condition_enum producer_plugin::maybe_produce_block()
 {
+
+	static uint32_t prev_slot = 0xffffffff; 
+	static bool prev_prod_enabled = true;
+	static fc::time_point prev_print_epoch = fc::time_point::now();
+	
+
 	chain::chain_controller& chain = *_chain;
 
 	fc::time_point now_fine = fc::time_point::now();
@@ -106,25 +115,48 @@ block_production_condition::block_production_condition_enum producer_plugin::may
     //cnote << "in maybe produce" << now.sec_since_epoch();
 
 
+	if (_production_enabled != prev_prod_enabled)
+	{//降低日志频率
+		if (_production_enabled) {
+			ctrace << "BLOCK CHAIN SYNCED AGAIN!";
+		}
+		else {
+			ctrace << "BLOCK CHAIN NOT SYNCED"; 
+		}
+		prev_prod_enabled = _production_enabled;
+	}
+
 	// If the next block production opportunity is in the present or future, we're synced.
 	if (!_production_enabled)
 	{
-	    std::cout<<"block_production_condition::not_synced"<<std::endl;
-        cdebug << chain.get_slot_time(1).sec_since_epoch();
-		cdebug << now.sec_since_epoch();
-
-		if (chain.get_slot_time(1) >= now)
-			_production_enabled = true;
+		if ((fc::time_point::now() - prev_print_epoch).to_seconds() > 10)
+		{//10秒打印一次
+			cdebug << chain.get_slot_time(1).sec_since_epoch();
+			cdebug << now.sec_since_epoch();
+			prev_print_epoch = fc::time_point::now();
+		}
+	 
+		if (chain.get_slot_time(1) >= now) 
+			_production_enabled = true; 
 		else
 			return block_production_condition::not_synced;
 	}
 
+	
+
 	// is anyone scheduled to produce now or one second in the future?
 	uint32_t slot = chain.get_slot_at_time(now);
-	ctrace << "slot num: " << slot;
+	if (slot != prev_slot)
+	{//确保在slot变换时打印log
+
+		ctrace << "slot num: " << slot;
+		
+	}
+
 	if (slot == 0)
 	{
-        //std::cout<<"block_production_condition::not_time_yet"<<std::endl;
+		prev_slot = slot;
+        //ctrace<<"block_production_condition::not_time_yet";
 		return block_production_condition::not_time_yet;
 	}
 
@@ -139,11 +171,17 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 	asserts(now > chain.head_block_time());
 
 	types::AccountName scheduled_producer = chain.get_scheduled_producer(slot);
-	ctrace << "scheduled_producer: " << scheduled_producer;
+
+	if (slot != prev_slot)
+	{
+		ctrace << "scheduled_producer: " << scheduled_producer;
+		prev_slot = slot;
+	}
+
 	// we must control the producer scheduled to produce the next block.
 	if (_producers.find(scheduled_producer) == _producers.end())
 	{
-        //std::cout<<"block_production_condition::not_my_turn"<<std::endl;
+        //ctrace<<"block_production_condition::not_my_turn";
 		return block_production_condition::not_my_turn;
 	}
 
@@ -153,7 +191,7 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 
 	if (private_key_itr == _private_keys.end())
 	{
-	    std::cout<<"block_production_condition::no_private_key"<<std::endl;
+	    ctrace<<"block_production_condition::no_private_key";
         return block_production_condition::no_private_key;
 	}
 
@@ -168,17 +206,19 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 	if (llabs((scheduled_time - now).count()) > fc::milliseconds(500).count())
 	{
 		//capture("scheduled_time", scheduled_time)("now", now);
-        std::cout<<"block_production_condition::lag"<<std::endl;
+        ctrace<<"block_production_condition::lag";
 		return block_production_condition::lag;
 	}
 
 	/// 出块
 	try
-	{
-		if (_client != nullptr)
+	{ 
+		if (_client != nullptr){
+			//ctrace << "maybe_produce_block:" << _client->blockChain().currentHash().hex();
 			_client->generate_block(scheduled_time, scheduled_producer, private_key_itr->second);
+		}
 		else
-			cwarn << "client is null";
+			cwarn << "client is null"; 
 	}
 	catch(...)
 	{
@@ -203,12 +243,12 @@ block_production_condition::block_production_condition_enum producer_plugin::may
 
 	//app().get_plugin<net_plugin>().broadcast_block(block);
 
-	//std::cout << (block.timestamp.sec_since_epoch()) << std::endl;
+	//ctrace << (block.timestamp.sec_since_epoch());
 
 	//ilog("producer: ");
-	//std::cout << block.producer << std::endl;
+	//ctrace << block.producer;
 	//ilog("private key: ");
-	//std::cout << std::hex << block.block_signing_private_key << std::endl;
+	//ctrace << std::hex << block.block_signing_private_key;
 
 	return block_production_condition::produced;
 }

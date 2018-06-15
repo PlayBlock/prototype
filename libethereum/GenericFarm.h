@@ -94,21 +94,21 @@ public:
 	 */
 	bool start(std::string const& _sealer)
 	{
-		//WriteGuard l(x_minerWork);
-		//if (!m_miners.empty() && m_lastSealer == _sealer)
-		//	return true;
-		//if (!m_sealers.count(_sealer))
-		//	return false;
+		WriteGuard l(x_minerWork);
+		if (!m_miners.empty() && m_lastSealer == _sealer)
+			return true;
+		if (!m_sealers.count(_sealer))
+			return false;
 
-		//m_miners.clear();
-		//auto ins = m_sealers[_sealer].instances();
-		//m_miners.reserve(ins);
-		//for (unsigned i = 0; i < ins; ++i)
-		//{
-		//	m_miners.push_back(std::shared_ptr<Miner>(m_sealers[_sealer].create(std::make_pair(this, i))));
-		//	m_miners.back()->setWork(m_work);
-		//}
-		//m_isMining = true;
+		m_miners.clear();
+		auto ins = m_sealers[_sealer].instances();
+		m_miners.reserve(ins);
+		for (unsigned i = 0; i < ins; ++i)
+		{
+			m_miners.push_back(std::shared_ptr<Miner>(m_sealers[_sealer].create(std::make_pair(this, i))));
+			m_miners.back()->setWork(m_work);
+		}
+		m_isMining = true;
 		m_lastSealer = _sealer;
 		resetTimer();
 		return true;
