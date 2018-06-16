@@ -1,164 +1,87 @@
-# cpp-ethereum - Ethereum C++ client
-
-This repository contains [cpp-ethereum](http://cpp-ethereum.org), the [Ethereum](https://ethereum.org) C++ client.
-
-It is the third most popular of the Ethereum clients, behind [geth](https://github.com/ethereum/go-ethereum) (the [go](https://golang.org)
-client) and [Parity](https://github.com/ethcore/parity) (the [rust](https://www.rust-lang.org/) client).  The code is exceptionally
-[portable](http://cpp-ethereum.org/portability.html) and has been used successfully on a very broad range
-of operating systems and hardware.
+# prototype - A PlayBlock Chain Prototype Project
 
 
-## Contact
-
-[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/ethereum/cpp-ethereum)
-[![GitHub Issues](https://img.shields.io/github/issues-raw/badges/shields.svg)](https://github.com/ethereum/cpp-ethereum/issues)
-
-- Chat in [cpp-ethereum channel on Gitter](https://gitter.im/ethereum/cpp-ethereum).
-- Report bugs, issues or feature requests using [GitHub issues](issues/new).
-
-
-## Getting Started
-
-The Ethereum Documentation site hosts the **[cpp-ethereum homepage](http://cpp-ethereum.org)**, which
-has a Quick Start section.
-
-
-Operating system | Status
----------------- | ----------
-Ubuntu and macOS | [![TravisCI](https://img.shields.io/travis/ethereum/cpp-ethereum/develop.svg)](https://travis-ci.org/ethereum/cpp-ethereum)
-Windows          | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-ethereum/develop.svg)](https://ci.appveyor.com/project/ethereum/cpp-ethereum)
-
-
-## Building from source
-
-### Get the source code
-
-Git and GitHub is used to maintain the source code. Clone the repository by:
-
-```shell
-git clone --recursive https://github.com/ethereum/cpp-ethereum.git
-cd cpp-ethereum
-```
-
-The `--recursive` option is important. It orders git to clone additional 
-submodules which are required to build the project.
-If you missed it you can correct your mistake with command 
-`git submodule update --init`.
-
-### Install CMake
-
-CMake is used to control the build configuration of the project. Quite recent 
-version of CMake is required 
-(at the time of writing [3.4.3 is the minimum](CMakeLists.txt#L25)).
-We recommend installing CMake by downloading and unpacking the binary 
-distribution  of the latest version available on the 
-[**CMake download page**](https://cmake.org/download/).
-
-The CMake package available in your operating system can also be installed
-and used if it meets the minimum version requirement.
-
-> **Alternative method**
->
-> The repository contains the
-[scripts/install_cmake.sh](scripts/install_cmake.sh) script that downloads 
-> a fixed version of CMake and unpacks it to the given directory prefix. 
-> Example usage: `scripts/install_cmake.sh --prefix /usr/local`.
-
-### Install dependencies (Linux, macOS)
-
-The following *libraries* are required to be installed in the system in their
-development variant:
-
-- leveldb
-
-They usually can be installed using system-specific package manager.
-Examples for some systems:
-
-Operating system | Installation command
----------------- | --------------------
-Debian-based     | `sudo apt-get install libleveldb-dev`
-RedHat-based     | `dnf install leveldb-devel`
-macOS            | `brew install leveldb`
-
-
-We also support a "one-button" shell script 
-[scripts/install_deps.sh](scripts/install_deps.sh)
-which attempts to aggregate dependencies installation instructions for Unix-like
-operating systems. It identifies your distro and installs the external packages.
-Supporting the script is non-trivial task so please [inform us](#contact)
-if it does not work for your use-case.
-
-### Install dependencies (Windows)
-
-We provide prebuilt dependencies required to build the project. Download them
-with the [scripts/install_deps.bat](scripts/install_deps.bat) script.
-
-```shell
-scripts/install_deps.bat
-```
 
 ### Build
 
-Configure the project build with the following command. It will create the 
-`build` directory with the configuration.
 
 ```shell
-mkdir build; cd build  # Create a build directory.
-cmake ..               # Configure the project.
-cmake --build .        # Build all default targets.
-```
+mkdir build
 
-On **Windows** Visual Studio 2015 is required. You should generate Visual Studio 
-solution file (.sln) for 64-bit architecture by adding 
-`-G "Visual Studio 14 2015 Win64"` argument to the CMake configure command.
-After configuration is completed the `cpp-ethereum.sln` can be found in the
-`build` directory.
+./scripts/install_deps.bat
 
-```shell
+cd build
+
 cmake .. -G "Visual Studio 14 2015 Win64"
+
 ```
 
-## Contributing
 
-[![Contributors](https://img.shields.io/github/contributors/ethereum/cpp-ethereum.svg)](https://github.com/ethereum/cpp-ethereum/graphs/contributors)
-[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/ethereum/cpp-ethereum)
-[![up-for-grabs](https://img.shields.io/github/issues-raw/ethereum/cpp-ethereum/up-for-grabs.svg)](https://github.com/ethereum/cpp-ethereum/labels/up-for-grabs)
+ 
+####Optimization work based on ETH
+- **Consensus algorithm optimization:**
+	- Replace ETH's POW consensus with DPOS+POW. The specific algorithm is as follows:
+		- The process of generating a block consists of rounds, with 21 nodes participating in each round. Each node is rewarded with system rewards and transaction fees if it produces a block.
+		- At the end of each round, the system selects the next 21 nodes.
+		- 21 nodes in each round consist of 4 POW nodes and 17 DPOS nodes
+		- This ratio will change over time.
+		- In the first 30 days of Genesis, the chain prefers POW nodes.
+		- After 30 days of Genesis, since then, there are only 4 POW nodes in the chain
+		- DPOS election algorithm：
+			- Select 16 DPOS nodes from highest to lowest according to the number of votes.
+			- The last one DPOS node is selected according to an algorithm.
+			- This algorithm guarantees that the remaining DPOS nodes (not the first 16 DPOS nodes) have the same probability of being selected by the system and the weight of the votes of each other.
+		- POW election
+			- The node that has calculated the hash problem will broadcast the solution result (also a transaction) to the entire network. If the block is generated in time (needs to be solved before the next block output or otherwise invalid), the node is recorded in the POW node list.
+			- The system selects the POW node of the next round as follows: The oldest POW node recorded in the list will be selected and deleted from the list.
+	- POW calculation algorithm uses MLGB's hash hopping algorithm.
 
-The current codebase is the work of many, many hands, with nearly 100
-[individual contributors](https://github.com/ethereum/cpp-ethereum/graphs/contributors) over the course of its development.
+- **Contract VM Optimization:**use EOS WAVM
+- **P2P synchronization logic optimization:**
+	- Rewritten ETH's P2P synchronization module
+	- Solved the ETH P2P synchronization logic in the weak network environment easily forked bugs and various synchronization bugs
+	- Block producers broadcast blocks directly after producing blocks to speed up synchronization
+- **Transaction verification speed optimization:**
+	- Transaction inspection algorithm changed from ETH's single-thread inspection algorithm to multi-thread inspection algorithm
+- **Main production block flow optimization**
+	- In the DPOS algorithm of EOS, the block producer checks whether a block is generated every 1 second. In ETI, this interval is changed to millisecond polling to prevent frequent missed block time.
+- **Stability optimization:**
+	- The synchronization logic is decoupled from the block production flow and does not affect the current node production block when synchronizing the external block
+- **RLP structure optimization:**
+	- Fixed a bug in ETH's RLP accessing slowly under tens of thousands of transaction cases.
+- **State tree build optimization:**
+	- Optimize the original single-threaded tree construction algorithm as a multi-threaded tree construction algorithm
+- **Others：**
+	- Removed Uncle block reward from ETH
+	- Removes the fork processing logic from the ETH
+	- Added a large number of test cases to fix bugs and new features to ensure system stability
 
-Our day-to-day development chat happens on the
-[cpp-ethereum](https://gitter.im/ethereum/cpp-ethereum) Gitter channel.
+####Need to do optimization work later:
+- **Question: As the number of accounts increases, the block takes longer to import**
+	- **Test environment:**
+		- Two ETI nodes with SSD disks, one node sending huge transactions to another node
+		- The process of sending the transaction is to create 10,240 accounts and make 10,240 transactions in each block interval. Each transaction is sent from a Genesis rich account to a new account.
+		- This test environment will maximize the number of transactions per block.
+		- Note: This pressure test environment is very strict and may exceed the actual operating conditions. In this test environment, 280 million accounts will be generated each day, while Ethereum is currently only about 31 million accounts.
+	- **Result:**The time for importing blocks will increase as the number of accounts grows. With the maximum number of transactions, after the 1,000th block is produced (that is, the number of system accounts has reached 10 million, and the total number of current Ethereum accounts is only 31 million), A block time will reach about 3 seconds and the import time will continue to rise.
+	- **Reason:**Each block has a state tree, and the leaves node stores the state of each account. This tree is reconstructed for every block that is produced, and the tree is also queried when the transaction is executed. As the number of accounts increases, the depth of the tree increases and the time for importing blocks increases. That is, the import block time is positively correlated with the total number of accounts in the system and the number of transactions in the block. For example, when the chain full block status has yielded 1,000 blocks and the lead time has changed to 3 seconds, even if the subsequent transaction is transferred to a known account in the system, In each full block state is still 3 seconds.
+	- **Solution:** There are currently two options:
+		- Scenario 1: Continue to use ETH's state tree, use caching to mitigate slow access problems
+		- Scenario 2: Full use of map + memory-mapped file storage in EOS solutions
+####Some technical parameters:
+- **TPS:** 3413tx/s
+- **Block size: **10240 txs/block, one block size equal to approximately 1MByte
+- **gas limit：**
+	- Every simple transaction: 21000wei
+	- Maximum number of transactions in a block：10240
+	- Block gaslimit = 10240 * 21000 wei
+- **Transaction DATA field data volume limit:**
+	- Calculate gas according to transaction data volume. The larger the data amount is, the higher the gas is, and the upper limit is only affected by the block gas limit.
 
-All contributions are welcome! We try to keep a list of tasks that are suitable
-for newcomers under the tag 
-[up-for-grabs](https://github.com/ethereum/cpp-ethereum/labels/up-for-grabs).
-If you have any questions, please just ask.
+####Hardware requirements
+- **Test environment:** Two nodes one production block and one receiving block
+- **Disk usage:** The initial disk usage of the node is about 1GB (used to save the EOS database memory mapping file). When each block is full, the node consumes about 28GB of disk space a day.
+- **Memory usage:**About 1GB
+- **CPU  usage:**36% ( Intel(R) Xeon(R) CPU E5-26xx v4 8Core )
+- **Network bandwidth usage:**2Mbps/Node
 
-Please read [CodingStandards.txt](CodingStandards.txt) thoroughly before making
-alterations to the code base.
-
-All development goes in develop branch.
-
-
-## Mining
-
-This project is **not suitable for Ethereum mining**. The support for GPU mining 
-has been dropped some time ago including the ethminer tool. Use the ethminer tool from https://github.com/ethereum-mining/ethminer.
-
-## Testing
-
-To run the tests, make sure you clone https://github.com/ethereum/tests and point the environment variable
-`ETHEREUM_TEST_PATH` to that path.
-
-## Documentation
-
-- [Internal documentation for developers](doc/index.rst).
-- [Outdated documentation for end users](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/).
-
-
-## License
-
-[![License](https://img.shields.io/github/license/ethereum/cpp-ethereum.svg)](LICENSE)
-
-All contributions are made under the [GNU General Public License v3](https://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE).
