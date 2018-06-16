@@ -70,7 +70,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 		- Scenario 2: Full use of map + memory-mapped file storage in EOS solutions
 #### Some technical parameters:
 - **TPS:** 3413tx/s
-- **Block size: ** 10240 txs/block, one block size equal to approximately 1MByte
+- **Block size:** 10240 txs/block, one block size equal to approximately 1MByte
 - **gas limit：**
 	- Every simple transaction: 21000wei
 	- Maximum number of transactions in a block：10240
