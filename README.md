@@ -63,14 +63,14 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 		- The process of sending the transaction is to create 10,240 accounts and make 10,240 transactions in each block interval. Each transaction is sent from a Genesis rich account to a new account.
 		- This test environment will maximize the number of transactions per block.
 		- Note: This pressure test environment is very strict and may exceed the actual operating conditions. In this test environment, 280 million accounts will be generated each day, while Ethereum is currently only about 31 million accounts.
-	- **Result:**The time for importing blocks will increase as the number of accounts grows. With the maximum number of transactions, after the 1,000th block is produced (that is, the number of system accounts has reached 10 million, and the total number of current Ethereum accounts is only 31 million), A block time will reach about 3 seconds and the import time will continue to rise.
-	- **Reason:**Each block has a state tree, and the leaves node stores the state of each account. This tree is reconstructed for every block that is produced, and the tree is also queried when the transaction is executed. As the number of accounts increases, the depth of the tree increases and the time for importing blocks increases. That is, the import block time is positively correlated with the total number of accounts in the system and the number of transactions in the block. For example, when the chain full block status has yielded 1,000 blocks and the lead time has changed to 3 seconds, even if the subsequent transaction is transferred to a known account in the system, In each full block state is still 3 seconds.
+	- **Result:** The time for importing blocks will increase as the number of accounts grows. With the maximum number of transactions, after the 1,000th block is produced (that is, the number of system accounts has reached 10 million, and the total number of current Ethereum accounts is only 31 million), A block time will reach about 3 seconds and the import time will continue to rise.
+	- **Reason:** Each block has a state tree, and the leaves node stores the state of each account. This tree is reconstructed for every block that is produced, and the tree is also queried when the transaction is executed. As the number of accounts increases, the depth of the tree increases and the time for importing blocks increases. That is, the import block time is positively correlated with the total number of accounts in the system and the number of transactions in the block. For example, when the chain full block status has yielded 1,000 blocks and the lead time has changed to 3 seconds, even if the subsequent transaction is transferred to a known account in the system, In each full block state is still 3 seconds.
 	- **Solution:** There are currently two options:
 		- Scenario 1: Continue to use ETH's state tree, use caching to mitigate slow access problems
 		- Scenario 2: Full use of map + memory-mapped file storage in EOS solutions
 #### Some technical parameters:
 - **TPS:** 3413tx/s
-- **Block size: **10240 txs/block, one block size equal to approximately 1MByte
+- **Block size: ** 10240 txs/block, one block size equal to approximately 1MByte
 - **gas limit：**
 	- Every simple transaction: 21000wei
 	- Maximum number of transactions in a block：10240
@@ -81,7 +81,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 #### Hardware requirements
 - **Test environment:** Two nodes one production block and one receiving block
 - **Disk usage:** The initial disk usage of the node is about 1GB (used to save the EOS database memory mapping file). When each block is full, the node consumes about 28GB of disk space a day.
-- **Memory usage:**About 1GB
-- **CPU  usage:**36% ( Intel(R) Xeon(R) CPU E5-26xx v4 8Core )
-- **Network bandwidth usage:**2Mbps/Node
+- **Memory usage:** About 1GB
+- **CPU  usage:** 36% ( Intel(R) Xeon(R) CPU E5-26xx v4 8Core )
+- **Network bandwidth usage:** 2Mbps/Node
 
