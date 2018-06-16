@@ -18,7 +18,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 
 
  
-####Optimization work based on ETH
+#### Optimization work based on ETH
 - **Consensus algorithm optimization:**
 	- Replace ETH's POW consensus with DPOS+POW. The specific algorithm is as follows:
 		- The process of generating a block consists of rounds, with 21 nodes participating in each round. Each node is rewarded with system rewards and transaction fees if it produces a block.
