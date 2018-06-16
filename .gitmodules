@@ -1,8 +1,6 @@
 [submodule "evmjit"]
 	path = evmjit
-	url = git@192.168.1.126:evmjit.git
-	branch = develop
-[submodule "test/tests"]
+	url = https://github.com/walden01/evmjit.git
+[submodule "test/jsontests"]
 	path = test/jsontests
-	url = git@192.168.1.126:tests.git
-	branch = develop
+	url = https://github.com/walden01/tests.git
