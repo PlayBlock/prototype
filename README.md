@@ -36,7 +36,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 			- The system selects the POW node of the next round as follows: The oldest POW node recorded in the list will be selected and deleted from the list.
 	- POW calculation algorithm uses MLGB's hash hopping algorithm.
 
-- **Contract VM Optimization:**use EOS WAVM
+- **Contract VM Optimization:** use EOS WAVM
 - **P2P synchronization logic optimization:**
 	- Rewritten ETH's P2P synchronization module
 	- Solved the ETH P2P synchronization logic in the weak network environment easily forked bugs and various synchronization bugs
@@ -56,7 +56,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 	- Removes the fork processing logic from the ETH
 	- Added a large number of test cases to fix bugs and new features to ensure system stability
 
-####Need to do optimization work later:
+#### Need to do optimization work later:
 - **Question: As the number of accounts increases, the block takes longer to import**
 	- **Test environment:**
 		- Two ETI nodes with SSD disks, one node sending huge transactions to another node
@@ -68,7 +68,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 	- **Solution:** There are currently two options:
 		- Scenario 1: Continue to use ETH's state tree, use caching to mitigate slow access problems
 		- Scenario 2: Full use of map + memory-mapped file storage in EOS solutions
-####Some technical parameters:
+#### Some technical parameters:
 - **TPS:** 3413tx/s
 - **Block size: **10240 txs/block, one block size equal to approximately 1MByte
 - **gas limit：**
@@ -78,7 +78,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 - **Transaction DATA field data volume limit:**
 	- Calculate gas according to transaction data volume. The larger the data amount is, the higher the gas is, and the upper limit is only affected by the block gas limit.
 
-####Hardware requirements
+#### Hardware requirements
 - **Test environment:** Two nodes one production block and one receiving block
 - **Disk usage:** The initial disk usage of the node is about 1GB (used to save the EOS database memory mapping file). When each block is full, the node consumes about 28GB of disk space a day.
 - **Memory usage:**About 1GB
