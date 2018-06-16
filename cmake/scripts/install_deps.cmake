@@ -1,9 +1,7 @@
 include("${CMAKE_CURRENT_LIST_DIR}/helpers.cmake")
 
-set(INSTALL_DIR "${ROOT_DIR}/deps")
-#set(SERVER "https://github.com/ethereum/cpp-dependencies/releases/download/vc140/")
-#替换为本地server
-set(SERVER "http://192.168.1.126/cpp-ethereum-v130/")
+set(INSTALL_DIR "${ROOT_DIR}/deps") 
+set(SERVER "https://github.com/walden01/prototype_deps/releases/download/deps/")
 
 function(download_and_install PACKAGE_NAME)
     download_and_unpack("${SERVER}${PACKAGE_NAME}.tar.gz" ${INSTALL_DIR})
