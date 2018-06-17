@@ -16,6 +16,10 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 
 ```
 
+### Next Verion Plan:
+- **Develop the whole new blockchain framework use GO language**
+- **Replace the DPOS consensus algorithm Use Gosig**
+- **Delete the POW**
 
  
 #### Optimization work based on ETH
