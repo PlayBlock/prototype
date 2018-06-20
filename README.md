@@ -16,7 +16,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 
 ```
 
-![](https://github.com/walden01/prototype/raw/master/app_screenshots/boot.png)
+
 
 ### Note: This project is a local git repository, so the number of contributors displayed on github is less than the actual contributors.
 
@@ -93,3 +93,17 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 - **CPU  usage:** 36% ( Intel(R) Xeon(R) CPU E5-26xx v4 8Core )
 - **Network bandwidth usage:** 2Mbps/Node
 
+---------------------------------------------------------------------------
+
+### DAPP On Chain
+
+#### Block Dungeon
+
+- Block Dungeon is a H5 dungeon fighting game that combines blockchain technology.The game created the dungeon fighting game. When the player is exploring the dungeon, it will trigger various battles between the character and the boss. Through challenging the dungeon, players can get a variety of equipment and can trade peer-to-peer items with other players through the market.
+Through blockchain technology, the development team ensures the fairness, openness, and security of “player data storage, verification of battle results, and player-to-player transactions” to protect the rights of users’ game assets.
+
+![](https://github.com/walden01/prototype/raw/master/app_screenshots/boot.png)
+![](https://github.com/walden01/prototype/raw/master/app_screenshots/maze_battle1.jpg)
+![](https://github.com/walden01/prototype/raw/master/app_screenshots/wheel.jpg)
+![](https://github.com/walden01/prototype/raw/master/app_screenshots/frontpage.jpg)
+![](https://github.com/walden01/prototype/raw/master/app_screenshots/eq.jpg)
