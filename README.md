@@ -16,7 +16,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 
 ```
 
-###Note: This project is a local git repository, so the number of contributors displayed on github is less than the actual contributors.
+### Note: This project is a local git repository, so the number of contributors displayed on github is less than the actual contributors.
 
 ### Next Verion Plan:
 - **Develop the whole new blockchain framework use GO language**
