@@ -16,7 +16,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 
 ```
 
-![](https://github.com/walden01/prototype/tree/master/app_screenshots/boot.png)
+![](https://github.com/walden01/prototype/raw/master/app_screenshots/boot.png)
 
 ### Note: This project is a local git repository, so the number of contributors displayed on github is less than the actual contributors.
 
