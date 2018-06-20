@@ -99,7 +99,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 
 #### Block Dungeon
 
-- The first H5 dungeon battle game based on blockchain technology. The Block Dungeon game rules are based on cryptography and deployed on the PlayBlock Chain in the form of smart contracts. Because the data of the blockchain is unchangeable and transparent, it ensures the fairness of the game rules and the security of asset transactions among players. Relying on the high TPS performance and scalability of PlayBlock Chain, Block Dungeon theoretically has no upper limit on the number of online players.
+- Block Dungeon is the first H5 dungeon combat game based on blockchain technology. The Block Dungeon game rules are based on cryptography and deployed on the PlayBlock Chain in the form of smart contracts. Because the data of the blockchain is unchangeable and transparent, it ensures the fairness of the game rules and the security of asset transactions among players. Relying on the high TPS performance and scalability of PlayBlock Chain, Block Dungeon theoretically has no upper limit on the number of online players.
 
 ![](https://github.com/walden01/prototype/raw/master/app_screenshots/boot.png)
 ![](https://github.com/walden01/prototype/raw/master/app_screenshots/maze_battle1.jpg)
