@@ -187,7 +187,7 @@ Linux)
 			cd deps
 			mkdir install
 			cd install 
-			wget http://192.168.1.126/cpp-ethereum-v130/wavm-linux.tar.gz
+			wget https://github.com/walden01/prototype_deps/releases/download/deps/wavm-linux.tar.gz
 			tar -xzvf ./wavm-linux.tar.gz
 			rm -rf ./wavm-linux.tar.gz
 			cd ../..
