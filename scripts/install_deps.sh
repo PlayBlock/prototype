@@ -185,7 +185,7 @@ Linux)
 				
 			# 获取wavm-linux
 			cd deps
-			mkdir install
+			mkdir -p install
 			cd install 
 			wget https://github.com/walden01/prototype_deps/releases/download/deps/wavm-linux.tar.gz
 			tar -xzvf ./wavm-linux.tar.gz
